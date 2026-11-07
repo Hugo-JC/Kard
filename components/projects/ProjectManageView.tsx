@@ -20,6 +20,7 @@ import {
   Sparkles,
   Check,
   Clock,
+  Flag,
   MoreVertical,
   ChevronDown,
   UserCheck,
@@ -35,7 +36,12 @@ import {
 } from "@/lib/data"
 import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "@/components/Logos"
 import { Avatar } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { ProjectSelectField, memberSelectOptions, type ProjectSelectOption } from "@/components/projects/ProjectSelectField"
+import { TaskComposer } from "@/components/projects/TaskComposer"
 import { cn } from "@/lib/utils"
 
 interface ProjectManageViewProps {
@@ -60,6 +66,19 @@ const PRESET_ACCENTS = [
   "#F43F5E", // Rose
 ]
 
+const PROJECT_STATUS_OPTIONS: ProjectSelectOption[] = [
+  { value: "SELECT PROGRESS", label: "Planejado", indicatorClassName: "bg-muted-foreground" },
+  { value: "IN PROGRESS", label: "Em andamento", indicatorClassName: "bg-primary" },
+  { value: "COMPLETED", label: "Concluído", indicatorClassName: "bg-success" },
+  { value: "ON HOLD", label: "Pausado", indicatorClassName: "bg-warning" },
+]
+
+const PROJECT_PRIORITY_OPTIONS: ProjectSelectOption[] = [
+  { value: "HIGH PRIORITY", label: "Alta", indicatorClassName: "bg-danger" },
+  { value: "MEDIUM PRIORITY", label: "Média", indicatorClassName: "bg-warning" },
+  { value: "LOW PRIORITY", label: "Baixa", indicatorClassName: "bg-info" },
+]
+
 export function ProjectManageView({
   project,
   tasks,
@@ -80,14 +99,6 @@ export function ProjectManageView({
   // Task filter state
   const [taskFilterAssignee, setTaskFilterAssignee] = useState<string>("ALL")
   const [taskFilterStatus, setTaskFilterStatus] = useState<"ALL" | "ACTIVE" | "COMPLETED">("ALL")
-
-  // Inline task creation
-  const [newTaskTitle, setNewTaskTitle] = useState("")
-  const [newTaskAssignee, setNewTaskAssignee] = useState<Member>(
-    project.members[0] || AVAILABLE_CONTRIBUTORS[0]
-  )
-  const [newTaskPriority, setNewTaskPriority] = useState<"High" | "Medium" | "Low">("Medium")
-  const [newTaskDueDate, setNewTaskDueDate] = useState("28 June")
 
   // Chat state
   const [chatInput, setChatInput] = useState("")
@@ -151,6 +162,12 @@ export function ProjectManageView({
   })
 
   const percent = Math.round((project.completedTasks / Math.max(1, project.totalTasks)) * 100)
+  const projectAssignees = project.members.length > 0 ? project.members : AVAILABLE_CONTRIBUTORS
+  const assigneeOptions = memberSelectOptions(projectAssignees)
+  const taskFilterOptions: ProjectSelectOption[] = [
+    { value: "ALL", label: "Todas as pessoas", indicatorClassName: "bg-primary" },
+    ...assigneeOptions,
+  ]
 
   // Handle uploading device image for project branding
   const handleDeviceImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,27 +218,6 @@ export function ProjectManageView({
       accentColor: newColor,
       progressColor: newColor,
     })
-  }
-
-  // Handle adding task
-  const handleCreateTask = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTaskTitle.trim()) return
-
-    onAddTask({
-      title: newTaskTitle.trim(),
-      project: project.name,
-      commentsCount: 0,
-      subtasksCount: 0,
-      completed: false,
-      priority: newTaskPriority,
-      tags: ["Deliverable"],
-      dueDate: newTaskDueDate,
-      assignee: newTaskAssignee,
-      stage: "TODO",
-    })
-
-    setNewTaskTitle("")
   }
 
   // Handle sending chat message
@@ -439,54 +435,27 @@ export function ProjectManageView({
               </div>
             </div>
 
-            {/* Status & Priority Selectors */}
-            <div className="flex flex-wrap items-center gap-2">
-              <select
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+              <ProjectSelectField
+                ariaLabel="Status do projeto"
                 value={project.status}
-                onChange={(e) =>
-                  onUpdateProject({
-                    ...project,
-                    status: e.target.value as Project["status"],
-                  })
+                options={PROJECT_STATUS_OPTIONS}
+                onValueChange={(value) =>
+                  onUpdateProject({ ...project, status: value as Project["status"] })
                 }
-                className={cn(
-                  "rounded-xl px-3 py-1.5 text-xs font-bold tracking-wider uppercase border focus:outline-none cursor-pointer",
-                  project.status === "COMPLETED"
-                    ? "bg-success-subtle text-success-foreground border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-300"
-                    : project.status === "IN PROGRESS"
-                    ? "bg-primary-subtle text-primary border-blue-500/30 dark:bg-blue-950/40 dark:text-blue-300"
-                    : project.status === "ON HOLD"
-                    ? "bg-warning-subtle text-warning-foreground border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300"
-                    : "bg-muted text-muted-foreground border-border"
-                )}
-              >
-                <option value="IN PROGRESS" className="bg-card">IN PROGRESS</option>
-                <option value="COMPLETED" className="bg-card">COMPLETED</option>
-                <option value="ON HOLD" className="bg-card">ON HOLD</option>
-                <option value="SELECT PROGRESS" className="bg-card">SELECT PROGRESS</option>
-              </select>
-
-              <select
+                className="w-full sm:w-auto"
+                triggerClassName="sm:w-44"
+              />
+              <ProjectSelectField
+                ariaLabel="Prioridade do projeto"
                 value={project.priority}
-                onChange={(e) =>
-                  onUpdateProject({
-                    ...project,
-                    priority: e.target.value as Project["priority"],
-                  })
+                options={PROJECT_PRIORITY_OPTIONS}
+                onValueChange={(value) =>
+                  onUpdateProject({ ...project, priority: value as Project["priority"] })
                 }
-                className={cn(
-                  "rounded-xl px-3 py-1.5 text-xs font-bold tracking-wider uppercase border focus:outline-none cursor-pointer",
-                  project.priority === "HIGH PRIORITY"
-                    ? "border-red-400/40 text-red-500 bg-red-50/20 dark:bg-red-950/30 dark:text-red-400"
-                    : project.priority === "MEDIUM PRIORITY"
-                    ? "border-emerald-500/40 text-emerald-600 bg-emerald-50/20 dark:bg-emerald-950/30 dark:text-emerald-400"
-                    : "border-slate-300 dark:border-slate-700 text-muted-foreground bg-muted/30"
-                )}
-              >
-                <option value="HIGH PRIORITY" className="bg-card">HIGH PRIORITY</option>
-                <option value="MEDIUM PRIORITY" className="bg-card">MEDIUM PRIORITY</option>
-                <option value="LOW PRIORITY" className="bg-card">LOW PRIORITY</option>
-              </select>
+                className="w-full sm:w-auto"
+                triggerClassName="sm:w-36"
+              />
             </div>
           </div>
 
@@ -611,252 +580,174 @@ export function ProjectManageView({
 
       {/* 4. Tab 1: Tasks & Designated Assignees */}
       {activeTab === "tasks" && (
-        <div className="space-y-5">
-          {/* Controls: Filter by Assignee, Status, and Inline Creator */}
-          <div className="rounded-2xl bg-card p-4 border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground mr-1">
-                Filter Assignee:
-              </span>
-              <button
-                onClick={() => setTaskFilterAssignee("ALL")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors",
-                  taskFilterAssignee === "ALL"
-                    ? "bg-muted text-card-foreground font-bold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                All
-              </button>
-              {project.members.map((member) => (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-xs sm:flex-row sm:items-end sm:justify-between sm:p-4">
+            <ProjectSelectField
+              label="Responsável"
+              value={taskFilterAssignee}
+              options={taskFilterOptions}
+              onValueChange={setTaskFilterAssignee}
+              className="w-full sm:max-w-60"
+              triggerClassName="bg-background"
+            />
+            <div
+              role="group"
+              aria-label="Filtrar tarefas por status"
+              className="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/60 p-1"
+            >
+              {[
+                { value: "ALL", label: "Todas" },
+                { value: "ACTIVE", label: "Ativas" },
+                { value: "COMPLETED", label: "Concluídas" },
+              ].map((option) => (
                 <button
-                  key={member.name}
-                  onClick={() => setTaskFilterAssignee(member.name)}
+                  key={option.value}
+                  type="button"
+                  aria-pressed={taskFilterStatus === option.value}
+                  onClick={() => setTaskFilterStatus(option.value as typeof taskFilterStatus)}
                   className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors",
-                    taskFilterAssignee === member.name
-                      ? "bg-primary-subtle text-primary font-bold"
+                    "min-h-11 rounded-lg px-3 text-sm font-semibold transition-colors",
+                    taskFilterStatus === option.value
+                      ? "bg-card text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <Avatar src={member.avatar} fallback={member.name[0]} size="sm" className="w-4 h-4" />
-                  <span>{member.name.split(" ")[0]}</span>
+                  {option.label}
                 </button>
               ))}
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setTaskFilterStatus("ALL")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer",
-                  taskFilterStatus === "ALL"
-                    ? "bg-muted text-card-foreground font-bold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setTaskFilterStatus("ACTIVE")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer",
-                  taskFilterStatus === "ACTIVE"
-                    ? "bg-muted text-card-foreground font-bold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Active
-              </button>
-              <button
-                onClick={() => setTaskFilterStatus("COMPLETED")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer",
-                  taskFilterStatus === "COMPLETED"
-                    ? "bg-muted text-card-foreground font-bold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Done
-              </button>
-            </div>
           </div>
 
-          {/* Quick Task Creator Form */}
-          <form
-            onSubmit={handleCreateTask}
-            className="rounded-2xl bg-card p-4 border border-border shadow-xs space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Plus className="w-3.5 h-3.5 text-primary" />
-                <span>Add Task & Designate Contributor</span>
-              </h4>
-            </div>
+          <TaskComposer
+            project={project}
+            assignees={projectAssignees}
+            onAddTask={onAddTask}
+          />
 
-            <div className="flex flex-col sm:flex-row items-center gap-2.5">
-              <input
-                type="text"
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder={`New deliverable for ${project.name}...`}
-                className="flex-1 h-10 rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 w-full"
-                required
-              />
-
-              {/* Assignee select */}
-              <div className="flex items-center gap-1 w-full sm:w-auto">
-                <select
-                  value={newTaskAssignee.name}
-                  onChange={(e) => {
-                    const found = AVAILABLE_CONTRIBUTORS.find(
-                      (m) => m.name === e.target.value
-                    )
-                    if (found) setNewTaskAssignee(found)
-                  }}
-                  className="h-10 rounded-xl border border-border bg-muted/40 px-3 text-xs font-semibold text-foreground focus:outline-none cursor-pointer w-full sm:w-auto"
-                >
-                  {project.members.map((m) => (
-                    <option key={m.name} value={m.name} className="bg-card">
-                      👤 {m.name} ({m.role || "Contributor"})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Priority select */}
-              <select
-                value={newTaskPriority}
-                onChange={(e) =>
-                  setNewTaskPriority(e.target.value as "High" | "Medium" | "Low")
-                }
-                className="h-10 rounded-xl border border-border bg-muted/40 px-3 text-xs font-semibold text-foreground focus:outline-none cursor-pointer w-full sm:w-auto"
-              >
-                <option value="High" className="bg-card">High Priority</option>
-                <option value="Medium" className="bg-card">Medium Priority</option>
-                <option value="Low" className="bg-card">Low Priority</option>
-              </select>
-
-              <Button type="submit" size="sm" className="h-10 gap-1.5 px-4 shrink-0 w-full sm:w-auto">
-                <Plus className="w-4 h-4" />
-                <span>Assign Task</span>
-              </Button>
-            </div>
-          </form>
-
-          {/* Task List Items */}
-          <div className="space-y-2">
+          <section aria-label="Lista de tarefas" className="flex flex-col gap-3">
             {filteredTasks.length === 0 ? (
-              <div className="rounded-2xl bg-card p-10 text-center border border-border text-muted-foreground">
-                <p className="text-sm font-semibold">No tasks found matching your filter.</p>
-                <p className="text-xs text-muted-foreground/80 mt-1">
-                  Create a task above or adjust your contributor filter.
+              <div className="rounded-2xl border border-dashed border-border bg-card-subtle p-8 text-center sm:p-10">
+                <span className="mx-auto mb-3 grid size-11 place-items-center rounded-2xl bg-primary-subtle text-primary">
+                  <CheckCircle2 aria-hidden="true" className="size-5" />
+                </span>
+                <p className="text-base font-semibold text-card-foreground">
+                  Nenhuma tarefa corresponde a esses filtros.
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Crie uma tarefa acima ou ajuste os filtros.
                 </p>
               </div>
             ) : (
-              filteredTasks.map((t) => (
-                <div
-                  key={t.id}
-                  onClick={() => onToggleTask(t.id)}
-                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-card border border-border/80 hover:border-border transition-all cursor-pointer shadow-xs gap-3"
+              filteredTasks.map((task) => (
+                <motion.article
+                  key={task.id}
+                  layout
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="grid min-w-0 gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-xs transition-colors hover:border-primary/25 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-4"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <input
-                      type="checkbox"
-                      checked={t.completed}
-                      onChange={() => onToggleTask(t.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-4 rounded-md border-border text-primary accent-primary cursor-pointer shrink-0"
+                  <Field orientation="horizontal" className="items-start gap-3">
+                    <Checkbox
+                      id={`task-${task.id}`}
+                      checked={task.completed}
+                      onCheckedChange={(checked) => {
+                        if (checked !== task.completed) {
+                          onToggleTask(task.id)
+                        }
+                      }}
+                      aria-label={
+                        task.completed
+                          ? `Reabrir tarefa: ${task.title}`
+                          : `Concluir tarefa: ${task.title}`
+                      }
+                      className="mt-0.5 size-5 rounded-md border-2 border-muted-foreground/35 bg-background transition-colors data-checked:border-success data-checked:bg-success data-checked:text-white"
                     />
-
-                    <div className="min-w-0">
-                      <p
+                    <div className="flex min-w-0 flex-col gap-1.5">
+                      <FieldLabel
+                        htmlFor={`task-${task.id}`}
                         className={cn(
-                          "text-xs sm:text-sm font-semibold transition-all truncate",
-                          t.completed
-                            ? "line-through text-muted-foreground/60"
-                            : "text-card-foreground group-hover:text-primary"
+                          "cursor-pointer text-sm leading-snug sm:text-base",
+                          task.completed
+                            ? "text-muted-foreground line-through"
+                            : "text-card-foreground"
                         )}
                       >
-                        {t.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
-                        {t.tags?.map((tag) => (
-                          <span key={tag} className="uppercase font-medium">
-                            #{tag}
-                          </span>
+                        {task.title}
+                      </FieldLabel>
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-muted-foreground">
+                        {task.tags?.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="rounded-md px-2 py-0.5 text-xs font-semibold normal-case tracking-normal"
+                          >
+                            {tag}
+                          </Badge>
                         ))}
-                        {t.dueDate && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {t.dueDate}
+                        {task.dueDate && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Clock aria-hidden="true" className="size-4" />
+                            {task.dueDate}
                           </span>
                         )}
                       </div>
                     </div>
-                  </div>
+                  </Field>
 
-                  {/* Right: Contributor designation and priority badge */}
-                  <div
-                    className="flex items-center justify-between sm:justify-end gap-3 shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* Designated Contributor Selector / Avatar */}
-                    <div className="flex items-center gap-2 bg-muted/40 px-2.5 py-1 rounded-xl border border-border/60">
-                      <Avatar
-                        src={t.assignee?.avatar || project.members[0]?.avatar || "/avatars/courtney.jpg"}
-                        fallback={t.assignee?.name[0] || "U"}
-                        size="sm"
-                        className="w-5 h-5"
-                      />
-                      <select
-                        value={t.assignee?.name || project.members[0]?.name}
-                        onChange={(e) => {
-                          const found = AVAILABLE_CONTRIBUTORS.find(
-                            (m) => m.name === e.target.value
-                          )
-                          if (found && onUpdateTaskAssignee) {
-                            onUpdateTaskAssignee(t.id, found)
-                          }
-                        }}
-                        className="bg-transparent text-[11px] font-semibold text-card-foreground focus:outline-none cursor-pointer"
-                      >
-                        {project.members.map((m) => (
-                          <option key={m.name} value={m.name} className="bg-card">
-                            {m.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <span
-                      className={cn(
-                        "rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0",
-                        t.priority === "High"
-                          ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900"
-                          : t.priority === "Medium"
-                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900"
-                          : "bg-muted text-muted-foreground"
-                      )}
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+                    <ProjectSelectField
+                      ariaLabel={`Responsável pela tarefa ${task.title}`}
+                      value={
+                        task.assignee?.name ?? projectAssignees[0]?.name ?? ""
+                      }
+                      options={assigneeOptions}
+                      onValueChange={(value) => {
+                        const assignee = projectAssignees.find(
+                          (member) => member.name === value
+                        )
+                        if (assignee) onUpdateTaskAssignee?.(task.id, assignee)
+                      }}
+                      disabled={!onUpdateTaskAssignee}
+                      className="min-w-0 flex-1 sm:flex-none"
+                      triggerClassName="h-11 w-full sm:w-48"
+                      contentClassName="min-w-56"
+                    />
+                    <Badge
+                      variant={
+                        task.priority === "High"
+                          ? "destructive"
+                          : task.priority === "Medium"
+                          ? "warning"
+                          : "info"
+                      }
+                      className="min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase"
                     >
-                      {t.priority}
-                    </span>
-
+                      <Flag aria-hidden="true" className="size-3.5" />
+                      {task.priority === "High"
+                        ? "Alta"
+                        : task.priority === "Medium"
+                        ? "Média"
+                        : "Baixa"}
+                    </Badge>
                     {onDeleteTask && (
-                      <button
-                        onClick={() => onDeleteTask(t.id)}
-                        className="p-1 text-muted-foreground/50 hover:text-danger transition-colors cursor-pointer"
-                        title="Delete task"
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDeleteTask(task.id)}
+                        aria-label={`Excluir tarefa: ${task.title}`}
+                        title="Excluir tarefa"
+                        className="size-11 shrink-0 rounded-xl text-muted-foreground hover:bg-danger-subtle hover:text-danger-foreground"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                        <Trash2 aria-hidden="true" className="size-4" />
+                      </Button>
                     )}
                   </div>
-                </div>
+                </motion.article>
               ))
             )}
-          </div>
+          </section>
         </div>
       )}
 

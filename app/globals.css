@@ -22,6 +22,18 @@
   --color-border-subtle: var(--border-subtle);
   --color-input: var(--border);
   --color-ring: var(--primary);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-subtle: var(--info-subtle);
 }
 
 :root {
@@ -44,26 +56,28 @@
 
   /* Brand / Active State */
   --primary: #0D6EFD;
-  --primary-forenground: #FFFFFF;
-  --primary-subtle: #EBF3FF;  /* Secondary & Accents */
+  --primary-foreground: #FFFFFF;
+  --primary-subtle: #EBF3FF;
+
+  /* Secondary & Accents */
   --secondary: #F1F5F9;
   --secondary-foreground: #1E293B;
-
   --accent: #F8FAFC;
   --accent-foreground: #0F172A;
 
-  /* Semantic Feedback Tokens */
-  --success: #10B981;
-  --success-subtle: #E8FAF1;
-  --success-foreground: #059669;
-
-  --warning: #F59E0B;
-  --warning-subtle: #FFFC7E6;
-  --warning-foreground: #D97706;
-
-  --danger: #EF4444;
-  --danger-subtle: #FFF0EB;
-  --danger-foreground: #FF5C38;
+  /* Semantic feedback palette */
+  --success: #059669;
+  --success-subtle: #ECFDF5;
+  --success-foreground: #047857;
+  --warning: #D97706;
+  --warning-subtle: #FFF7ED;
+  --warning-foreground: #B45309;
+  --danger: #E11D48;
+  --danger-subtle: #FFF1F2;
+  --danger-foreground: #BE123C;
+  --info: #0284C7;
+  --info-subtle: #E0F2FE;
+  --info-foreground: #0369A1;
 }
 
 .dark {
@@ -105,9 +119,13 @@
   --warning-subtle: rgba(245, 158, 11, 0.18);
   --warning-foreground: #FBBF24;
 
-  --danger : #EF4444;
-  --danger-subtle: rgba(239, 68, 68, 0.18);
-  --danger-foreground: #F87171;
+  --danger: #FB7185;
+  --danger-subtle: rgba(244, 63, 94, 0.18);
+  --danger-foreground: #FDA4AF;
+
+  --info: #38BDF8;
+  --info-subtle: rgba(56, 189, 248, 0.18);
+  --info-foreground: #7DD3FC;
 }
 
 html {
