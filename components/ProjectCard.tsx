@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { Star, MoreVertical, Calendar, CheckCircle2, Clock } from "lucide-react"
-import { GoogleLogo, SlackLogo } from "./Logos"
+import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "./Logos"
 import { Avatar } from "@/components/ui/avatar"
 import { Project } from "@/lib/data"
 import { cn } from "@/lib/utils"
@@ -11,12 +11,14 @@ interface ProjectCardProps {
   project: Project
   onToggleStar: (id: string) => void
   onUpdateStatus?: (id: string, newStatus: Project["status"]) => void
+  onClick?: () => void
 }
 
 export function ProjectCard({
   project,
   onToggleStar,
   onUpdateStatus,
+  onClick,
 }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const percent = Math.round((project.completedTasks / project.totalTasks) * 100)
@@ -30,20 +32,39 @@ export function ProjectCard({
         return "bg-primary-subtle text-primary dark:bg-blue-950/40 dark:text-blue-300"
       case "ANDROID":
         return "bg-warning-subtle text-warning-foreground dark:bg-amber-950/40 dark:text-amber-300"
+      case "AUDIO API":
+        return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+      case "GRAPHQL":
+        return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
       default:
         return "bg-muted text-muted-foreground"
     }
   }
 
   return (
-    <div className="relative rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 transition-all duration-200 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] text-card-foreground">
+    <div
+      onClick={onClick}
+      className={cn(
+        "relative rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 transition-all duration-200 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] text-card-foreground",
+        onClick && "cursor-pointer"
+      )}
+    >
       {/* Top Header Row */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60 dark:bg-slate-900/80 border border-border/60 shadow-2xs">
-            {project.logo === "google" && <GoogleLogo className="w-7 h-7" />}
-            {project.logo === "slack" && <SlackLogo className="w-7 h-7" />}
-            {project.logo === "custom" && (
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60 dark:bg-slate-900/80 border border-border/60 shadow-2xs overflow-hidden">
+            {project.customImage ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={project.customImage} alt={project.name} className="h-full w-full object-cover" />
+            ) : project.logo === "google" ? (
+              <GoogleLogo className="w-7 h-7" />
+            ) : project.logo === "slack" ? (
+              <SlackLogo className="w-7 h-7" />
+            ) : project.logo === "spotify" ? (
+              <SpotifyLogo className="w-7 h-7" />
+            ) : project.logo === "linear" ? (
+              <LinearLogo className="w-7 h-7" />
+            ) : (
               <span className="text-base font-extrabold text-primary">
                 {project.name.charAt(0)}
               </span>
@@ -157,7 +178,7 @@ export function ProjectCard({
             className="h-full rounded-full transition-all duration-500 ease-out"
             style={{
               width: `${percent}%`,
-              backgroundColor: project.progressColor,
+              backgroundColor: project.accentColor || project.progressColor,
             }}
           />
         </div>

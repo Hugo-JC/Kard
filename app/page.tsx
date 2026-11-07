@@ -12,6 +12,7 @@ import { MessageWidget } from "@/components/MessageWidget"
 import { NewTaskModal } from "@/components/NewTaskModal"
 import { QuickChatModal } from "@/components/QuickChatModal"
 import { CommandPalette } from "@/components/CommandPalette"
+import { ProjectsView } from "@/components/projects/ProjectsView"
 import {
   INITIAL_PROJECTS,
   INITIAL_TASKS,
@@ -20,15 +21,22 @@ import {
   INITIAL_NOTIFICATIONS,
   Project,
   TaskItem,
+  Member,
   TrackedTimer,
   ChatMessage,
   NotificationItem,
 } from "@/lib/data"
+import { useTheme } from "@/components/ThemeProvider"
+import { Moon, Sun } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
+  const { toggleTheme } = useTheme()
+
   // Navigation State
   const [activeNav, setActiveNav] = useState<NavItemKey>("dashboard")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [managingProjectId, setManagingProjectId] = useState<string | null>(null)
 
   // Data States
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS)
@@ -54,11 +62,11 @@ export default function DashboardPage() {
         prev.map((t) =>
           t.isRunning ? { ...t, secondsElapsed: t.secondsElapsed + 1 } : t
         )
-      );
-    }, 1000);
+      )
+    }, 1000)
 
-    return () => clearInterval(interval);
-  }, [timers]);
+    return () => clearInterval(interval)
+  }, [timers])
 
   // Handle toggling task completion
   const handleToggleTask = (id: string) => {
@@ -109,6 +117,45 @@ export default function DashboardPage() {
     )
   }
 
+  // Handle adding a new project (with optional starter tasks)
+  const handleAddProject = (
+    newProjectData: Omit<Project, "id" | "completedTasks">,
+    initialTasks?: Omit<TaskItem, "id" | "number">[]
+  ) => {
+    const newProject: Project = {
+      ...newProjectData,
+      id: `proj-${Date.now()}`,
+      completedTasks: 0,
+    }
+    setProjects((prev) => [newProject, ...prev])
+
+    if (initialTasks && initialTasks.length > 0) {
+      const createdTasks: TaskItem[] = initialTasks.map((t, idx) => ({
+        ...t,
+        id: `task-${Date.now()}-${idx}`,
+        number: String(tasks.length + idx + 1).padStart(2, "0"),
+      }))
+      setTasks((prev) => [...createdTasks, ...prev])
+    }
+  }
+
+  // Handle updating an existing project (e.g. from ProjectManageView)
+  const handleUpdateProject = (updated: Project) => {
+    setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+  }
+
+  // Handle deleting a task
+  const handleDeleteTask = (taskId: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== taskId))
+  }
+
+  // Handle updating task assignee
+  const handleUpdateTaskAssignee = (taskId: string, assignee: Member) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, assignee } : t))
+    )
+  }
+
   // Handle star toggle
   const handleToggleStar = (projectId: string) => {
     setProjects((prev) =>
@@ -130,7 +177,6 @@ export default function DashboardPage() {
         if (t.id === timerId) {
           return { ...t, isRunning: !t.isRunning }
         }
-        // If we want only one active timer running at once:
         return { ...t, isRunning: false }
       })
     )
@@ -158,13 +204,12 @@ export default function DashboardPage() {
   const handleOpenChat = (msg: ChatMessage) => {
     setSelectedChatUser(msg)
     setIsChatOpen(true)
-    // Mark message as read
     setMessages((prev) =>
       prev.map((m) => (m.id === msg.id ? { ...m, unread: false } : m))
     )
   }
 
-  // Filter tasks and projects based on search query
+  // Filter tasks and projects based on search query for Dashboard
   const query = searchQuery.trim().toLowerCase()
   const displayTasks = query
     ? tasks.filter(
@@ -185,10 +230,15 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-200 p-3 sm:p-5 md:p-6 lg:p-7">
       <div className="mx-auto flex max-w-[1560px] gap-5 items-start">
-        {/* 1. Sidebar Component */}
+        {/* 1. Sidebar Navigation */}
         <Sidebar
           activeNav={activeNav}
-          onSelectNav={(key) => setActiveNav(key)}
+          onSelectNav={(key) => {
+            setActiveNav(key)
+            if (key === "projects") {
+              setManagingProjectId(null)
+            }
+          }}
           isMobileOpen={isMobileMenuOpen}
           onCloseMobile={() => setIsMobileMenuOpen(false)}
         />
@@ -205,8 +255,8 @@ export default function DashboardPage() {
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
           />
 
-          {/* Active Search Notification Banner if searching */}
-          {query && (
+          {/* Active Search Notification Banner if searching on dashboard */}
+          {query && activeNav === "dashboard" && (
             <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-3 border border-border shadow-xs text-xs text-muted-foreground">
               <span>
                 Filtering results for: <strong>&quot;{searchQuery}&quot;</strong> (
@@ -221,59 +271,215 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Main Bento Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-start">
-            {/* COLUMN 1: Active Projects (Google & Slack) — lg:col-span-4 */}
-            <div className="space-y-5 lg:col-span-4">
-              {displayProjects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
+          {/* Views Switching */}
+          <AnimatePresence mode="wait">
+            {activeNav === "projects" ? (
+              <motion.div
+                key="projects-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ProjectsView
+                  projects={projects}
+                  tasks={tasks}
                   onToggleStar={handleToggleStar}
                   onUpdateStatus={handleUpdateStatus}
+                  onAddProject={handleAddProject}
+                  onToggleTask={handleToggleTask}
+                  onAddTask={handleAddTask}
+                  onUpdateProject={handleUpdateProject}
+                  onDeleteTask={handleDeleteTask}
+                  onUpdateTaskAssignee={handleUpdateTaskAssignee}
+                  managingProjectId={managingProjectId}
+                  onSetManagingProjectId={setManagingProjectId}
                 />
-              ))}
-
-              {displayProjects.length === 0 && (
-                <div className="rounded-[28px] bg-card p-8 text-center text-xs text-muted-foreground border border-border">
-                  No projects matching your search.
+              </motion.div>
+            ) : activeNav === "my-tasks" ? (
+              <motion.div
+                key="tasks-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-5"
+              >
+                <div className="lg:col-span-8">
+                  <MyTasksCard
+                    tasks={tasks}
+                    onToggleTask={handleToggleTask}
+                    onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
+                  />
                 </div>
-              )}
-            </div>
+                <div className="lg:col-span-4 space-y-5">
+                  <TimeTrackerCard
+                    timers={timers}
+                    onToggleTimer={handleToggleTimer}
+                    onResetTimer={handleResetTimer}
+                  />
+                  <CalendarWidget />
+                </div>
+              </motion.div>
+            ) : activeNav === "calendar" ? (
+              <motion.div
+                key="calendar-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-5"
+              >
+                <div className="lg:col-span-8">
+                  <CalendarWidget />
+                </div>
+                <div className="lg:col-span-4">
+                  <MyTasksCard
+                    tasks={tasks}
+                    onToggleTask={handleToggleTask}
+                    onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
+                  />
+                </div>
+              </motion.div>
+            ) : activeNav === "time-manage" ? (
+              <motion.div
+                key="time-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-5"
+              >
+                <div className="lg:col-span-8">
+                  <TimeTrackerCard
+                    timers={timers}
+                    onToggleTimer={handleToggleTimer}
+                    onResetTimer={handleResetTimer}
+                  />
+                </div>
+                <div className="lg:col-span-4">
+                  <MessageWidget
+                    messages={messages}
+                    onSelectMessage={handleOpenChat}
+                  />
+                </div>
+              </motion.div>
+            ) : activeNav === "settings" ? (
+              <motion.div
+                key="settings-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-[28px] bg-card p-8 border border-border space-y-6 max-w-3xl"
+              >
+                <div>
+                  <h2 className="text-xl font-bold text-card-foreground">Workspace Settings</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Manage workspace themes, team preferences, and notification rules.
+                  </p>
+                </div>
 
-            {/* COLUMN 2: My Tasks & Time Manage (Chronometer) — lg:col-span-4 */}
-            <div className="space-y-5 lg:col-span-4">
-              {/* My Tasks Card */}
-              <MyTasksCard
-                tasks={displayTasks}
-                onToggleTask={handleToggleTask}
-                onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
-              />
+                <div className="divide-y divide-border/60">
+                  <div className="py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-card-foreground">Interface Appearance</p>
+                      <p className="text-xs text-muted-foreground">Toggle between Light mode and Deep Slate Dark mode.</p>
+                    </div>
+                    <Button onClick={toggleTheme} variant="outline" size="sm" className="gap-2 cursor-pointer">
+                      <Sun className="hidden dark:block w-4 h-4 text-amber-400" />
+                      <Moon className="block dark:hidden w-4 h-4 text-blue-500" />
+                      <span className="capitalize">
+                        <span className="hidden dark:inline">Switch to Light</span>
+                        <span className="inline dark:hidden">Switch to Dark</span>
+                      </span>
+                    </Button>
+                  </div>
 
-              {/* Time Tracker Stopwatch Card */}
-              <TimeTrackerCard
-                timers={timers}
-                onToggleTimer={handleToggleTimer}
-                onResetTimer={handleResetTimer}
-              />
-            </div>
+                  <div className="py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-card-foreground">Desktop Notifications</p>
+                      <p className="text-xs text-muted-foreground">Receive real-time alerts for project deadlines and team mentions.</p>
+                    </div>
+                    <span className="text-xs font-semibold text-primary bg-primary-subtle px-2.5 py-1 rounded-lg">
+                      Active
+                    </span>
+                  </div>
 
-            {/* COLUMN 3: Calendar & Messages — lg:col-span-4 */}
-            <div className="space-y-5 md:col-span-2 lg:col-span-4">
-              {/* Calendar Widget */}
-              <CalendarWidget />
+                  <div className="py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-card-foreground">Kard Cloud Sync</p>
+                      <p className="text-xs text-muted-foreground">Instant multi-device state synchronization.</p>
+                    </div>
+                    <span className="text-xs font-semibold text-success-foreground bg-success-subtle px-2.5 py-1 rounded-lg">
+                      Connected
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              /* DEFAULT: Bento Grid Dashboard */
+              <motion.div
+                key="dashboard-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-start"
+              >
+                {/* COLUMN 1: Active Projects — lg:col-span-4 */}
+                <div className="space-y-5 lg:col-span-4">
+                  {displayProjects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onToggleStar={handleToggleStar}
+                      onUpdateStatus={handleUpdateStatus}
+                      onClick={() => {
+                        setManagingProjectId(project.id)
+                        setActiveNav("projects")
+                      }}
+                    />
+                  ))}
 
-              {/* Message Widget */}
-              <MessageWidget
-                messages={messages}
-                onSelectMessage={handleOpenChat}
-              />
-            </div>
-          </div>
+                  {displayProjects.length === 0 && (
+                    <div className="rounded-[28px] bg-card p-8 text-center text-xs text-muted-foreground border border-border">
+                      No projects matching your search.
+                    </div>
+                  )}
+                </div>
+
+                {/* COLUMN 2: My Tasks & Time Manage (Chronometer) — lg:col-span-4 */}
+                <div className="space-y-5 lg:col-span-4">
+                  <MyTasksCard
+                    tasks={displayTasks}
+                    onToggleTask={handleToggleTask}
+                    onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
+                  />
+
+                  <TimeTrackerCard
+                    timers={timers}
+                    onToggleTimer={handleToggleTimer}
+                    onResetTimer={handleResetTimer}
+                  />
+                </div>
+
+                {/* COLUMN 3: Calendar & Messages — lg:col-span-4 */}
+                <div className="space-y-5 md:col-span-2 lg:col-span-4">
+                  <CalendarWidget />
+
+                  <MessageWidget
+                    messages={messages}
+                    onSelectMessage={handleOpenChat}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
 
-      {/* Modals & Dialogs */}
+      {/* Global Modals */}
       <NewTaskModal
         open={isNewTaskOpen}
         onOpenChange={setIsNewTaskOpen}
@@ -289,7 +495,12 @@ export default function DashboardPage() {
       <CommandPalette
         open={isCommandPaletteOpen}
         onOpenChange={setIsCommandPaletteOpen}
-        onSelectAction={(key) => setActiveNav(key)}
+        onSelectAction={(key) => {
+          setActiveNav(key)
+          if (key === "projects") {
+            setManagingProjectId(null)
+          }
+        }}
       />
     </div>
   )

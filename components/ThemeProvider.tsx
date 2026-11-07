@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useSyncExternalStore } from "react"
 
 export type Theme = "light" | "dark" | "system"
 
@@ -13,72 +13,78 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
+const STORAGE_KEY = "kard-theme"
+
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback)
+  window.addEventListener("kard-theme-change", callback)
+  return () => {
+    window.removeEventListener("storage", callback)
+    window.removeEventListener("kard-theme-change", callback)
+  }
+}
+
+function getSnapshot(): Theme {
+  try {
+    return (localStorage.getItem(STORAGE_KEY) as Theme) || "light"
+  } catch {
+    return "light"
+  }
+}
+
+function getServerSnapshot(): Theme {
+  return "light"
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "light",
-  storageKey = "kard-theme",
 }: {
   children: React.ReactNode
   defaultTheme?: Theme
   storageKey?: string
 }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return defaultTheme
-    try {
-      const stored = localStorage.getItem(storageKey) as Theme | null
-      return stored || defaultTheme
-    } catch {
-      return defaultTheme
-    }
-  })
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light")
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
-  // Apply theme class to documentElement
+  // Determine resolvedTheme
+  const isDark = theme === "dark"
+  const resolvedTheme: "light" | "dark" = isDark ? "dark" : "light"
+
+  // Synchronize the DOM element class when theme changes
   useEffect(() => {
     const root = document.documentElement
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
 
-    const applyTheme = () => {
-      let activeTheme: "light" | "dark" = "light"
+    const applyClass = () => {
+      const activeDark =
+        theme === "dark" || (theme === "system" && mediaQuery.matches)
 
-      if (theme === "system") {
-        activeTheme = mediaQuery.matches ? "dark" : "light"
-      } else {
-        activeTheme = theme
-      }
-
-      setResolvedTheme(activeTheme)
-
-      if (activeTheme === "dark") {
+      if (activeDark) {
         root.classList.add("dark")
       } else {
         root.classList.remove("dark")
       }
     }
 
-    applyTheme()
+    applyClass()
 
-    const listener = () => {
-      if (theme === "system") {
-        applyTheme()
-      }
+    if (theme === "system") {
+      mediaQuery.addEventListener("change", applyClass)
+      return () => mediaQuery.removeEventListener("change", applyClass)
     }
-
-    mediaQuery.addEventListener("change", listener)
-    return () => mediaQuery.removeEventListener("change", listener)
   }, [theme])
 
   const setTheme = (newTheme: Theme) => {
     try {
-      localStorage.setItem(storageKey, newTheme)
+      localStorage.setItem(STORAGE_KEY, newTheme)
+      window.dispatchEvent(new Event("kard-theme-change"))
     } catch {
       // ignore
     }
-    setThemeState(newTheme)
   }
 
   const toggleTheme = () => {
-    const nextTheme = resolvedTheme === "dark" ? "light" : "dark"
+    const nextTheme = theme === "dark" ? "light" : "dark"
     setTheme(nextTheme)
   }
 

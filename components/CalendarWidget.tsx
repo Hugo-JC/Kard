@@ -14,16 +14,14 @@ interface CalendarEvent {
 
 export function CalendarWidget() {
   // Initial date matching the screenshot Jan 2021, but fully navigable!
-  const [currentDate, setCurrentDate] = useState(new Date(2021, 0, 5))
+  const [currentMonth, setCurrentMonth] = useState(0) // Jan (0-indexed)
+  const [currentYear, setCurrentYear] = useState(2021)
   const [selectedDay, setSelectedDay] = useState<number>(5)
 
   const monthNames = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ]
-
-  const currentMonth = currentDate.getMonth()
-  const currentYear = currentDate.getFullYear()
 
   // Sample events with indicator dots matching the screenshot
   const events: CalendarEvent[] = [
@@ -35,17 +33,27 @@ export function CalendarWidget() {
   ]
 
   const prevMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth - 1, 1))
+    if (currentMonth === 0) {
+      setCurrentMonth(11)
+      setCurrentYear((y) => y - 1)
+    } else {
+      setCurrentMonth((m) => m - 1)
+    }
   }
 
   const nextMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
+    if (currentMonth === 11) {
+      setCurrentMonth(0)
+      setCurrentYear((y) => y + 1)
+    } else {
+      setCurrentMonth((m) => m + 1)
+    }
   }
 
-  // Days in month calculation
-  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay()
-  const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
-  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate()
+  // Pure deterministic calendar calculations (UTC based, timezone-safe)
+  const firstDayOfWeek = new Date(Date.UTC(currentYear, currentMonth, 1)).getUTCDay()
+  const daysInCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).getUTCDate()
+  const daysInPrevMonth = new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate()
 
   // Generate calendar days
   const calendarCells = []

@@ -28,7 +28,7 @@ export function Header({
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
-  const { resolvedTheme, toggleTheme } = useTheme()
+  const { toggleTheme } = useTheme()
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -76,18 +76,15 @@ export function Header({
 
       {/* Right: Theme Toggle, Notification bell & User avatar */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Dark/Light Theme Toggle */}
+        {/* Dark/Light Theme Toggle (CSS-controlled to guarantee zero hydration mismatch) */}
         <button
           onClick={toggleTheme}
           className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer border border-transparent hover:border-border/60"
-          aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label="Toggle theme appearance"
+          title="Toggle theme appearance"
         >
-          {resolvedTheme === "dark" ? (
-            <Sun className="w-5 h-5 text-amber-400 hover:rotate-45 transition-transform" />
-          ) : (
-            <Moon className="w-5 h-5 text-slate-600 hover:-rotate-12 transition-transform" />
-          )}
+          <Sun className="hidden dark:block w-5 h-5 text-amber-400 hover:rotate-45 transition-transform" />
+          <Moon className="block dark:hidden w-5 h-5 text-slate-600 hover:-rotate-12 transition-transform" />
         </button>
 
         {/* Notification Bell */}
