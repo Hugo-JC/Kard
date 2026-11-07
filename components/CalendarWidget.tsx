@@ -90,7 +90,7 @@ export function CalendarWidget() {
   )
 
   return (
-    <div className="rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 text-card-foreground flex flex-col justify-between">
+    <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6">
       <div>
         {/* Month & Navigation Header */}
         <div className="flex items-center justify-between mb-5">
@@ -101,14 +101,14 @@ export function CalendarWidget() {
           <div className="flex items-center gap-2">
             <button
               onClick={prevMonth}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
+              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8"
               aria-label="Previous month"
             >
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             </button>
             <button
               onClick={nextMonth}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
+              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8"
               aria-label="Next month"
             >
               <ChevronRight className="w-4 h-4 stroke-[2.5]" />
@@ -149,7 +149,7 @@ export function CalendarWidget() {
                     if (cell.isCurrentMonth) setSelectedDay(cell.day)
                   }}
                   className={cn(
-                    "relative flex h-8 w-8 items-center justify-center rounded-xl text-xs font-semibold transition-all cursor-pointer",
+                    "relative flex h-10 w-full max-w-10 items-center justify-center rounded-xl text-[13px] font-semibold transition-all cursor-pointer", 
                     isSelected
                       ? "bg-primary text-primary-foreground shadow-xs font-bold scale-105"
                       : cell.isCurrentMonth

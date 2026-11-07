@@ -47,25 +47,26 @@ export function Header({
   }, [])
 
   return (
-    <header className="relative z-30 flex items-center justify-between gap-4 rounded-[28px] bg-card px-5 py-3.5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] border border-border/80 text-card-foreground">
+    <header className="relative z-30 flex flex-wrap items-center justify-between gap-x-2 gap-y-3 rounded-3xl border border-border/80 bg-card p-3 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] sm:flex-nowrap sm:gap-4 sm:px-5 sm:py-3.5">
       {/* Left: Mobile hamburger & Search bar */}
-      <div className="flex flex-1 items-center gap-3">
+      <div className="order-2 flex w-full min-w-0 items-center gap-2 sm:order-1 sm:flex-1 sm:gap-3">
         <button
           onClick={onOpenMobileMenu}
-          className="lg:hidden p-2 rounded-xl text-muted-foreground hover:bg-muted focus:outline-none"
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted lg:hidden"
           aria-label="Open navigation menu"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="relative flex w-full max-w-xl items-center">
-          <Search className="absolute left-4 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <div className="relative flex min-w-0 flex-1 items-center sm:max-w-xl">
+          <Search className="pointer-events-none absolute left-4 size-4 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
+            aria-label="Search projects, tasks, or team members"
             placeholder="Search projects, tasks, or team members..."
-            className="h-10 w-full rounded-2xl bg-slate-100/70 dark:bg-slate-900/60 pl-11 pr-20 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all border border-transparent dark:border-border/60"
+            className="h-11 w-full rounded-2xl border border-transparent bg-slate-100/70 pl-11 pr-20 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border/60 dark:bg-slate-900/60"
           />
           <div className="absolute right-3 hidden sm:flex items-center gap-1 rounded-md bg-card px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-2xs border border-border">
             <span>⌘</span>
@@ -75,11 +76,11 @@ export function Header({
       </div>
 
       {/* Right: Theme Toggle, Notification bell & User avatar */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="order-1 ml-auto flex shrink-0 items-center gap-1 sm:order-2 sm:ml-0 sm:gap-3">
         {/* Dark/Light Theme Toggle (CSS-controlled to guarantee zero hydration mismatch) */}
         <button
           onClick={toggleTheme}
-          className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer border border-transparent hover:border-border/60"
+          className="relative flex size-11 items-center justify-center rounded-2xl border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted hover:text-foreground"
           aria-label="Toggle theme appearance"
           title="Toggle theme appearance"
         >
@@ -91,7 +92,7 @@ export function Header({
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setIsNotifOpen(!isNotifOpen)}
-            className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+            className="relative flex size-11 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="View notifications"
           >
             <Bell className="w-5 h-5" />
@@ -104,7 +105,7 @@ export function Header({
 
           {/* Notification Dropdown */}
           {isNotifOpen && (
-            <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-card p-4 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground">
+            <div className="absolute right-0 mt-3 w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-xl animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-bold text-card-foreground">Notifications</h4>
@@ -131,11 +132,12 @@ export function Header({
                   </p>
                 ) : (
                   notifications.map((item) => (
-                    <div
+                    <button
+                      type="button"
                       key={item.id}
                       onClick={() => onMarkNotificationRead(item.id)}
                       className={cn(
-                        "flex items-start gap-3 rounded-xl p-2.5 transition-colors cursor-pointer",
+                        "flex min-h-11 w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors",
                         item.read ? "bg-transparent hover:bg-muted/60" : "bg-primary-subtle/50 hover:bg-primary-subtle"
                       )}
                     >
@@ -156,7 +158,7 @@ export function Header({
                       {!item.read && (
                         <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
                       )}
-                    </div>
+                    </button>
                   ))
                 )}
               </div>

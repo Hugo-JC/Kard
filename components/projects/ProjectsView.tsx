@@ -141,14 +141,14 @@ export function ProjectsView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Projects
             </h1>
             <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
               {projects.length} Total
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Click on any project to open its full management view, contributors, deliverables, and team chat.
           </p>
         </div>
@@ -156,7 +156,7 @@ export function ProjectsView({
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setIsNewProjectModalOpen(true)}
-            className="gap-2 bg-primary hover:bg-blue-700 text-primary-foreground font-semibold shadow-xs cursor-pointer"
+            className="min-h-11 gap-2 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-blue-700 sm:min-h-9"
           >
             <Plus className="w-4 h-4" />
             <span>New Project</span>
@@ -171,7 +171,7 @@ export function ProjectsView({
           <button
             onClick={() => setStatusFilter("ALL")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer",
+              "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
               statusFilter === "ALL"
                 ? "bg-primary text-primary-foreground shadow-xs font-bold"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -183,7 +183,7 @@ export function ProjectsView({
           <button
             onClick={() => setStatusFilter("IN PROGRESS")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer",
+              "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
               statusFilter === "IN PROGRESS"
                 ? "bg-primary text-primary-foreground shadow-xs font-bold"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -195,7 +195,7 @@ export function ProjectsView({
           <button
             onClick={() => setStatusFilter("COMPLETED")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer",
+              "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
               statusFilter === "COMPLETED"
                 ? "bg-primary text-primary-foreground shadow-xs font-bold"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -207,7 +207,7 @@ export function ProjectsView({
           <button
             onClick={() => setStatusFilter("ON HOLD")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer",
+              "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
               statusFilter === "ON HOLD"
                 ? "bg-primary text-primary-foreground shadow-xs font-bold"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -220,14 +220,15 @@ export function ProjectsView({
         {/* Search, Priority Filter, and View Mode Switcher */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search Box */}
-          <div className="relative flex-1 sm:w-60 min-w-[180px]">
+          <div className="relative w-full min-w-0 flex-1 sm:w-60">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search projects or tags..."
-              className="w-full h-9 pl-8 pr-7 rounded-xl border border-border bg-muted/40 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              aria-label="Search projects or tags"
+              className="h-11 w-full rounded-xl border border-border bg-muted/40 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
             {searchQuery && (
               <button
@@ -244,7 +245,8 @@ export function ProjectsView({
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
-              className="h-9 rounded-xl border border-border bg-muted/40 px-2.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+              aria-label="Filter by priority"
+              className="h-11 max-w-full rounded-xl border border-border bg-muted/40 px-2.5 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="ALL" className="bg-card">All Priorities</option>
               <option value="HIGH" className="bg-card">High Priority</option>
@@ -258,7 +260,7 @@ export function ProjectsView({
             <button
               onClick={() => setViewMode("grid")}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                "flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all sm:min-h-9",
                 viewMode === "grid"
                   ? "bg-card text-foreground shadow-xs font-bold"
                   : "text-muted-foreground hover:text-foreground"
@@ -272,7 +274,7 @@ export function ProjectsView({
             <button
               onClick={() => setViewMode("table")}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                "flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all sm:min-h-9",
                 viewMode === "table"
                   ? "bg-card text-foreground shadow-xs font-bold"
                   : "text-muted-foreground hover:text-foreground"

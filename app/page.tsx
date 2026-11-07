@@ -228,8 +228,8 @@ export default function DashboardPage() {
     : projects
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-200 p-3 sm:p-5 md:p-6 lg:p-7">
-      <div className="mx-auto flex max-w-[1560px] gap-5 items-start">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200 p-3 sm:p-4 lg:p-6">
+      <div className="mx-auto flex max-w-[1560px] items-start gap-4 lg:gap-5">
         {/* 1. Sidebar Navigation */}
         <Sidebar
           activeNav={activeNav}

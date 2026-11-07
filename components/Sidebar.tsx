@@ -67,7 +67,9 @@ export function Sidebar({
           {onCloseMobile && (
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-2 rounded-xl text-muted-foreground hover:bg-muted"
+              type="button"
+              aria-label="Close navigation menu"
+              className="flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted lg:hidden"
             >
               <X className="w-5 h-5" />
             </button>
@@ -75,7 +77,7 @@ export function Sidebar({
         </div>
 
         {/* Navigation list */}
-        <nav className="mt-10 flex w-full flex-col space-y-2">
+        <nav aria-label="Main navigation" className="mt-8 flex w-full flex-col gap-2 sm:mt-10">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = activeNav === item.key
@@ -88,7 +90,7 @@ export function Sidebar({
                   if (onCloseMobile) onCloseMobile()
                 }}
                 className={cn(
-                  "group relative flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 text-xs font-bold tracking-wider transition-all duration-200 cursor-pointer",
+                  "group relative flex min-h-11 w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer sm:gap-3.5 sm:px-4 sm:tracking-wider",
                   isActive
                     ? "bg-primary-subtle text-primary shadow-xs font-extrabold"
                     : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -136,11 +138,13 @@ export function Sidebar({
       {/* Mobile Drawer Overlay */}
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div
+          <button
+            type="button"
+            aria-label="Close navigation menu"
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
             onClick={onCloseMobile}
           />
-          <div className="relative z-10 w-72 max-w-[80vw] h-full bg-card shadow-2xl">
+          <div role="dialog" aria-modal="true" aria-label="Main navigation" className="relative z-10 h-full w-72 max-w-[80vw] bg-card shadow-2xl">
             {sidebarContent}
           </div>
         </div>
