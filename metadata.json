@@ -1,0 +1,6 @@
+{
+  "name": "Kard - Task & Productivity SaaS",
+  "description": "Modern, minimalist task management dashboard featuring interactive bento grid, time tracking, calendar, and team workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
