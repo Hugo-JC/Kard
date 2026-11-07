@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Image from "next/image"
 import {
   LayoutDashboard,
   FolderKanban,
@@ -13,7 +14,6 @@ import {
   HelpCircle,
   Sparkles
 } from "lucide-react"
-import { KardLogoMark } from "./Logos"
 import { cn } from "@/lib/utils"
 
 export type NavItemKey =
@@ -53,14 +53,24 @@ export function Sidebar({
       {/* Top Brand Logo */}
       <div className="flex flex-col items-center">
         <div className="flex items-center justify-between w-full px-2 lg:justify-center">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 dark:bg-blue-600 shadow-md shadow-slate-900/10 dark:shadow-blue-500/20 text-white">
-              <KardLogoMark className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex flex-col lg:hidden">
-              <span className="font-extrabold text-xl tracking-tight text-foreground">Kard</span>
-              <span className="text-[11px] text-muted-foreground font-medium">Workspace v2.4</span>
-            </div>
+          <div className="flex flex-col items-start gap-1.5 lg:items-center">
+            <Image
+              src="/kard_logo_light.svg"
+              alt="Kard"
+              width={148}
+              height={56}
+              priority
+              className="h-11 w-auto dark:hidden"
+            />
+            <Image
+              src="/kard_logo_dark.svg"
+              alt="Kard"
+              width={148}
+              height={56}
+              priority
+              className="hidden h-11 w-auto dark:block"
+            />
+            <span className="text-[11px] font-medium text-muted-foreground lg:hidden">Workspace v2.4</span>
           </div>
 
           {/* Mobile close button */}

@@ -11,6 +11,20 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'Kard — Task & Productivity SaaS Dashboard',
+  icons: {
+    icon: [
+      {
+        url: '/logo_light.svg',
+        type: 'image/svg+xml',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/logo_dark.svg',
+        type: 'image/svg+xml',
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
+  },
   description: 'Modern, minimalist task management dashboard featuring interactive bento grid, time tracking, calendar, and team workflows.',
   openGraph: {
     title: 'Kard — Task & Productivity SaaS Dashboard',
