@@ -220,10 +220,10 @@ export function TaskComposer({ project, assignees, onAddTask }: TaskComposerProp
                     type="button"
                     variant="outline"
                     aria-label={`Selecionar prazo. Atual: ${deadlineLabel}`}
-                    className="h-12 min-h-12 w-full justify-start gap-2.5 rounded-xl border-border bg-background px-3 text-sm font-medium"
+                    className="h-12 min-h-12 w-full justify-start gap-2.5 rounded-xl border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted/60"
                   >
-                    <CalendarDays data-icon="inline-start" aria-hidden="true" />
-                    <span className="truncate">{deadlineLabel}</span>
+                    <CalendarDays data-icon="inline-start" aria-hidden="true" className="size-4 shrink-0 text-primary" />
+                    <span className="truncate text-foreground">{deadlineLabel}</span>
                   </Button>
                 }
               />
