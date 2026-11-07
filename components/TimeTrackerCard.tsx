@@ -32,7 +32,7 @@ export function TimeTrackerCard({
   const slackTimers = timers.filter((t) => t.project === "Slack")
 
   return (
-    <div className="rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 text-card-foreground flex flex-col justify-between">
+    <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6">
       <div>
         {/* Google Section */}
         <div className="mb-6">
@@ -91,7 +91,7 @@ export function TimeTrackerCard({
                   <button
                     onClick={() => onToggleTimer(timer.id)}
                     className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-full transition-transform active:scale-95 cursor-pointer",
+                      "flex size-11 items-center justify-center rounded-full transition-transform active:scale-95 sm:size-8",
                       timer.isRunning
                         ? "bg-primary text-primary-foreground shadow-2xs hover:bg-blue-700"
                         : "border border-border text-muted-foreground hover:bg-muted hover:border-slate-400"
@@ -157,7 +157,7 @@ export function TimeTrackerCard({
                   <button
                     onClick={() => onToggleTimer(timer.id)}
                     className={cn(
-                      "flex h-6 w-6 items-center justify-center rounded-full transition-transform active:scale-95 cursor-pointer",
+                      "flex size-11 items-center justify-center rounded-full transition-transform active:scale-95 sm:size-8",
                       timer.isRunning
                         ? "bg-primary text-primary-foreground shadow-2xs"
                         : "text-muted-foreground hover:text-card-foreground hover:bg-muted"

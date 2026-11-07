@@ -33,10 +33,10 @@ export function ProjectTableView({
 
   return (
     <div className="rounded-[28px] bg-card border border-border/80 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] overflow-hidden text-card-foreground">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+      <div role="region" aria-label="Scrollable projects table" tabIndex={0} className="overflow-x-auto focus-visible:outline-offset-[-2px]">
+        <table className="w-full min-w-[860px] text-left text-sm lg:min-w-full">
           {/* Table Header */}
-          <thead className="bg-muted/40 border-b border-border/70 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+          <thead className="border-b border-border/70 bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="py-4 pl-6 pr-3 font-bold w-10">★</th>
               <th className="py-4 px-4 font-bold">Project & Client</th>
@@ -71,7 +71,8 @@ export function ProjectTableView({
                     }}
                   >
                     <button
-                      className="p-1 rounded-md text-muted-foreground/50 hover:text-amber-400 transition-colors cursor-pointer"
+                      type="button"
+                      className="flex size-11 items-center justify-center rounded-md text-muted-foreground/50 transition-colors hover:text-amber-400 sm:size-9"
                       aria-label="Toggle star"
                     >
                       <Star
@@ -121,7 +122,7 @@ export function ProjectTableView({
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <span
                       className={cn(
-                        "inline-flex items-center rounded-md px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase",
+                        "inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase",
                         project.status === "COMPLETED"
                           ? "bg-success-subtle text-success-foreground dark:bg-emerald-950/40 dark:text-emerald-300"
                           : project.status === "IN PROGRESS"
@@ -139,7 +140,7 @@ export function ProjectTableView({
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <span
                       className={cn(
-                        "inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase",
+                        "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold tracking-wider uppercase",
                         project.priority === "HIGH PRIORITY"
                           ? "border-red-400/40 text-red-500 bg-red-50/20 dark:bg-red-950/30 dark:text-red-400"
                           : project.priority === "MEDIUM PRIORITY"
@@ -187,7 +188,7 @@ export function ProjectTableView({
                         />
                       ))}
                       {project.extraMembersCount > 0 && (
-                        <div className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground ring-2 ring-card border border-border">
+                        <div className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-muted-foreground ring-2 ring-card border border-border">
                           +{project.extraMembersCount}
                         </div>
                       )}
@@ -200,7 +201,7 @@ export function ProjectTableView({
                       {project.sprintStage || "Sprint 1"}
                     </span>
                     {project.attachmentsCount && (
-                      <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/70">
+                      <span className="ml-2 inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/70">
                         <Paperclip className="w-2.5 h-2.5" />
                         {project.attachmentsCount}
                       </span>
@@ -209,7 +210,7 @@ export function ProjectTableView({
 
                   {/* Due Date */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
-                    <span className="rounded-lg bg-danger-subtle/80 px-2 py-0.5 text-[10px] font-bold text-danger-foreground dark:bg-red-950/30 dark:text-red-400">
+                    <span className="rounded-lg bg-danger-subtle/80 px-2 py-0.5 text-[11px] font-bold text-danger-foreground dark:bg-red-950/30 dark:text-red-400">
                       {project.dueDate}
                     </span>
                   </td>
@@ -226,7 +227,7 @@ export function ProjectTableView({
                   >
                     <button
                       onClick={() => onSelectProject(project)}
-                      className="inline-flex items-center gap-1 rounded-xl bg-muted/80 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-primary-subtle hover:text-primary transition-colors cursor-pointer"
+                      className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-muted/80 px-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary-subtle hover:text-primary sm:min-h-9"
                     >
                       <span>View</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />

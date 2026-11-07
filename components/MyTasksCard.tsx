@@ -32,7 +32,7 @@ export function MyTasksCard({
   const formattedCount = String(pendingCount).padStart(2, "0")
 
   return (
-    <div className="rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 text-card-foreground flex flex-col justify-between">
+    <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6">
       {/* Header */}
       <div>
         <div className="flex items-center justify-between pb-3">
@@ -47,7 +47,8 @@ export function MyTasksCard({
 
           <button
             onClick={onOpenNewTaskModal}
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:bg-primary-subtle hover:text-primary transition-colors cursor-pointer border border-border/60"
+            type="button"
+            className="flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted text-muted-foreground transition-colors hover:bg-primary-subtle hover:text-primary sm:size-9"
             aria-label="Add new task"
             title="Add task"
           >
@@ -75,17 +76,18 @@ export function MyTasksCard({
                     </span>
 
                     <div className="flex items-center gap-2 min-w-0">
-                      <span
+                      <button
+                        type="button"
                         onClick={() => onToggleTask(task.id)}
                         className={cn(
-                          "text-sm font-medium transition-all duration-200 truncate cursor-pointer select-none",
+                          "min-w-0 truncate text-left text-sm font-medium transition-all duration-200", 
                           task.completed
                             ? "text-muted-foreground line-through decoration-slate-400/50 decoration-1.5"
                             : "text-card-foreground hover:text-primary"
                         )}
                       >
                         {task.title}
-                      </span>
+                      </button>
                     </div>
                   </div>
 
@@ -109,8 +111,9 @@ export function MyTasksCard({
 
                     {/* Interactive Checkbox Button matching screenshot */}
                     <button
+                      type="button"
                       onClick={() => onToggleTask(task.id)}
-                      className="relative flex h-6 w-6 items-center justify-center rounded-full transition-transform active:scale-90 cursor-pointer"
+                      className="relative flex size-11 items-center justify-center rounded-full transition-transform active:scale-90 sm:size-8"
                       aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
                     >
                       {task.completed ? (
@@ -130,33 +133,36 @@ export function MyTasksCard({
       </div>
 
       {/* Subtle filter buttons footer */}
-      <div className="mt-4 pt-3 border-t border-border/80 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="mt-4 flex flex-col items-start justify-between gap-2 border-t border-border/80 pt-3 text-xs text-muted-foreground sm:flex-row sm:items-center">
         <span className="font-medium">
           {pendingCount} remaining · {tasks.length - pendingCount} done
         </span>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setFilter("all")}
             className={cn(
-              "px-2 py-0.5 rounded-md font-medium transition-colors cursor-pointer",
+              "min-h-11 rounded-md px-3 text-xs font-medium transition-colors sm:min-h-9",
               filter === "all" ? "bg-muted text-card-foreground font-bold" : "hover:text-card-foreground"
             )}
           >
             All
           </button>
           <button
+            type="button"
             onClick={() => setFilter("pending")}
             className={cn(
-              "px-2 py-0.5 rounded-md font-medium transition-colors cursor-pointer",
+              "min-h-11 rounded-md px-3 text-xs font-medium transition-colors sm:min-h-9",
               filter === "pending" ? "bg-muted text-card-foreground font-bold" : "hover:text-card-foreground"
             )}
           >
             Active
           </button>
           <button
+            type="button"
             onClick={() => setFilter("completed")}
             className={cn(
-              "px-2 py-0.5 rounded-md font-medium transition-colors cursor-pointer",
+              "min-h-11 rounded-md px-3 text-xs font-medium transition-colors sm:min-h-9",
               filter === "completed" ? "bg-muted text-card-foreground font-bold" : "hover:text-card-foreground"
             )}
           >

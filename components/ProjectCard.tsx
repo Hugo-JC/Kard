@@ -45,7 +45,7 @@ export function ProjectCard({
     <div
       onClick={onClick}
       className={cn(
-        "relative rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 transition-all duration-200 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] text-card-foreground",
+        "relative rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] transition-all duration-200 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] sm:p-6",
         onClick && "cursor-pointer"
       )}
     >
@@ -81,8 +81,12 @@ export function ProjectCard({
         {/* Action icons: Star & Three dots */}
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => onToggleStar(project.id)}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/60 hover:bg-muted hover:text-amber-400 transition-colors cursor-pointer"
+            onClick={(event) => {
+              event.stopPropagation()
+              onToggleStar(project.id)
+            }}
+            type="button"
+            className="flex size-11 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:bg-muted hover:text-amber-400 sm:size-9"
             aria-label="Star project"
           >
             <Star
@@ -97,8 +101,12 @@ export function ProjectCard({
 
           <div className="relative">
             <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors cursor-pointer"
+              onClick={(event) => {
+                event.stopPropagation()
+                setShowMenu(!showMenu)
+              }}
+              type="button"
+              className="flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-card-foreground sm:size-9"
               aria-label="Project actions"
             >
               <MoreVertical className="w-5 h-5" />
@@ -200,7 +208,7 @@ export function ProjectCard({
       </div>
 
       {/* Footer: Member avatars & Due date */}
-      <div className="mt-6 flex items-center justify-between pt-1">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 pt-1">
         {/* Overlapping member avatars */}
         <div className="flex items-center -space-x-2 overflow-hidden py-1">
           {project.members.map((member, idx) => (
