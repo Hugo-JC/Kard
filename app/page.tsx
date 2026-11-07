@@ -183,7 +183,7 @@ export default function DashboardPage() {
     : projects
 
   return (
-    <div className="min-h-screen bg-[#EEF0F5] p-3 sm:p-5 md:p-6 lg:p-7">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200 p-3 sm:p-5 md:p-6 lg:p-7">
       <div className="mx-auto flex max-w-[1560px] gap-5 items-start">
         {/* 1. Sidebar Component */}
         <Sidebar
@@ -207,14 +207,14 @@ export default function DashboardPage() {
 
           {/* Active Search Notification Banner if searching */}
           {query && (
-            <div className="flex items-center justify-between rounded-2xl bg-white px-5 py-3 border border-slate-100 shadow-xs text-xs text-slate-600">
+            <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-3 border border-border shadow-xs text-xs text-muted-foreground">
               <span>
                 Filtering results for: <strong>&quot;{searchQuery}&quot;</strong> (
                 {displayTasks.length} tasks, {displayProjects.length} projects found)
               </span>
               <button
                 onClick={() => setSearchQuery("")}
-                className="font-bold text-blue-600 hover:underline cursor-pointer"
+                className="font-bold text-primary hover:underline cursor-pointer"
               >
                 Clear filter
               </button>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
               ))}
 
               {displayProjects.length === 0 && (
-                <div className="rounded-[28px] bg-white p-8 text-center text-xs text-slate-400 border border-slate-100">
+                <div className="rounded-[28px] bg-card p-8 text-center text-xs text-muted-foreground border border-border">
                   No projects matching your search.
                 </div>
               )}

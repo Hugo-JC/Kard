@@ -24,11 +24,15 @@ export const metadata: Metadata = {
   },
 };
 
+import { ThemeProvider } from '@/components/ThemeProvider';
+
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en" className={plusJakarta.variable}>
-      <body className="font-sans antialiased bg-[#F3F4F8] text-slate-800 selection:bg-blue-100 selection:text-blue-900 min-h-screen" suppressHydrationWarning>
-        {children}
+    <html lang="en" className={plusJakarta.variable} suppressHydrationWarning>
+      <body className="font-sans antialiased bg-background text-foreground selection:bg-blue-500/20 selection:text-blue-500 min-h-screen" suppressHydrationWarning>
+        <ThemeProvider defaultTheme="light">
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -47,7 +47,7 @@ export function NewTaskModal({ open, onOpenChange, onAddTask }: NewTaskModalProp
     >
       <form onSubmit={handleSubmit} className="space-y-4 mt-2">
         <div>
-          <label className="text-xs font-bold text-slate-700 block mb-1.5">
+          <label className="text-xs font-bold text-card-foreground block mb-1.5">
             Task Name
           </label>
           <Input
@@ -61,38 +61,38 @@ export function NewTaskModal({ open, onOpenChange, onAddTask }: NewTaskModalProp
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">
+            <label className="text-xs font-bold text-card-foreground block mb-1.5">
               Project
             </label>
             <select
               value={project}
               onChange={(e) => setProject(e.target.value)}
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              className="h-11 w-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/60 px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <option value="Google">Google</option>
-              <option value="Slack">Slack</option>
+              <option value="Google" className="bg-card text-card-foreground">Google</option>
+              <option value="Slack" className="bg-card text-card-foreground">Slack</option>
             </select>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">
+            <label className="text-xs font-bold text-card-foreground block mb-1.5">
               Priority
             </label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as TaskItem["priority"])}
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              className="h-11 w-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/60 px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <option value="High">High Priority</option>
-              <option value="Medium">Medium Priority</option>
-              <option value="Low">Low Priority</option>
+              <option value="High" className="bg-card text-card-foreground">High Priority</option>
+              <option value="Medium" className="bg-card text-card-foreground">Medium Priority</option>
+              <option value="Low" className="bg-card text-card-foreground">Low Priority</option>
             </select>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">
+            <label className="text-xs font-bold text-card-foreground block mb-1.5">
               Category Tag
             </label>
             <Input
@@ -103,7 +103,7 @@ export function NewTaskModal({ open, onOpenChange, onAddTask }: NewTaskModalProp
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">
+            <label className="text-xs font-bold text-card-foreground block mb-1.5">
               Due Date
             </label>
             <Input
@@ -114,7 +114,7 @@ export function NewTaskModal({ open, onOpenChange, onAddTask }: NewTaskModalProp
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border">
           <Button
             type="button"
             variant="ghost"
@@ -122,7 +122,7 @@ export function NewTaskModal({ open, onOpenChange, onAddTask }: NewTaskModalProp
           >
             Cancel
           </Button>
-          <Button type="submit" className="bg-[#0D6EFD] hover:bg-blue-700 text-white font-semibold">
+          <Button type="submit" className="bg-primary hover:bg-blue-700 text-primary-foreground font-semibold">
             Create Task
           </Button>
         </div>

@@ -48,11 +48,11 @@ export function SlackLogo({ className = "w-7 h-7" }: { className?: string }) {
 
 export function KardLogoMark({ className = "w-8 h-8" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 36 36" fill="none">
+    <svg className={className} viewBox="0 0 36 36" fill="currentColor">
       {/* Sleek architectural Kard glyph matching the screenshot */}
-      <rect x="4" y="4" width="10" height="28" rx="3" fill="#1E293B" />
-      <rect x="18" y="4" width="14" height="12" rx="3" fill="#1E293B" />
-      <rect x="18" y="20" width="14" height="12" rx="3" fill="#1E293B" />
+      <rect x="4" y="4" width="10" height="28" rx="3" />
+      <rect x="18" y="4" width="14" height="12" rx="3" />
+      <rect x="18" y="20" width="14" height="12" rx="3" />
     </svg>
   );
 }

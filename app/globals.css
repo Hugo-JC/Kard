@@ -1,1 +1,119 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-subtle: var(--card-subtle);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+}
+
+:root {
+  /* Canvas & Base Tokens */
+  --background: #EEF0F5;
+  --foreground: #0F172A;
+
+  /* Card Surfaces & Bento Grid */
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --card-subtle: #F8FAFC;
+
+  /* Muted & Fillers */
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+
+  /* Hairline Borders */
+  --border: #E2E8F0;
+  --border-subtle: #F1F5F9;
+
+  /* Brand / Active State */
+  --primary: #0D6EFD;
+  --primary-foreground: #FFFFFF;
+  --primary-subtle: #EBF3FF;
+
+  /* Secondary & Accents */
+  --secondary: #F1F5F9;
+  --secondary-foreground: #1E293B;
+
+  --accent: #F8FAFC;
+  --accent-foreground: #0F172A;
+
+  /* Semantic Feedback Tokens */
+  --success: #10B981;
+  --success-subtle: #E8FAF1;
+  --success-foreground: #059669;
+
+  --warning: #F59E0B;
+  --warning-subtle: #FFF7E6;
+  --warning-foreground: #D97706;
+
+  --danger: #EF4444;
+  --danger-subtle: #FFF0EB;
+  --danger-foreground: #FF5C38;
+}
+
+.dark {
+  /* Canvas & Base Tokens (Deep Slate) */
+  --background: #0B0F19;
+  --foreground: #F8FAFC;
+
+  /* Card Surfaces & Bento Grid */
+  --card: #131A2B;
+  --card-foreground: #F8FAFC;
+  --card-subtle: #19233A;
+
+  /* Muted & Fillers */
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+
+  /* Hairline Borders */
+  --border: #1E293B;
+  --border-subtle: #182236;
+
+  /* Brand / Active State */
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --primary-subtle: rgba(59, 130, 246, 0.18);
+
+  /* Secondary & Accents */
+  --secondary: #1E293B;
+  --secondary-foreground: #F1F5F9;
+
+  --accent: #19233A;
+  --accent-foreground: #F8FAFC;
+
+  /* Semantic Feedback Tokens */
+  --success: #10B981;
+  --success-subtle: rgba(16, 185, 129, 0.18);
+  --success-foreground: #34D399;
+
+  --warning: #F59E0B;
+  --warning-subtle: rgba(245, 158, 11, 0.18);
+  --warning-foreground: #FBBF24;
+
+  --danger: #EF4444;
+  --danger-subtle: rgba(239, 68, 68, 0.18);
+  --danger-foreground: #F87171;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

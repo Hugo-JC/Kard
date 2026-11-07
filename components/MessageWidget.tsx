@@ -12,14 +12,14 @@ interface MessageWidgetProps {
 
 export function MessageWidget({ messages, onSelectMessage }: MessageWidgetProps) {
   return (
-    <div className="rounded-[28px] bg-white p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] border border-slate-100/90 flex flex-col justify-between">
+    <div className="rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 text-card-foreground flex flex-col justify-between">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-slate-900 tracking-tight">
+          <h3 className="text-base font-bold text-card-foreground tracking-tight">
             Message
           </h3>
-          <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 cursor-pointer">
+          <span className="text-[11px] font-semibold text-primary hover:underline cursor-pointer">
             View all
           </span>
         </div>
@@ -30,7 +30,7 @@ export function MessageWidget({ messages, onSelectMessage }: MessageWidgetProps)
             <div
               key={item.id}
               onClick={() => onSelectMessage(item)}
-              className="group flex items-center gap-3.5 rounded-2xl p-2 -mx-2 hover:bg-slate-50 transition-colors cursor-pointer"
+              className="group flex items-center gap-3.5 rounded-2xl p-2 -mx-2 hover:bg-muted/70 transition-colors cursor-pointer"
             >
               {/* Avatar with subtle ring & online indicator */}
               <div className="relative shrink-0">
@@ -39,24 +39,24 @@ export function MessageWidget({ messages, onSelectMessage }: MessageWidgetProps)
                   alt={item.user}
                   fallback={item.user[0]}
                   size="md"
-                  className="ring-2 ring-slate-100 group-hover:scale-105 transition-transform"
+                  className="ring-2 ring-card group-hover:scale-105 transition-transform"
                 />
                 {item.online && (
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-card" />
                 )}
               </div>
 
               {/* Message Details */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                  <h4 className="text-xs sm:text-sm font-bold text-card-foreground group-hover:text-primary transition-colors truncate">
                     {item.user}
                   </h4>
-                  <span className="text-[10px] text-slate-400 font-medium shrink-0 ml-2">
+                  <span className="text-[10px] text-muted-foreground/80 font-medium shrink-0 ml-2">
                     {item.time}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 truncate mt-0.5">
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
                   {item.text}
                 </p>
               </div>
@@ -66,9 +66,9 @@ export function MessageWidget({ messages, onSelectMessage }: MessageWidgetProps)
       </div>
 
       {/* Footer subtle quick reply */}
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+      <div className="mt-4 pt-3 border-t border-border/80 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>4 active team threads</span>
-        <span className="text-slate-500 font-medium">Click to chat</span>
+        <span className="text-muted-foreground font-medium">Click to chat</span>
       </div>
     </div>
   )

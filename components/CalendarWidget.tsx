@@ -82,25 +82,25 @@ export function CalendarWidget() {
   )
 
   return (
-    <div className="rounded-[28px] bg-white p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] border border-slate-100/90 flex flex-col justify-between">
+    <div className="rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 text-card-foreground flex flex-col justify-between">
       <div>
         {/* Month & Navigation Header */}
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+          <h3 className="text-lg font-bold text-card-foreground tracking-tight">
             {monthNames[currentMonth]} {currentYear}
           </h3>
 
           <div className="flex items-center gap-2">
             <button
               onClick={prevMonth}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0D6EFD] text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
               aria-label="Previous month"
             >
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             </button>
             <button
               onClick={nextMonth}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0D6EFD] text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
               aria-label="Next month"
             >
               <ChevronRight className="w-4 h-4 stroke-[2.5]" />
@@ -109,7 +109,7 @@ export function CalendarWidget() {
         </div>
 
         {/* Days of week header */}
-        <div className="grid grid-cols-7 text-center mb-3 text-[11px] font-bold text-slate-400 tracking-wider">
+        <div className="grid grid-cols-7 text-center mb-3 text-[11px] font-bold text-muted-foreground/80 tracking-wider">
           <span>SUN</span>
           <span>MON</span>
           <span>TUE</span>
@@ -143,10 +143,10 @@ export function CalendarWidget() {
                   className={cn(
                     "relative flex h-8 w-8 items-center justify-center rounded-xl text-xs font-semibold transition-all cursor-pointer",
                     isSelected
-                      ? "bg-[#0D6EFD] text-white shadow-xs font-bold scale-105"
+                      ? "bg-primary text-primary-foreground shadow-xs font-bold scale-105"
                       : cell.isCurrentMonth
-                      ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                      : "text-slate-300 font-normal hover:text-slate-400"
+                      ? "text-card-foreground hover:bg-muted"
+                      : "text-muted-foreground/40 font-normal hover:text-muted-foreground"
                   )}
                 >
                   <span className="tabular-nums">{formattedDayNumber}</span>
@@ -169,21 +169,21 @@ export function CalendarWidget() {
       </div>
 
       {/* Selected Day Event Summary */}
-      <div className="mt-4 pt-3 border-t border-slate-100">
+      <div className="mt-4 pt-3 border-t border-border/80">
         {activeEvent ? (
           <div className="flex items-center gap-2 text-xs">
             <span
               className="h-2 w-2 rounded-full shrink-0"
               style={{ backgroundColor: activeEvent.dots[0] }}
             />
-            <span className="font-semibold text-slate-800 truncate">
+            <span className="font-semibold text-card-foreground truncate">
               {activeEvent.title}
             </span>
           </div>
         ) : (
-          <div className="flex items-center justify-between text-[11px] text-slate-400">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Selected: {selectedDay} {monthNames[currentMonth]}</span>
-            <span className="font-medium text-blue-600 hover:underline cursor-pointer">
+            <span className="font-medium text-primary hover:underline cursor-pointer">
               + Add Event
             </span>
           </div>

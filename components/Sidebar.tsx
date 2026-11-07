@@ -54,12 +54,12 @@ export function Sidebar({
       <div className="flex flex-col items-center">
         <div className="flex items-center justify-between w-full px-2 lg:justify-center">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 shadow-md shadow-slate-900/10">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 dark:bg-blue-600 shadow-md shadow-slate-900/10 dark:shadow-blue-500/20 text-white">
               <KardLogoMark className="w-6 h-6 text-white" />
             </div>
             <div className="flex flex-col lg:hidden">
-              <span className="font-extrabold text-xl tracking-tight text-slate-900">Kard</span>
-              <span className="text-[11px] text-slate-400 font-medium">Workspace v2.4</span>
+              <span className="font-extrabold text-xl tracking-tight text-foreground">Kard</span>
+              <span className="text-[11px] text-muted-foreground font-medium">Workspace v2.4</span>
             </div>
           </div>
 
@@ -67,7 +67,7 @@ export function Sidebar({
           {onCloseMobile && (
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-2 rounded-xl text-slate-400 hover:bg-slate-100"
+              className="lg:hidden p-2 rounded-xl text-muted-foreground hover:bg-muted"
             >
               <X className="w-5 h-5" />
             </button>
@@ -90,20 +90,20 @@ export function Sidebar({
                 className={cn(
                   "group relative flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 text-xs font-bold tracking-wider transition-all duration-200 cursor-pointer",
                   isActive
-                    ? "bg-[#EBF3FF] text-[#0D6EFD] shadow-xs"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-primary-subtle text-primary shadow-xs font-extrabold"
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 )}
               >
                 <Icon
                   className={cn(
                     "w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-105",
-                    isActive ? "text-[#0D6EFD]" : "text-slate-400 group-hover:text-slate-700"
+                    isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
                   )}
                 />
                 <span className="truncate">{item.label}</span>
 
                 {isActive && (
-                  <span className="absolute right-3.5 h-1.5 w-1.5 rounded-full bg-[#0D6EFD]" />
+                  <span className="absolute right-3.5 h-1.5 w-1.5 rounded-full bg-primary" />
                 )}
               </button>
             )
@@ -112,13 +112,13 @@ export function Sidebar({
       </div>
 
       {/* Bottom helper card / Pro banner */}
-      <div className="mt-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 p-4 border border-blue-100/60 text-center">
-        <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs mb-2">
+      <div className="mt-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/30 p-4 border border-blue-100/60 dark:border-blue-900/40 text-center">
+        <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs mb-2">
           <Sparkles className="w-4 h-4" />
         </div>
-        <p className="text-xs font-bold text-slate-800">Kard Pro</p>
-        <p className="text-[11px] text-slate-500 mt-0.5">Sprint velocity +38%</p>
-        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-blue-700 hover:text-blue-800 cursor-pointer">
+        <p className="text-xs font-bold text-foreground">Kard Pro</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">Sprint velocity +38%</p>
+        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-primary hover:underline cursor-pointer">
           <HelpCircle className="w-3.5 h-3.5" />
           <span>Documentation</span>
         </div>
@@ -129,7 +129,7 @@ export function Sidebar({
   return (
     <>
       {/* Desktop Floating Sidebar */}
-      <aside className="hidden lg:block w-[240px] shrink-0 sticky top-6 self-start h-[calc(100vh-3rem)] rounded-[32px] bg-white border border-slate-100/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] overflow-hidden">
+      <aside className="hidden lg:block w-[240px] shrink-0 sticky top-6 self-start h-[calc(100vh-3rem)] rounded-[32px] bg-card border border-border/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] overflow-hidden">
         {sidebarContent}
       </aside>
 
@@ -140,7 +140,7 @@ export function Sidebar({
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
             onClick={onCloseMobile}
           />
-          <div className="relative z-10 w-72 max-w-[80vw] h-full bg-white shadow-2xl">
+          <div className="relative z-10 w-72 max-w-[80vw] h-full bg-card shadow-2xl">
             {sidebarContent}
           </div>
         </div>

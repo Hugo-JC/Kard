@@ -62,21 +62,21 @@ export function QuickChatModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="max-w-md p-0 overflow-hidden">
+    <Dialog open={open} onOpenChange={onOpenChange} className="max-w-md p-0 overflow-hidden bg-card text-card-foreground border-border">
       {/* Chat Header */}
-      <div className="flex items-center gap-3 bg-slate-50/80 p-5 border-b border-slate-100">
+      <div className="flex items-center gap-3 bg-muted/60 p-5 border-b border-border">
         <Avatar src={message.avatar} alt={message.user} fallback={message.user[0]} size="md" />
         <div>
-          <h4 className="text-sm font-bold text-slate-900">{message.user}</h4>
-          <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 font-semibold">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <h4 className="text-sm font-bold text-card-foreground">{message.user}</h4>
+          <div className="flex items-center gap-1.5 text-[11px] text-success font-semibold">
+            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
             <span>Active now · {message.role}</span>
           </div>
         </div>
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="p-5 space-y-3 max-h-80 overflow-y-auto bg-white min-h-[220px]">
+      <div className="p-5 space-y-3 max-h-80 overflow-y-auto bg-card min-h-[220px]">
         {chatLog.map((chat, idx) => (
           <div
             key={idx}
@@ -87,13 +87,13 @@ export function QuickChatModal({
             <div
               className={`rounded-2xl px-4 py-2.5 max-w-[80%] text-xs font-medium leading-relaxed ${
                 chat.sender === "me"
-                  ? "bg-[#0D6EFD] text-white rounded-tr-xs"
-                  : "bg-slate-100 text-slate-800 rounded-tl-xs"
+                  ? "bg-primary text-primary-foreground rounded-tr-xs"
+                  : "bg-muted text-card-foreground rounded-tl-xs"
               }`}
             >
               {chat.text}
             </div>
-            <span className="text-[10px] text-slate-400 mt-1 px-1">
+            <span className="text-[10px] text-muted-foreground mt-1 px-1">
               {chat.time}
             </span>
           </div>
@@ -101,18 +101,18 @@ export function QuickChatModal({
       </div>
 
       {/* Chat Input */}
-      <form onSubmit={handleSend} className="p-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
+      <form onSubmit={handleSend} className="p-4 bg-muted/40 border-t border-border flex items-center gap-2">
         <Input
           value={replyText}
           onChange={(e) => setReplyText(e.target.value)}
           placeholder={`Reply to ${message.user}...`}
-          className="bg-white text-xs h-10"
+          className="bg-card text-xs h-10 border-border"
           autoFocus
         />
         <button
           type="submit"
           disabled={!replyText.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0D6EFD] text-white hover:bg-blue-700 disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-blue-700 disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
         >
           <Send className="w-4 h-4 translate-x-0.5" />
         </button>

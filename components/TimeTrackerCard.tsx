@@ -32,16 +32,16 @@ export function TimeTrackerCard({
   const slackTimers = timers.filter((t) => t.project === "Slack")
 
   return (
-    <div className="rounded-[28px] bg-white p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] border border-slate-100/90 flex flex-col justify-between">
+    <div className="rounded-[28px] bg-card p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] border border-border/80 text-card-foreground flex flex-col justify-between">
       <div>
         {/* Google Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-bold text-slate-900 tracking-tight">
+            <h4 className="text-sm font-bold text-card-foreground tracking-tight">
               Google
             </h4>
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
-              <Play className="w-3 h-3 fill-slate-400 text-slate-400" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-muted-foreground border border-border/60">
+              <Play className="w-3 h-3 fill-muted-foreground text-muted-foreground" />
             </div>
           </div>
 
@@ -52,8 +52,8 @@ export function TimeTrackerCard({
                 className={cn(
                   "flex items-center justify-between rounded-2xl p-3.5 transition-all duration-200",
                   timer.isRunning
-                    ? "bg-[#F5F8FF] border border-blue-100/80 shadow-2xs"
-                    : "bg-slate-50/70 hover:bg-slate-50 border border-transparent"
+                    ? "bg-primary-subtle/50 dark:bg-blue-950/25 border border-primary/20 dark:border-blue-800/40 shadow-2xs"
+                    : "bg-slate-50/70 dark:bg-slate-900/40 hover:bg-muted/70 border border-transparent"
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -61,8 +61,8 @@ export function TimeTrackerCard({
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-xl",
                       timer.isRunning
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "bg-white text-slate-500 border border-slate-200/60"
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "bg-card text-muted-foreground border border-border/60"
                     )}
                   >
                     <Timer
@@ -72,7 +72,7 @@ export function TimeTrackerCard({
                       )}
                     />
                   </div>
-                  <span className="text-xs sm:text-sm font-semibold text-slate-800 truncate">
+                  <span className="text-xs sm:text-sm font-semibold text-card-foreground truncate">
                     {timer.taskTitle}
                   </span>
                 </div>
@@ -81,7 +81,7 @@ export function TimeTrackerCard({
                   <span
                     className={cn(
                       "text-xs sm:text-sm font-bold tabular-nums",
-                      timer.isRunning ? "text-blue-600" : "text-slate-600"
+                      timer.isRunning ? "text-primary" : "text-muted-foreground"
                     )}
                   >
                     {formatTime(timer.secondsElapsed)}
@@ -93,21 +93,21 @@ export function TimeTrackerCard({
                     className={cn(
                       "flex h-7 w-7 items-center justify-center rounded-full transition-transform active:scale-95 cursor-pointer",
                       timer.isRunning
-                        ? "bg-[#0D6EFD] text-white shadow-2xs hover:bg-blue-700"
-                        : "border border-slate-300 text-slate-600 hover:bg-slate-100 hover:border-slate-400"
+                        ? "bg-primary text-primary-foreground shadow-2xs hover:bg-blue-700"
+                        : "border border-border text-muted-foreground hover:bg-muted hover:border-slate-400"
                     )}
                     aria-label={timer.isRunning ? "Pause timer" : "Start timer"}
                   >
                     {timer.isRunning ? (
                       <Pause className="w-3 h-3 fill-white" />
                     ) : (
-                      <Play className="w-3 h-3 fill-slate-600 translate-x-0.5" />
+                      <Play className="w-3 h-3 fill-muted-foreground translate-x-0.5" />
                     )}
                   </button>
 
                   <button
                     onClick={() => onResetTimer?.(timer.id)}
-                    className="text-slate-300 hover:text-slate-600 p-0.5"
+                    className="text-muted-foreground/60 hover:text-card-foreground p-0.5 cursor-pointer"
                     title="Reset timer"
                   >
                     <MoreVertical className="w-4 h-4" />
@@ -121,11 +121,11 @@ export function TimeTrackerCard({
         {/* Slack Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-bold text-slate-900 tracking-tight">
+            <h4 className="text-sm font-bold text-card-foreground tracking-tight">
               Slack
             </h4>
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
-              <Play className="w-3 h-3 fill-slate-400 text-slate-400" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-muted-foreground border border-border/60">
+              <Play className="w-3 h-3 fill-muted-foreground text-muted-foreground" />
             </div>
           </div>
 
@@ -136,21 +136,21 @@ export function TimeTrackerCard({
                 className={cn(
                   "flex items-center justify-between rounded-2xl p-3 transition-colors",
                   timer.isRunning
-                    ? "bg-[#F5F8FF] border border-blue-100 shadow-2xs"
-                    : "hover:bg-slate-50/80"
+                    ? "bg-primary-subtle/50 dark:bg-blue-950/25 border border-primary/20 shadow-2xs"
+                    : "hover:bg-muted/70"
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground">
                     <Timer className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-medium text-slate-700 truncate">
+                  <span className="text-xs font-medium text-card-foreground truncate">
                     {timer.taskTitle}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-xs font-semibold text-slate-500 tabular-nums">
+                  <span className="text-xs font-semibold text-muted-foreground tabular-nums">
                     {formatTime(timer.secondsElapsed)}
                   </span>
 
@@ -159,21 +159,21 @@ export function TimeTrackerCard({
                     className={cn(
                       "flex h-6 w-6 items-center justify-center rounded-full transition-transform active:scale-95 cursor-pointer",
                       timer.isRunning
-                        ? "bg-blue-600 text-white shadow-2xs"
-                        : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                        ? "bg-primary text-primary-foreground shadow-2xs"
+                        : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
                     )}
                     aria-label={timer.isRunning ? "Pause timer" : "Start timer"}
                   >
                     {timer.isRunning ? (
                       <Pause className="w-3 h-3 fill-white" />
                     ) : (
-                      <Play className="w-3 h-3 fill-slate-400 translate-x-0.2" />
+                      <Play className="w-3 h-3 fill-muted-foreground translate-x-0.2" />
                     )}
                   </button>
 
                   <button
                     onClick={() => onResetTimer?.(timer.id)}
-                    className="text-slate-300 hover:text-slate-600 p-0.5"
+                    className="text-muted-foreground/60 hover:text-card-foreground p-0.5 cursor-pointer"
                     title="Options"
                   >
                     <MoreVertical className="w-4 h-4" />
@@ -186,10 +186,10 @@ export function TimeTrackerCard({
       </div>
 
       {/* Footer subtle summary */}
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+      <div className="mt-4 pt-3 border-t border-border/80 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>Active Tracker: Google</span>
-        <span className="text-emerald-600 font-semibold flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="text-success font-semibold flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
           Synchronized
         </span>
       </div>

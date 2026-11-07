@@ -43,25 +43,25 @@ export function CommandPalette({
   }, [open, onOpenChange])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="max-w-xl p-0 overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100">
-        <Search className="w-5 h-5 text-slate-400 shrink-0" />
+    <Dialog open={open} onOpenChange={onOpenChange} className="max-w-xl p-0 overflow-hidden bg-card text-card-foreground border-border">
+      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
+        <Search className="w-5 h-5 text-muted-foreground shrink-0" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Type a command or search..."
-          className="w-full text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
+          className="w-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none bg-transparent"
           autoFocus
         />
-        <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+        <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
           ESC
         </span>
       </div>
 
       <div className="max-h-72 overflow-y-auto p-2">
         {filtered.length === 0 ? (
-          <div className="py-8 text-center text-xs text-slate-400">
+          <div className="py-8 text-center text-xs text-muted-foreground">
             No matching actions found.
           </div>
         ) : (
@@ -74,20 +74,20 @@ export function CommandPalette({
                   onSelectAction(item.id)
                   onOpenChange(false)
                 }}
-                className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-left hover:bg-slate-50 transition-colors group cursor-pointer"
+                className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-left hover:bg-muted transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground group-hover:bg-primary-subtle group-hover:text-primary transition-colors">
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-800 group-hover:text-blue-600">
+                    <p className="text-xs font-bold text-card-foreground group-hover:text-primary">
                       {item.title}
                     </p>
-                    <p className="text-[10px] text-slate-400">{item.category}</p>
+                    <p className="text-[10px] text-muted-foreground">{item.category}</p>
                   </div>
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
               </button>
             )
           })
