@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -38,28 +39,15 @@ export const metadata: Metadata = {
   },
 };
 
-import { ThemeProvider } from '@/components/ThemeProvider';
-
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" className={plusJakarta.variable} suppressHydrationWarning>
-      <head>
+      <body className="font-sans antialiased bg-background text-foreground selection:bg-blue-500/20 selection:text-blue-500 min-h-screen" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                var t = localStorage.getItem('kard-theme');
-                if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (_) {}
-            `,
+            __html: `try{var t=localStorage.getItem('kard-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(_){}`,
           }}
         />
-      </head>
-      <body className="font-sans antialiased bg-background text-foreground selection:bg-blue-500/20 selection:text-blue-500 min-h-screen" suppressHydrationWarning>
         <ThemeProvider defaultTheme="light">
           {children}
         </ThemeProvider>
