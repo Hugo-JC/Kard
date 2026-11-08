@@ -1,8 +1,42 @@
+export type MemberStatus = 'Online' | 'In Meeting' | 'Focused' | 'Offline';
+
 export interface Member {
   name: string;
   avatar: string;
   role?: string;
+  status?: MemberStatus;
+  statusNote?: string;
 }
+
+export const MEMBER_STATUS_CONFIG: Record<
+  MemberStatus,
+  { color: string; bg: string; dot: string; label: string }
+> = {
+  Online: {
+    color: 'text-emerald-500 dark:text-emerald-400',
+    bg: 'bg-emerald-500/10 border-emerald-500/25',
+    dot: 'bg-emerald-500',
+    label: 'Online',
+  },
+  'In Meeting': {
+    color: 'text-amber-500 dark:text-amber-400',
+    bg: 'bg-amber-500/10 border-amber-500/25',
+    dot: 'bg-amber-500',
+    label: 'In Meeting',
+  },
+  Focused: {
+    color: 'text-purple-500 dark:text-purple-400',
+    bg: 'bg-purple-500/10 border-purple-500/25',
+    dot: 'bg-purple-500',
+    label: 'Focused',
+  },
+  Offline: {
+    color: 'text-zinc-500 dark:text-zinc-400',
+    bg: 'bg-zinc-500/10 border-zinc-500/25',
+    dot: 'bg-zinc-400 dark:bg-zinc-500',
+    label: 'Offline',
+  },
+};
 
 export interface ProjectChatMessage {
   id: string;
@@ -12,6 +46,7 @@ export interface ProjectChatMessage {
   text: string;
   time: string;
   isMe?: boolean;
+  userStatus?: MemberStatus;
 }
 
 export interface ProjectDocument {
@@ -45,6 +80,7 @@ export interface Project {
   customImage?: string; // Uploaded image from device (Base64 data URL)
   coverImage?: string; // Banner cover image
   accentColor?: string; // Project primary highlight color
+  isArchived?: boolean; // Archived state flag
   chatMessages?: ProjectChatMessage[];
   documents?: ProjectDocument[];
 }
@@ -93,11 +129,41 @@ export interface NotificationItem {
 }
 
 export const AVAILABLE_CONTRIBUTORS: Member[] = [
-  { name: 'Angelina Smith', avatar: '/avatars/angelina.jpg', role: 'Project Manager (You)' },
-  { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI/UX Design Lead' },
-  { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Lead Fullstack Dev' },
-  { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'System Architect' },
-  { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand & QA Specialist' },
+  {
+    name: 'Angelina Smith',
+    avatar: '/avatars/angelina.jpg',
+    role: 'Project Manager (You)',
+    status: 'Online',
+    statusNote: 'Reviewing sprint deliverables',
+  },
+  {
+    name: 'Courtney Henry',
+    avatar: '/avatars/courtney.jpg',
+    role: 'UI/UX Design Lead',
+    status: 'Online',
+    statusNote: 'Refining Dark Mode components',
+  },
+  {
+    name: 'John Doe',
+    avatar: '/avatars/johndoe.jpg',
+    role: 'Lead Fullstack Dev',
+    status: 'Focused',
+    statusNote: 'Deep work on API endpoints',
+  },
+  {
+    name: 'Jerome Bell',
+    avatar: '/avatars/jerome.jpg',
+    role: 'System Architect',
+    status: 'In Meeting',
+    statusNote: 'Architecture sync with client',
+  },
+  {
+    name: 'Arlene McCoy',
+    avatar: '/avatars/arlene.jpg',
+    role: 'Brand & QA Specialist',
+    status: 'Offline',
+    statusNote: 'Back tomorrow at 9 AM',
+  },
 ];
 
 export const INITIAL_PROJECTS: Project[] = [
@@ -115,16 +181,17 @@ export const INITIAL_PROJECTS: Project[] = [
     accentColor: '#3B49DF',
     tags: ['IOS APP', 'UI/UX'],
     isStarred: false,
+    isArchived: false,
     dueDate: '20 JUNE',
     sprintStage: 'Sprint 3 / 6',
     attachmentsCount: 12,
     budget: '$54,000',
     description: 'Core iOS client wireframes, micro-interactions design system, and multi-service Google Workspace integrations.',
     members: [
-      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead' },
-      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Dev Lead' },
-      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Architect' },
-      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand QA' },
+      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', status: 'Online', statusNote: 'Design token updates' },
+      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Dev Lead', status: 'Focused', statusNote: 'GraphQL resolver optim' },
+      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Architect', status: 'In Meeting', statusNote: 'Client sync' },
+      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand QA', status: 'Offline' },
     ],
     extraMembersCount: 5,
     chatMessages: [
@@ -133,6 +200,7 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'Courtney Henry',
         avatar: '/avatars/courtney.jpg',
         role: 'UI Lead',
+        userStatus: 'Online',
         text: 'Uploaded the updated Figma design tokens for the Dark Mode color palette.',
         time: '10:15 AM',
       },
@@ -141,6 +209,7 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'John Doe',
         avatar: '/avatars/johndoe.jpg',
         role: 'Dev Lead',
+        userStatus: 'Focused',
         text: 'Reviewing the API endpoints for the contact sync milestone. Looking rock solid!',
         time: '10:42 AM',
       },
@@ -149,6 +218,7 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'Angelina Smith',
         avatar: '/avatars/angelina.jpg',
         role: 'Project Manager (You)',
+        userStatus: 'Online',
         text: 'Great work team! We are on track for the 20 June delivery.',
         time: '11:05 AM',
         isMe: true,
@@ -174,16 +244,17 @@ export const INITIAL_PROJECTS: Project[] = [
     accentColor: '#EC4899',
     tags: ['IOS APP', 'ANDROID'],
     isStarred: true,
+    isArchived: false,
     dueDate: '15 JULY',
     sprintStage: 'Phase 2 QA',
     attachmentsCount: 8,
     budget: '$38,500',
     description: 'Multi-platform mobile asset delivery and brand refresh implementation for team communication channels.',
     members: [
-      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist' },
-      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Product Lead' },
-      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'Product Designer' },
-      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Fullstack Dev' },
+      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist', status: 'Offline' },
+      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Product Lead', status: 'In Meeting' },
+      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'Product Designer', status: 'Online' },
+      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Fullstack Dev', status: 'Focused' },
     ],
     extraMembersCount: 5,
     chatMessages: [
@@ -192,6 +263,7 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'Arlene McCoy',
         avatar: '/avatars/arlene.jpg',
         role: 'Brand Specialist',
+        userStatus: 'Offline',
         text: 'All brand guidelines and custom reaction SVGs have been vetted for production.',
         time: 'Yesterday',
       },
@@ -200,6 +272,7 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'Jerome Bell',
         avatar: '/avatars/jerome.jpg',
         role: 'Product Lead',
+        userStatus: 'In Meeting',
         text: 'Sprint retrospective scheduled for tomorrow afternoon.',
         time: '3 hours ago',
       },
@@ -223,15 +296,16 @@ export const INITIAL_PROJECTS: Project[] = [
     accentColor: '#10B981',
     tags: ['AUDIO API', 'WEB'],
     isStarred: true,
+    isArchived: false,
     dueDate: '10 AUGUST',
     sprintStage: 'Sprint 4 / 4',
     attachmentsCount: 15,
     budget: '$62,000',
     description: 'Real-time player controls, playlist sync engine, and native iOS lockscreen widget integration.',
     members: [
-      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Senior Dev' },
-      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UX Designer' },
-      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Tech Lead' },
+      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Senior Dev', status: 'Focused', statusNote: 'Audio SDK low-latency buffer' },
+      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UX Designer', status: 'Online' },
+      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Tech Lead', status: 'In Meeting' },
     ],
     extraMembersCount: 3,
     chatMessages: [
@@ -240,6 +314,7 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'John Doe',
         avatar: '/avatars/johndoe.jpg',
         role: 'Senior Dev',
+        userStatus: 'Focused',
         text: 'Audio streaming buffer latency is down to 42ms on the staging server.',
         time: '09:30 AM',
       },
@@ -248,6 +323,7 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'Courtney Henry',
         avatar: '/avatars/courtney.jpg',
         role: 'UX Designer',
+        userStatus: 'Online',
         text: 'Lockscreen media control widget animations are approved.',
         time: '11:15 AM',
       },
@@ -271,14 +347,15 @@ export const INITIAL_PROJECTS: Project[] = [
     accentColor: '#8B5CF6',
     tags: ['GRAPHQL', 'WORKFLOW'],
     isStarred: false,
+    isArchived: false,
     dueDate: '30 SEPTEMBER',
     sprintStage: 'Design Audit',
     attachmentsCount: 5,
     budget: '$22,000',
     description: 'Bi-directional issue syncing, webhook triage triggers, and automated keyboard shortcut mapping.',
     members: [
-      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand QA' },
-      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Tech Lead' },
+      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand QA', status: 'Offline' },
+      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Tech Lead', status: 'In Meeting' },
     ],
     extraMembersCount: 2,
     chatMessages: [
@@ -287,12 +364,53 @@ export const INITIAL_PROJECTS: Project[] = [
         user: 'Jerome Bell',
         avatar: '/avatars/jerome.jpg',
         role: 'Tech Lead',
+        userStatus: 'In Meeting',
         text: 'Awaiting webhook approval from the security compliance team before continuing.',
         time: '2 days ago',
       },
     ],
     documents: [
       { id: 'doc-8', name: 'GraphQL_Schema_Mapping.json', size: '420 KB', date: 'Last week', type: 'CODE' },
+    ],
+  },
+  {
+    id: 'uber-archive-proj',
+    name: 'Uber Fleet Mobile',
+    company: 'Uber Technologies',
+    logo: 'custom',
+    status: 'COMPLETED',
+    priority: 'LOW PRIORITY',
+    completedTasks: 35,
+    totalTasks: 35,
+    progressColor: '#10B981',
+    progressTrack: '#E6F8EE',
+    accentColor: '#10B981',
+    tags: ['MAPS', 'TELEMETRY'],
+    isStarred: false,
+    isArchived: true, // Archived project sample!
+    dueDate: '15 MARCH',
+    sprintStage: 'Shipped v1.0',
+    attachmentsCount: 10,
+    budget: '$85,000',
+    description: 'Autonomous dispatch console and driver route optimization delivered in Q1.',
+    members: [
+      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Lead Dev', status: 'Focused' },
+      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', status: 'Online' },
+    ],
+    extraMembersCount: 4,
+    chatMessages: [
+      {
+        id: 'ub-1',
+        user: 'Courtney Henry',
+        avatar: '/avatars/courtney.jpg',
+        role: 'UI Lead',
+        userStatus: 'Online',
+        text: 'Final release notes approved and sent to client.',
+        time: '15 Mar',
+      },
+    ],
+    documents: [
+      { id: 'doc-9', name: 'Final_Handover_Bundle.zip', size: '120 MB', date: '15 Mar', type: 'ZIP' },
     ],
   },
 ];
@@ -309,7 +427,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'High',
     tags: ['UI/UX'],
     dueDate: '20 June',
-    assignee: { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead' },
+    assignee: { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', status: 'Online' },
     stage: 'IN PROGRESS',
   },
   {
@@ -323,7 +441,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'Medium',
     tags: ['Branding'],
     dueDate: '15 July',
-    assignee: { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist' },
+    assignee: { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist', status: 'Offline' },
     stage: 'IN PROGRESS',
   },
   {
@@ -337,7 +455,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'High',
     tags: ['UI/UX', 'Web'],
     dueDate: '22 June',
-    assignee: { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead' },
+    assignee: { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', status: 'Online' },
     stage: 'TODO',
   },
   {
@@ -351,7 +469,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'Medium',
     tags: ['Wireframe'],
     dueDate: '10 June',
-    assignee: { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Fullstack Dev' },
+    assignee: { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Fullstack Dev', status: 'Focused' },
     stage: 'DONE',
   },
   {
@@ -365,7 +483,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'Low',
     tags: ['Asset'],
     dueDate: '12 June',
-    assignee: { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist' },
+    assignee: { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist', status: 'Offline' },
     stage: 'DONE',
   },
   {
@@ -379,7 +497,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'Medium',
     tags: ['Iconography'],
     dueDate: '25 June',
-    assignee: { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Architect' },
+    assignee: { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Architect', status: 'In Meeting' },
     stage: 'REVIEW',
   },
   {
@@ -393,7 +511,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'High',
     tags: ['Audio API', 'Backend'],
     dueDate: '28 July',
-    assignee: { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Senior Dev' },
+    assignee: { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Senior Dev', status: 'Focused' },
     stage: 'IN PROGRESS',
   },
   {
@@ -407,7 +525,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'Medium',
     tags: ['GraphQL', 'Webhooks'],
     dueDate: '15 August',
-    assignee: { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Tech Lead' },
+    assignee: { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Tech Lead', status: 'In Meeting' },
     stage: 'TODO',
   },
 ];

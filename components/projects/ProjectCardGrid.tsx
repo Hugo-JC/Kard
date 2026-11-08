@@ -10,6 +10,7 @@ interface ProjectCardGridProps {
   onToggleStar: (id: string) => void
   onUpdateStatus: (id: string, newStatus: Project["status"]) => void
   onSelectProject: (project: Project) => void
+  onToggleArchive?: (id: string) => void
 }
 
 export function ProjectCardGrid({
@@ -17,6 +18,7 @@ export function ProjectCardGrid({
   onToggleStar,
   onUpdateStatus,
   onSelectProject,
+  onToggleArchive,
 }: ProjectCardGridProps) {
   if (projects.length === 0) {
     return (
@@ -37,6 +39,7 @@ export function ProjectCardGrid({
             project={project}
             onToggleStar={onToggleStar}
             onUpdateStatus={onUpdateStatus}
+            onToggleArchive={onToggleArchive}
             onClick={() => onSelectProject(project)}
           />
 

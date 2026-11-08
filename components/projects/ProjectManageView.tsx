@@ -24,12 +24,18 @@ import {
   MoreVertical,
   ChevronDown,
   UserCheck,
-  Palette
+  Palette,
+  Archive,
+  ArchiveRestore,
+  Shield,
+  Activity
 } from "lucide-react"
 import {
   Project,
   TaskItem,
   Member,
+  MemberStatus,
+  MEMBER_STATUS_CONFIG,
   ProjectChatMessage,
   ProjectDocument,
   AVAILABLE_CONTRIBUTORS,
@@ -42,6 +48,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { ProjectSelectField, memberSelectOptions, type ProjectSelectOption } from "@/components/projects/ProjectSelectField"
 import { TaskComposer } from "@/components/projects/TaskComposer"
+import { ProjectProgressSummaryCard } from "@/components/projects/ProjectProgressSummaryCard"
+import { MemberStatusBadge, MemberAvatarWithStatus } from "@/components/ui/MemberStatusBadge"
 import { cn } from "@/lib/utils"
 
 interface ProjectManageViewProps {
@@ -225,6 +233,9 @@ export function ProjectManageView({
     e.preventDefault()
     if (!chatInput.trim()) return
 
+    const myCurrentStatus =
+      project.members.find((m) => m.name === "Angelina Smith")?.status || "Online"
+
     const newMsg: ProjectChatMessage = {
       id: `chat-${Date.now()}`,
       user: "Angelina Smith",
@@ -233,6 +244,7 @@ export function ProjectManageView({
       text: chatInput.trim(),
       time: "Just now",
       isMe: true,
+      userStatus: myCurrentStatus,
     }
 
     const updated = [...projectChats, newMsg]
@@ -242,6 +254,17 @@ export function ProjectManageView({
       chatMessages: updated,
     })
     setChatInput("")
+  }
+
+  // Handle updating member status
+  const handleUpdateMemberStatus = (memberName: string, newStatus: MemberStatus) => {
+    const updatedMembers = project.members.map((m) =>
+      m.name === memberName ? { ...m, status: newStatus } : m
+    )
+    onUpdateProject({
+      ...project,
+      members: updatedMembers,
+    })
   }
 
   // Handle adding contributor to project
@@ -293,6 +316,37 @@ export function ProjectManageView({
                   : "text-muted-foreground/50 hover:text-muted-foreground"
               )}
             />
+          </button>
+
+          {/* Archive / Restore Button */}
+          <button
+            onClick={() =>
+              onUpdateProject({ ...project, isArchived: !project.isArchived })
+            }
+            className={cn(
+              "flex items-center gap-1.5 h-9 rounded-xl border px-3 text-xs font-semibold transition-colors cursor-pointer",
+              project.isArchived
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-500 dark:text-amber-400 hover:bg-amber-500/20"
+                : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+            title={
+              project.isArchived
+                ? "Restore project to active board"
+                : "Archive project (removes from active dashboard, keeps data accessible via Archive filter)"
+            }
+          >
+            {project.isArchived ? (
+              <>
+                <ArchiveRestore className="w-3.5 h-3.5 text-amber-500" />
+                <span>Restore to Active</span>
+              </>
+            ) : (
+              <>
+                <Archive className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Archive Project</span>
+                <span className="sm:hidden">Archive</span>
+              </>
+            )}
           </button>
 
           {/* Accent Color Picker trigger */}
@@ -352,6 +406,25 @@ export function ProjectManageView({
           </div>
         </div>
       </div>
+
+      {/* Archived Notice Banner if project is archived */}
+      {project.isArchived && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 text-xs">
+          <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400 font-medium">
+            <Archive className="w-4 h-4 shrink-0 text-amber-500" />
+            <span>
+              <strong>Archived Project:</strong> This project is hidden from the main active dashboard. Its historical data and tasks remain preserved and accessible via search and the Archived filter.
+            </span>
+          </div>
+          <button
+            onClick={() => onUpdateProject({ ...project, isArchived: false })}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold px-3.5 py-2 text-xs transition-colors cursor-pointer shrink-0 shadow-xs"
+          >
+            <ArchiveRestore className="w-3.5 h-3.5" />
+            <span>Restore Project</span>
+          </button>
+        </div>
+      )}
 
       {/* 2. Hero Project Header with Accent Banner & Device Image */}
       <div className="rounded-[32px] bg-card border border-border shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_32px_-4px_rgba(0,0,0,0.4)] overflow-hidden">
@@ -523,7 +596,10 @@ export function ProjectManageView({
         </div>
       </div>
 
-      {/* 3. Tabbed Navigation Bar */}
+      {/* 3. Visual Progress Summary Card (Deliverables, Remaining Time, Average Completion Radial Chart) */}
+      <ProjectProgressSummaryCard project={project} tasks={tasks} />
+
+      {/* 4. Tabbed Navigation Bar */}
       <div className="flex items-center gap-2 border-b border-border pb-1 overflow-x-auto">
         <button
           onClick={() => setActiveTab("tasks")}
@@ -780,24 +856,32 @@ export function ProjectManageView({
                 (t) => t.assignee?.name === member.name
               )
               const completedAssigned = assignedTasks.filter((t) => t.completed).length
+              const currentStatus: MemberStatus = member.status || "Offline"
 
               return (
                 <div
                   key={member.name}
-                  className="rounded-2xl bg-card p-4 border border-border shadow-xs space-y-3"
+                  className="rounded-2xl bg-card p-4 border border-border shadow-xs space-y-3.5 hover:border-primary/40 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <Avatar
-                        src={member.avatar}
-                        fallback={member.name[0]}
+                      <MemberAvatarWithStatus
+                        avatar={member.avatar}
+                        name={member.name}
+                        status={currentStatus}
                         size="md"
-                        className="border border-border/80"
                       />
                       <div>
-                        <h4 className="text-sm font-bold text-card-foreground">
-                          {member.name}
-                        </h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-card-foreground">
+                            {member.name}
+                          </h4>
+                          {member.name === "Angelina Smith" && (
+                            <span className="rounded-md bg-primary-subtle text-primary px-1.5 py-0.2 text-[10px] font-bold">
+                              You
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {member.role || "Team Contributor"}
                         </p>
@@ -815,9 +899,33 @@ export function ProjectManageView({
                     )}
                   </div>
 
-                  <div className="rounded-xl bg-muted/40 p-2.5 flex items-center justify-between text-xs">
+                  {/* Status Indicator & Live Switcher */}
+                  <div className="flex items-center justify-between rounded-xl bg-muted/40 p-2.5 text-xs border border-border/60">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                        Status:
+                      </span>
+                      <MemberStatusBadge status={currentStatus} size="sm" />
+                    </div>
+
+                    <select
+                      value={currentStatus}
+                      onChange={(e) =>
+                        handleUpdateMemberStatus(member.name, e.target.value as MemberStatus)
+                      }
+                      aria-label={`Change status for ${member.name}`}
+                      className="text-[11px] font-semibold bg-card border border-border rounded-lg px-2 py-1 text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+                    >
+                      <option value="Online">Online</option>
+                      <option value="In Meeting">In Meeting</option>
+                      <option value="Focused">Focused</option>
+                      <option value="Offline">Offline</option>
+                    </select>
+                  </div>
+
+                  <div className="rounded-xl bg-muted/30 p-2.5 flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Tasks Allocation:</span>
-                    <span className="font-bold text-card-foreground">
+                    <span className="font-bold text-card-foreground tabular-nums">
                       {completedAssigned} / {assignedTasks.length} Done
                     </span>
                   </div>
@@ -874,98 +982,163 @@ export function ProjectManageView({
         </div>
       )}
 
-      {/* 6. Tab 3: Project Team Chat */}
-      {activeTab === "chat" && (
-        <div className="rounded-2xl bg-card border border-border overflow-hidden flex flex-col h-[520px]">
-          {/* Chat Room Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
-            <div className="flex items-center gap-3">
-              <div
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: accentColor }}
-              />
-              <div>
-                <h4 className="text-sm font-bold text-card-foreground">
-                  #{project.name.toLowerCase().replace(/\s+/g, "-")}-team
-                </h4>
-                <p className="text-[11px] text-muted-foreground">
-                  {project.members.length} team members in channel
-                </p>
-              </div>
-            </div>
+      {/* 6. Tab 3: Project Team Chat with Team Status Indicators */}
+      {activeTab === "chat" && (() => {
+        const onlineCount = project.members.filter((m) => m.status === "Online").length
+        const meetingCount = project.members.filter((m) => m.status === "In Meeting").length
+        const focusedCount = project.members.filter((m) => m.status === "Focused").length
+        const myMember = project.members.find((m) => m.name === "Angelina Smith")
+        const myStatus = myMember?.status || "Online"
 
-            <div className="flex items-center -space-x-1.5">
-              {project.members.map((m, idx) => (
-                <Avatar
-                  key={idx}
-                  src={m.avatar}
-                  fallback={m.name[0]}
-                  size="sm"
-                  className="w-6 h-6 border border-card"
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Chat Messages Log */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-            {projectChats.map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "flex items-start gap-3",
-                  msg.isMe && "flex-row-reverse"
-                )}
-              >
-                <Avatar
-                  src={msg.avatar}
-                  fallback={msg.user[0]}
-                  size="sm"
-                  className="w-7 h-7 mt-0.5"
-                />
-
+        return (
+          <div className="rounded-2xl bg-card border border-border overflow-hidden flex flex-col h-[560px]">
+            {/* Chat Room Header with Status Breakdown */}
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <div className="flex items-center gap-3">
                 <div
-                  className={cn(
-                    "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs shadow-2xs space-y-1",
-                    msg.isMe
-                      ? "bg-primary text-primary-foreground rounded-tr-xs"
-                      : "bg-muted/60 dark:bg-slate-900 border border-border/80 text-card-foreground rounded-tl-xs"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 text-[10px] font-semibold",
-                      msg.isMe ? "text-primary-foreground/80 justify-end" : "text-muted-foreground"
+                  className="h-3 w-3 rounded-full shrink-0"
+                  style={{ backgroundColor: accentColor }}
+                />
+                <div>
+                  <h4 className="text-sm font-bold text-card-foreground">
+                    #{project.name.toLowerCase().replace(/\s+/g, "-")}-team
+                  </h4>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                    <span className="font-semibold">{project.members.length} members</span>
+                    <span>•</span>
+                    <span className="inline-flex items-center gap-1 font-semibold text-emerald-500">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {onlineCount} Online
+                    </span>
+                    {meetingCount > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="font-semibold text-amber-500">{meetingCount} In Meeting</span>
+                      </>
                     )}
-                  >
-                    <span>{msg.user}</span>
-                    <span>• {msg.time}</span>
+                    {focusedCount > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="font-semibold text-purple-500">{focusedCount} Focused</span>
+                      </>
+                    )}
                   </div>
-                  <p className="leading-relaxed">{msg.text}</p>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Chat Input Bar */}
-          <form
-            onSubmit={handleSendChatMessage}
-            className="p-3 border-t border-border flex items-center gap-2 bg-card"
-          >
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder={`Message #${project.name.toLowerCase().replace(/\s+/g, "-")}-team...`}
-              className="flex-1 h-10 rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            <Button type="submit" size="sm" className="h-10 px-4 gap-1.5">
-              <span>Send</span>
-              <Send className="w-3.5 h-3.5" />
-            </Button>
-          </form>
-        </div>
-      )}
+              {/* Contributor Avatars with Live Status Rings */}
+              <div className="flex items-center -space-x-1.5">
+                {project.members.map((m, idx) => (
+                  <MemberAvatarWithStatus
+                    key={idx}
+                    avatar={m.avatar}
+                    name={m.name}
+                    status={m.status || "Offline"}
+                    size="sm"
+                    className="w-6 h-6 border-2 border-card"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Chat Messages Log with Member Status Reflecting */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+              {projectChats.map((msg) => {
+                const memberInfo = project.members.find((m) => m.name === msg.user)
+                const currentMsgStatus: MemberStatus =
+                  memberInfo?.status || msg.userStatus || (msg.isMe ? myStatus : "Online")
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex items-start gap-3",
+                      msg.isMe && "flex-row-reverse"
+                    )}
+                  >
+                    <MemberAvatarWithStatus
+                      avatar={msg.avatar}
+                      name={msg.user}
+                      status={currentMsgStatus}
+                      size="sm"
+                      className="mt-0.5"
+                    />
+
+                    <div
+                      className={cn(
+                        "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs shadow-2xs space-y-1",
+                        msg.isMe
+                          ? "bg-primary text-primary-foreground rounded-tr-xs"
+                          : "bg-muted/60 dark:bg-slate-900 border border-border/80 text-card-foreground rounded-tl-xs"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex flex-wrap items-center gap-1.5 text-[10px] font-semibold",
+                          msg.isMe ? "text-primary-foreground/90 justify-end" : "text-muted-foreground"
+                        )}
+                      >
+                        <span className="font-bold">{msg.user}</span>
+                        <MemberStatusBadge
+                          status={currentMsgStatus}
+                          size="sm"
+                          className={msg.isMe ? "border-white/20 bg-white/15 text-white" : ""}
+                        />
+                        <span>• {msg.time}</span>
+                      </div>
+                      <p className="leading-relaxed">{msg.text}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Live Presence Status Switcher for User (Angelina Smith) */}
+            <div className="px-3.5 py-2 border-t border-border/60 bg-muted/20 flex flex-wrap items-center justify-between text-xs gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground font-semibold">Your status:</span>
+                <MemberStatusBadge status={myStatus} size="sm" />
+              </div>
+
+              <div className="flex items-center gap-1">
+                {(["Online", "In Meeting", "Focused", "Offline"] as MemberStatus[]).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => handleUpdateMemberStatus("Angelina Smith", st)}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors cursor-pointer",
+                      myStatus === st
+                        ? "bg-primary text-primary-foreground shadow-2xs"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chat Input Bar */}
+            <form
+              onSubmit={handleSendChatMessage}
+              className="p-3 border-t border-border flex items-center gap-2 bg-card"
+            >
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={`Message #${project.name.toLowerCase().replace(/\s+/g, "-")}-team...`}
+                className="flex-1 h-10 rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <Button type="submit" size="sm" className="h-10 px-4 gap-1.5">
+                <span>Send</span>
+                <Send className="w-3.5 h-3.5" />
+              </Button>
+            </form>
+          </div>
+        )
+      })()}
 
       {/* 7. Tab 4: Files & Deliverables */}
       {activeTab === "files" && (

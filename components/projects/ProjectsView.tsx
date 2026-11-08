@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   Clock,
   PauseCircle,
-  FolderKanban
+  FolderKanban,
+  Archive,
+  ArchiveRestore
 } from "lucide-react"
 import { Project, TaskItem, Member } from "@/lib/data"
 import { Button } from "@/components/ui/button"
@@ -37,11 +39,12 @@ interface ProjectsViewProps {
   onUpdateProject: (project: Project) => void
   onDeleteTask?: (id: string) => void
   onUpdateTaskAssignee?: (taskId: string, assignee: Member) => void
+  onToggleArchive?: (id: string) => void
   managingProjectId?: string | null
   onSetManagingProjectId?: (id: string | null) => void
 }
 
-type StatusFilter = "ALL" | "IN PROGRESS" | "COMPLETED" | "ON HOLD"
+type StatusFilter = "ALL" | "IN PROGRESS" | "COMPLETED" | "ON HOLD" | "ARCHIVED"
 type PriorityFilter = "ALL" | "HIGH" | "MEDIUM" | "LOW"
 type ViewMode = "grid" | "table"
 
@@ -56,6 +59,7 @@ export function ProjectsView({
   onUpdateProject,
   onDeleteTask,
   onUpdateTaskAssignee,
+  onToggleArchive,
   managingProjectId,
   onSetManagingProjectId,
 }: ProjectsViewProps) {
@@ -79,26 +83,36 @@ export function ProjectsView({
     return projects.find((p) => p.id === activeManagingId) || null
   }, [projects, activeManagingId])
 
-  // Status counts
+  // Status counts (separating active projects from archived)
   const counts = useMemo(() => {
+    const active = projects.filter((p) => !p.isArchived)
     return {
-      all: projects.length,
-      inProgress: projects.filter((p) => p.status === "IN PROGRESS" || p.status === "SELECT PROGRESS").length,
-      completed: projects.filter((p) => p.status === "COMPLETED").length,
-      onHold: projects.filter((p) => p.status === "ON HOLD").length,
+      all: active.length,
+      inProgress: active.filter((p) => p.status === "IN PROGRESS" || p.status === "SELECT PROGRESS").length,
+      completed: active.filter((p) => p.status === "COMPLETED").length,
+      onHold: active.filter((p) => p.status === "ON HOLD").length,
+      archived: projects.filter((p) => p.isArchived).length,
     }
   }, [projects])
 
   // Filtered projects
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
-      // Status filter
-      if (statusFilter === "IN PROGRESS") {
-        if (project.status !== "IN PROGRESS" && project.status !== "SELECT PROGRESS") return false
-      } else if (statusFilter === "COMPLETED") {
-        if (project.status !== "COMPLETED") return false
-      } else if (statusFilter === "ON HOLD") {
-        if (project.status !== "ON HOLD") return false
+      // Archived projects logic:
+      if (statusFilter === "ARCHIVED") {
+        if (!project.isArchived) return false
+      } else {
+        // Hide archived projects from all active tabs
+        if (project.isArchived) return false
+
+        // Status filter
+        if (statusFilter === "IN PROGRESS") {
+          if (project.status !== "IN PROGRESS" && project.status !== "SELECT PROGRESS") return false
+        } else if (statusFilter === "COMPLETED") {
+          if (project.status !== "COMPLETED") return false
+        } else if (statusFilter === "ON HOLD") {
+          if (project.status !== "ON HOLD") return false
+        }
       }
 
       // Priority filter
@@ -215,6 +229,21 @@ export function ProjectsView({
           >
             On Hold <span className="opacity-70 ml-1">({counts.onHold})</span>
           </button>
+
+          <button
+            onClick={() => setStatusFilter("ARCHIVED")}
+            className={cn(
+              "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9 flex items-center gap-1.5",
+              statusFilter === "ARCHIVED"
+                ? "bg-amber-500 text-white shadow-xs font-bold"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+            )}
+            title="View archived projects"
+          >
+            <Archive className="w-3.5 h-3.5" />
+            <span>Archived</span>
+            <span className="opacity-80 ml-0.5">({counts.archived})</span>
+          </button>
         </div>
 
         {/* Search, Priority Filter, and View Mode Switcher */}
@@ -303,6 +332,7 @@ export function ProjectsView({
               onToggleStar={onToggleStar}
               onUpdateStatus={onUpdateStatus}
               onSelectProject={(proj) => setActiveManagingId(proj.id)}
+              onToggleArchive={onToggleArchive}
             />
           ) : (
             <ProjectTableView
@@ -310,6 +340,7 @@ export function ProjectsView({
               onToggleStar={onToggleStar}
               onUpdateStatus={onUpdateStatus}
               onSelectProject={(proj) => setActiveManagingId(proj.id)}
+              onToggleArchive={onToggleArchive}
             />
           )}
         </motion.div>

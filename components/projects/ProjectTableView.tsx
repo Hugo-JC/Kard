@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Star, MoreVertical, ArrowUpRight, Paperclip } from "lucide-react"
+import { Star, MoreVertical, ArrowUpRight, Paperclip, Archive, ArchiveRestore } from "lucide-react"
 import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "@/components/Logos"
 import { Avatar } from "@/components/ui/avatar"
 import { Project } from "@/lib/data"
@@ -12,6 +12,7 @@ interface ProjectTableViewProps {
   onToggleStar: (id: string) => void
   onUpdateStatus: (id: string, newStatus: Project["status"]) => void
   onSelectProject: (project: Project) => void
+  onToggleArchive?: (id: string) => void
 }
 
 export function ProjectTableView({
@@ -19,6 +20,7 @@ export function ProjectTableView({
   onToggleStar,
   onUpdateStatus,
   onSelectProject,
+  onToggleArchive,
 }: ProjectTableViewProps) {
   if (projects.length === 0) {
     return (
@@ -120,20 +122,28 @@ export function ProjectTableView({
 
                   {/* Status Badge */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase",
-                        project.status === "COMPLETED"
-                          ? "bg-success-subtle text-success-foreground dark:bg-emerald-950/40 dark:text-emerald-300"
-                          : project.status === "IN PROGRESS"
-                          ? "bg-primary-subtle text-primary dark:bg-blue-950/40 dark:text-blue-300"
-                          : project.status === "ON HOLD"
-                          ? "bg-warning-subtle text-warning-foreground dark:bg-amber-950/40 dark:text-amber-300"
-                          : "bg-muted text-muted-foreground"
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase",
+                          project.status === "COMPLETED"
+                            ? "bg-success-subtle text-success-foreground dark:bg-emerald-950/40 dark:text-emerald-300"
+                            : project.status === "IN PROGRESS"
+                            ? "bg-primary-subtle text-primary dark:bg-blue-950/40 dark:text-blue-300"
+                            : project.status === "ON HOLD"
+                            ? "bg-warning-subtle text-warning-foreground dark:bg-amber-950/40 dark:text-amber-300"
+                            : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {project.status}
+                      </span>
+                      {project.isArchived && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">
+                          <Archive className="w-2.5 h-2.5" />
+                          Archived
+                        </span>
                       )}
-                    >
-                      {project.status}
-                    </span>
+                    </div>
                   </td>
 
                   {/* Priority */}
@@ -225,13 +235,35 @@ export function ProjectTableView({
                     className="py-3.5 pr-6 pl-3 text-right whitespace-nowrap"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      onClick={() => onSelectProject(project)}
-                      className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-muted/80 px-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary-subtle hover:text-primary sm:min-h-9"
-                    >
-                      <span>View</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      {onToggleArchive && (
+                        <button
+                          type="button"
+                          onClick={() => onToggleArchive(project.id)}
+                          className={cn(
+                            "inline-flex min-h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold transition-colors sm:min-h-9 cursor-pointer",
+                            project.isArchived
+                              ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
+                              : "bg-muted/60 text-muted-foreground hover:text-amber-500 hover:bg-muted"
+                          )}
+                          title={project.isArchived ? "Restore to active board" : "Archive project"}
+                        >
+                          {project.isArchived ? (
+                            <ArchiveRestore className="w-3.5 h-3.5 text-amber-500" />
+                          ) : (
+                            <Archive className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onSelectProject(project)}
+                        className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-muted/80 px-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary-subtle hover:text-primary sm:min-h-9 cursor-pointer"
+                      >
+                        <span>View</span>
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )

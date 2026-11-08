@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Star, MoreVertical, Calendar, CheckCircle2, Clock } from "lucide-react"
+import { Star, MoreVertical, Calendar, CheckCircle2, Clock, Archive, ArchiveRestore } from "lucide-react"
 import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "./Logos"
 import { Avatar } from "@/components/ui/avatar"
 import { Project } from "@/lib/data"
@@ -11,6 +11,7 @@ interface ProjectCardProps {
   project: Project
   onToggleStar: (id: string) => void
   onUpdateStatus?: (id: string, newStatus: Project["status"]) => void
+  onToggleArchive?: (id: string) => void
   onClick?: () => void
 }
 
@@ -18,6 +19,7 @@ export function ProjectCard({
   project,
   onToggleStar,
   onUpdateStatus,
+  onToggleArchive,
   onClick,
 }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false)
@@ -113,8 +115,9 @@ export function ProjectCard({
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-9 z-20 w-44 rounded-2xl bg-card p-2 shadow-lg border border-border text-xs animate-in fade-in zoom-in-95 text-card-foreground">
+              <div className="absolute right-0 top-9 z-20 w-48 rounded-2xl bg-card p-2 shadow-lg border border-border text-xs animate-in fade-in zoom-in-95 text-card-foreground">
                 <button
+                  type="button"
                   onClick={() => {
                     onUpdateStatus?.(project.id, "IN PROGRESS")
                     setShowMenu(false)
@@ -124,6 +127,7 @@ export function ProjectCard({
                   Set as In Progress
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     onUpdateStatus?.(project.id, "COMPLETED")
                     setShowMenu(false)
@@ -132,25 +136,55 @@ export function ProjectCard({
                 >
                   Mark Completed
                 </button>
+                {onToggleArchive && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onToggleArchive(project.id)
+                      setShowMenu(false)
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-amber-500 hover:bg-amber-500/10 font-semibold cursor-pointer border-t border-border/60 mt-1 pt-1.5 flex items-center gap-1.5"
+                  >
+                    {project.isArchived ? (
+                      <>
+                        <ArchiveRestore className="w-3.5 h-3.5" />
+                        <span>Restore Project</span>
+                      </>
+                    ) : (
+                      <>
+                        <Archive className="w-3.5 h-3.5" />
+                        <span>Archive Project</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Badges: Status and Priority */}
-      <div className="mt-5 flex items-center justify-between gap-2">
-        {/* Status Badge */}
-        <span
-          className={cn(
-            "rounded-lg px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors",
-            project.status === "COMPLETED"
-              ? "bg-success-subtle text-success-foreground dark:bg-emerald-950/40 dark:text-emerald-300"
-              : "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300"
+      {/* Badges: Status, Archived, and Priority */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+        {/* Status Badge & Archived Tag */}
+        <div className="flex items-center gap-1.5">
+          <span
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors",
+              project.status === "COMPLETED"
+                ? "bg-success-subtle text-success-foreground dark:bg-emerald-950/40 dark:text-emerald-300"
+                : "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300"
+            )}
+          >
+            {project.status}
+          </span>
+          {project.isArchived && (
+            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">
+              <Archive className="w-2.5 h-2.5" />
+              Archived
+            </span>
           )}
-        >
-          {project.status}
-        </span>
+        </div>
 
         {/* Priority Badge */}
         <span

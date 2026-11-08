@@ -29,6 +29,7 @@ import {
 import { useTheme } from "@/components/ThemeProvider"
 import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export default function DashboardPage() {
   const { toggleTheme } = useTheme()
@@ -170,6 +171,15 @@ export default function DashboardPage() {
     )
   }
 
+  // Handle project archive toggle
+  const handleToggleArchive = (projectId: string) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, isArchived: !p.isArchived } : p))
+    )
+  }
+
+  const [includeArchivedSearch, setIncludeArchivedSearch] = useState(false)
+
   // Handle timer play/pause toggle
   const handleToggleTimer = (timerId: string) => {
     setTimers((prev) =>
@@ -219,13 +229,22 @@ export default function DashboardPage() {
       )
     : tasks
 
+  const matchingArchivedProjectsCount = query
+    ? projects.filter(
+        (p) =>
+          p.isArchived &&
+          (p.name.toLowerCase().includes(query) || p.company.toLowerCase().includes(query))
+      ).length
+    : projects.filter((p) => p.isArchived).length
+
   const displayProjects = query
     ? projects.filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.company.toLowerCase().includes(query)
+          (p.name.toLowerCase().includes(query) ||
+            p.company.toLowerCase().includes(query)) &&
+          (includeArchivedSearch ? true : !p.isArchived)
       )
-    : projects
+    : projects.filter((p) => !p.isArchived)
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-200 p-3 sm:p-4 lg:p-6">
@@ -257,13 +276,34 @@ export default function DashboardPage() {
 
           {/* Active Search Notification Banner if searching on dashboard */}
           {query && activeNav === "dashboard" && (
-            <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-3 border border-border shadow-xs text-xs text-muted-foreground">
-              <span>
-                Filtering results for: <strong>&quot;{searchQuery}&quot;</strong> (
-                {displayTasks.length} tasks, {displayProjects.length} projects found)
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card px-5 py-3 border border-border shadow-xs text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span>
+                  Filtering results for: <strong>&quot;{searchQuery}&quot;</strong> (
+                  {displayTasks.length} tasks, {displayProjects.length} projects)
+                </span>
+                {matchingArchivedProjectsCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIncludeArchivedSearch(!includeArchivedSearch)}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-colors cursor-pointer",
+                      includeArchivedSearch
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-500 dark:text-amber-400 font-bold"
+                        : "bg-muted/70 border-border text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {includeArchivedSearch
+                      ? `Hide archived (${matchingArchivedProjectsCount})`
+                      : `Include archived (${matchingArchivedProjectsCount})`}
+                  </button>
+                )}
+              </div>
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => {
+                  setSearchQuery("")
+                  setIncludeArchivedSearch(false)
+                }}
                 className="font-bold text-primary hover:underline cursor-pointer"
               >
                 Clear filter
@@ -292,6 +332,7 @@ export default function DashboardPage() {
                   onUpdateProject={handleUpdateProject}
                   onDeleteTask={handleDeleteTask}
                   onUpdateTaskAssignee={handleUpdateTaskAssignee}
+                  onToggleArchive={handleToggleArchive}
                   managingProjectId={managingProjectId}
                   onSetManagingProjectId={setManagingProjectId}
                 />
@@ -435,6 +476,7 @@ export default function DashboardPage() {
                       project={project}
                       onToggleStar={handleToggleStar}
                       onUpdateStatus={handleUpdateStatus}
+                      onToggleArchive={handleToggleArchive}
                       onClick={() => {
                         setManagingProjectId(project.id)
                         setActiveNav("projects")

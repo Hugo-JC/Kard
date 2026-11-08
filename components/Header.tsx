@@ -5,6 +5,7 @@ import { Search, Bell, Menu, Sun, Moon, Shield, User, LogOut } from "lucide-reac
 import { Avatar } from "@/components/ui/avatar"
 import { useTheme } from "@/components/ThemeProvider"
 import { NotificationItem } from "@/lib/data"
+import { MemberStatusBadge } from "@/components/ui/MemberStatusBadge"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
@@ -166,11 +167,12 @@ export function Header({
           )}
         </div>
 
-        {/* User Profile Avatar */}
+        {/* User Profile Avatar with Presence Indicator */}
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-2.5 rounded-full p-0.5 hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
+            className="relative flex items-center gap-2.5 rounded-full p-0.5 hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
+            title="Angelina Smith (Online)"
           >
             <Avatar
               src="/avatars/angelina.jpg"
@@ -179,16 +181,26 @@ export function Header({
               size="md"
               className="ring-2 ring-card shadow-xs"
             />
+            <span
+              className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card"
+              title="Online"
+            />
           </button>
 
           {/* Profile Dropdown */}
           {isProfileOpen && (
-            <div className="absolute right-0 mt-3 w-60 rounded-2xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground">
+            <div className="absolute right-0 mt-3 w-64 rounded-2xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground">
               <div className="flex items-center gap-3 p-2 border-b border-border pb-3">
-                <Avatar src="/avatars/angelina.jpg" fallback="AS" size="md" />
+                <div className="relative">
+                  <Avatar src="/avatars/angelina.jpg" fallback="AS" size="md" />
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+                </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-card-foreground truncate">Angelina Smith</p>
                   <p className="text-[11px] text-muted-foreground truncate">angelina@kard.dev</p>
+                  <div className="mt-1">
+                    <MemberStatusBadge status="Online" size="sm" />
+                  </div>
                 </div>
               </div>
 
