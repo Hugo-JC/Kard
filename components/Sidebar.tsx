@@ -15,6 +15,7 @@ import {
   Sparkles
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export type NavItemKey =
   | "dashboard"
@@ -30,6 +31,8 @@ interface SidebarProps {
   onSelectNav: (key: NavItemKey) => void
   isMobileOpen?: boolean
   onCloseMobile?: () => void
+  onOpenPricingModal?: () => void
+  currentTier?: "free" | "pro" | "business"
 }
 
 export function Sidebar({
@@ -37,6 +40,8 @@ export function Sidebar({
   onSelectNav,
   isMobileOpen = false,
   onCloseMobile,
+  onOpenPricingModal,
+  currentTier = "free",
 }: SidebarProps) {
   const navItems: { key: NavItemKey; label: string; icon: React.ElementType }[] = [
     { key: "dashboard", label: "DASHBOARD", icon: LayoutDashboard },
@@ -123,16 +128,36 @@ export function Sidebar({
         </nav>
       </div>
 
-      {/* Bottom helper card / Pro banner */}
-      <div className="mt-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/30 p-4 border border-blue-100/60 dark:border-blue-900/40 text-center">
-        <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs mb-2">
-          <Sparkles className="w-4 h-4" />
+      {/* Bottom Pro Upgrade Banner / Status with clean breathing room */}
+      <div
+        onClick={onOpenPricingModal}
+        className="mt-6 rounded-2xl bg-muted/40 p-4 border border-border/70 hover:border-border transition-all text-center cursor-pointer shadow-2xs group"
+      >
+        <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs mb-2.5 group-hover:scale-105 transition-transform">
+          <Sparkles className="w-4 h-4 text-amber-300" />
         </div>
-        <p className="text-xs font-bold text-foreground">Kard Pro</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">Sprint velocity +38%</p>
-        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-primary hover:underline cursor-pointer">
-          <HelpCircle className="w-3.5 h-3.5" />
-          <span>Documentation</span>
+        <div className="flex items-center justify-center gap-1.5">
+          <p className="text-xs font-extrabold text-foreground">
+            {currentTier === "free" ? "Kard Pro" : `Kard ${currentTier.toUpperCase()}`}
+          </p>
+          {currentTier === "free" && (
+            <span className="rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-extrabold px-1.5 py-0.2">
+              -50%
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-0.5">
+          {currentTier === "free" ? "Desconto na 1ª compra" : "Recursos ilimitados ativos"}
+        </p>
+        <div className="mt-3">
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            className="w-full h-8 text-[11px] font-bold rounded-xl cursor-pointer"
+          >
+            {currentTier === "free" ? "Ver Planos & Vantagens" : "Gerenciar Assinatura"}
+          </Button>
         </div>
       </div>
     </div>

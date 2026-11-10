@@ -5,16 +5,22 @@ import { Play, Pause, MoreVertical, Timer, RotateCcw } from "lucide-react"
 import { TrackedTimer } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
+import { Target } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ProjectLogoIcon } from "@/components/Logos"
+
 interface TimeTrackerCardProps {
   timers: TrackedTimer[]
   onToggleTimer: (id: string) => void
   onResetTimer?: (id: string) => void
+  onOpenFocusMode?: () => void
 }
 
 export function TimeTrackerCard({
   timers,
   onToggleTimer,
   onResetTimer,
+  onOpenFocusMode,
 }: TimeTrackerCardProps) {
   // Format seconds into "25m 20s" or "1h 10m 05s"
   const formatTime = (totalSeconds: number) => {
@@ -37,9 +43,12 @@ export function TimeTrackerCard({
         {/* Google Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-bold text-card-foreground tracking-tight">
-              Google
-            </h4>
+            <div className="flex items-center gap-2">
+              <ProjectLogoIcon project="Google" className="w-4 h-4" />
+              <h4 className="text-sm font-bold text-card-foreground tracking-tight">
+                Google
+              </h4>
+            </div>
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-muted-foreground border border-border/60">
               <Play className="w-3 h-3 fill-muted-foreground text-muted-foreground" />
             </div>

@@ -25,9 +25,13 @@ import {
   TrackedTimer,
   ChatMessage,
   NotificationItem,
+  TaskStage,
+  ProjectInvitation,
 } from "@/lib/data"
+import { PricingPlansModal, SubscriptionPlanTier } from "@/components/billing/PricingPlansModal"
+import { FocusModeView } from "@/components/focus/FocusModeView"
 import { useTheme } from "@/components/ThemeProvider"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -46,12 +50,15 @@ export default function DashboardPage() {
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS)
 
-  // Modal & Search States
+  // Modal, Plan & Search States
   const [searchQuery, setSearchQuery] = useState("")
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const [selectedChatUser, setSelectedChatUser] = useState<ChatMessage | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [userTier, setUserTier] = useState<SubscriptionPlanTier>("free")
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
+  const [isFocusMode, setIsFocusMode] = useState(false)
 
   // Live Timer Interval (Chronometer ticks up every second when any timer is running)
   useEffect(() => {
@@ -157,6 +164,94 @@ export default function DashboardPage() {
     )
   }
 
+  // Handle reordering tasks array (DnD within list/dashboard) - automatically updates task numbers
+  const handleReorderTasks = (newTasks: TaskItem[]) => {
+    const reindexed = newTasks.map((t, idx) => ({
+      ...t,
+      number: String(idx + 1).padStart(2, "0"),
+    }))
+    setTasks(reindexed)
+  }
+
+  // Handle moving a task across workflow stages or to another project (DnD)
+  const handleMoveTask = (
+    taskId: string,
+    targetStage?: TaskStage,
+    targetProject?: string
+  ) => {
+    setTasks((prev) => {
+      const task = prev.find((t) => t.id === taskId)
+      if (!task) return prev
+      const prevProject = task.project
+      const prevCompleted = task.completed
+      const isNowDone = targetStage ? targetStage === "DONE" : prevCompleted
+      const newStage = targetStage || task.stage
+      const newProject = targetProject || task.project
+
+      // Update project statistics if project ownership or completion changed
+      if (
+        prevProject.toLowerCase() !== newProject.toLowerCase() ||
+        prevCompleted !== isNowDone
+      ) {
+        setProjects((projList) =>
+          projList.map((p) => {
+            let updated = { ...p }
+            // Leaving old project
+            if (
+              p.name.toLowerCase() === prevProject.toLowerCase() &&
+              prevProject.toLowerCase() !== newProject.toLowerCase()
+            ) {
+              updated.totalTasks = Math.max(0, updated.totalTasks - 1)
+              if (prevCompleted) {
+                updated.completedTasks = Math.max(0, updated.completedTasks - 1)
+              }
+            }
+            // Entering new project
+            if (
+              p.name.toLowerCase() === newProject.toLowerCase() &&
+              prevProject.toLowerCase() !== newProject.toLowerCase()
+            ) {
+              updated.totalTasks = updated.totalTasks + 1
+              if (isNowDone) {
+                updated.completedTasks = updated.completedTasks + 1
+              }
+            }
+            // Same project, status flipped
+            if (
+              p.name.toLowerCase() === newProject.toLowerCase() &&
+              prevProject.toLowerCase() === newProject.toLowerCase()
+            ) {
+              if (prevCompleted !== isNowDone) {
+                const diff = isNowDone ? 1 : -1
+                updated.completedTasks = Math.max(
+                  0,
+                  Math.min(updated.totalTasks, updated.completedTasks + diff)
+                )
+              }
+            }
+            return updated
+          })
+        )
+      }
+
+      return prev.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              stage: newStage,
+              completed: isNowDone,
+              project: newProject,
+            }
+          : t
+      )
+    })
+  }
+
+  // Handle updating task stage directly
+  const handleUpdateTaskStage = (taskId: string, stage: TaskStage) => {
+    handleMoveTask(taskId, stage, undefined)
+  }
+
   // Handle star toggle
   const handleToggleStar = (projectId: string) => {
     setProjects((prev) =>
@@ -175,6 +270,173 @@ export default function DashboardPage() {
   const handleToggleArchive = (projectId: string) => {
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, isArchived: !p.isArchived } : p))
+    )
+  }
+
+  // Handle inviting a collaborator by email (creates pending invite + GitHub-style notification)
+  const handleInviteCollaborator = (
+    projectId: string,
+    email: string,
+    role: string
+  ) => {
+    const project = projects.find((p) => p.id === projectId)
+    if (!project) return
+
+    const newInvite: ProjectInvitation = {
+      id: `inv-${Date.now()}`,
+      projectId,
+      projectName: project.name,
+      email,
+      role,
+      sentAt: "Agora",
+      status: "pending",
+      invitedBy: "Angelina Smith",
+    }
+
+    // Add to project pending invitations
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              pendingInvitations: [newInvite, ...(p.pendingInvitations || [])],
+            }
+          : p
+      )
+    )
+
+    // Add notification with Colaborar / Negar interactive actions
+    const newNotification: NotificationItem = {
+      id: `notif-inv-${Date.now()}`,
+      title: "Convite para Colaborar no Projeto",
+      description: `Angelina Smith convidou ${email} para colaborar no projeto ${project.name} como ${role}.`,
+      time: "Agora",
+      read: false,
+      type: "invitation",
+      invitationData: {
+        projectId,
+        projectName: project.name,
+        projectLogo: project.logo,
+        email,
+        role,
+        invitedBy: "Angelina Smith",
+        status: "pending",
+      },
+    }
+
+    setNotifications((prev) => [newNotification, ...prev])
+  }
+
+  // Handle canceling a pending collaborator invitation
+  const handleCancelInvitation = (projectId: string, inviteId: string) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              pendingInvitations: (p.pendingInvitations || []).filter(
+                (inv) => inv.id !== inviteId
+              ),
+            }
+          : p
+      )
+    )
+  }
+
+  // Handle accepting an invitation (Colaborar)
+  const handleAcceptInvitation = (
+    notifId: string,
+    invitationData: NonNullable<NotificationItem["invitationData"]>
+  ) => {
+    const rawName = invitationData.email
+      .split("@")[0]
+      .replace(/[._]/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase())
+
+    const newMember: Member = {
+      name: rawName || "Novo Colaborador",
+      avatar: "/avatars/courtney.jpg",
+      role: invitationData.role,
+      email: invitationData.email,
+      status: "Online",
+      statusNote: "Recém ingressou no projeto",
+      invitedAt: "Hoje",
+    }
+
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (
+          p.id === invitationData.projectId ||
+          p.name.toLowerCase() === invitationData.projectName.toLowerCase()
+        ) {
+          const alreadyIn = p.members.some(
+            (m) =>
+              m.name.toLowerCase() === newMember.name.toLowerCase() ||
+              m.email?.toLowerCase() === newMember.email?.toLowerCase()
+          )
+          const updatedMembers = alreadyIn ? p.members : [...p.members, newMember]
+          const updatedInvites = (p.pendingInvitations || []).filter(
+            (inv) => inv.email.toLowerCase() !== invitationData.email.toLowerCase()
+          )
+          return {
+            ...p,
+            members: updatedMembers,
+            pendingInvitations: updatedInvites,
+          }
+        }
+        return p
+      })
+    )
+
+    // Mark notification as accepted
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === notifId
+          ? {
+              ...n,
+              read: true,
+              invitationData: n.invitationData
+                ? { ...n.invitationData, status: "accepted" as const }
+                : undefined,
+            }
+          : n
+      )
+    )
+  }
+
+  // Handle declining an invitation (Negar)
+  const handleDeclineInvitation = (notifId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === notifId
+          ? {
+              ...n,
+              read: true,
+              invitationData: n.invitationData
+                ? { ...n.invitationData, status: "declined" as const }
+                : undefined,
+            }
+          : n
+      )
+    )
+  }
+
+  // Handle removing a collaborator from project
+  const handleRemoveCollaborator = (
+    projectId: string,
+    memberNameOrEmail: string
+  ) => {
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id === projectId && p.members.length > 1) {
+          const updated = p.members.filter(
+            (m) =>
+              m.name !== memberNameOrEmail && m.email !== memberNameOrEmail
+          )
+          return { ...p, members: updated }
+        }
+        return p
+      })
     )
   }
 
@@ -260,6 +522,8 @@ export default function DashboardPage() {
           }}
           isMobileOpen={isMobileMenuOpen}
           onCloseMobile={() => setIsMobileMenuOpen(false)}
+          onOpenPricingModal={() => setIsPricingModalOpen(true)}
+          currentTier={userTier}
         />
 
         {/* 2. Main Content Area */}
@@ -272,6 +536,12 @@ export default function DashboardPage() {
             onMarkNotificationRead={handleMarkNotificationRead}
             onClearAllNotifications={handleClearAllNotifications}
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+            onAcceptInvitation={handleAcceptInvitation}
+            onDeclineInvitation={handleDeclineInvitation}
+            onOpenPricingModal={() => setIsPricingModalOpen(true)}
+            onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
+            isFocusModeActive={isFocusMode}
+            currentTier={userTier}
           />
 
           {/* Active Search Notification Banner if searching on dashboard */}
@@ -333,6 +603,15 @@ export default function DashboardPage() {
                   onDeleteTask={handleDeleteTask}
                   onUpdateTaskAssignee={handleUpdateTaskAssignee}
                   onToggleArchive={handleToggleArchive}
+                  onUpdateStage={handleUpdateTaskStage}
+                  onReorderTasks={handleReorderTasks}
+                  onMoveTask={handleMoveTask}
+                  onInviteCollaborator={handleInviteCollaborator}
+                  onCancelInvitation={handleCancelInvitation}
+                  onAcceptInvitationDirect={(projId, inv) =>
+                    handleAcceptInvitation(`direct-${inv.id}`, inv)
+                  }
+                  onRemoveCollaborator={handleRemoveCollaborator}
                   managingProjectId={managingProjectId}
                   onSetManagingProjectId={setManagingProjectId}
                 />
@@ -351,6 +630,8 @@ export default function DashboardPage() {
                     tasks={tasks}
                     onToggleTask={handleToggleTask}
                     onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
+                    onDeleteTask={handleDeleteTask}
+                    onReorderTasks={handleReorderTasks}
                   />
                 </div>
                 <div className="lg:col-span-4 space-y-5">
@@ -379,6 +660,8 @@ export default function DashboardPage() {
                     tasks={tasks}
                     onToggleTask={handleToggleTask}
                     onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
+                    onDeleteTask={handleDeleteTask}
+                    onReorderTasks={handleReorderTasks}
                   />
                 </div>
               </motion.div>
@@ -497,6 +780,8 @@ export default function DashboardPage() {
                     tasks={displayTasks}
                     onToggleTask={handleToggleTask}
                     onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
+                    onDeleteTask={handleDeleteTask}
+                    onReorderTasks={handleReorderTasks}
                   />
 
                   <TimeTrackerCard
@@ -544,6 +829,28 @@ export default function DashboardPage() {
           }
         }}
       />
+
+      {/* Kard Pro & Business Pricing Plans Modal */}
+      <PricingPlansModal
+        open={isPricingModalOpen}
+        onOpenChange={setIsPricingModalOpen}
+        currentTier={userTier}
+        onUpgradeSuccess={(tier) => setUserTier(tier)}
+      />
+
+      {/* Distraction-Free Focus Mode (Zen fullscreen experience) */}
+      <AnimatePresence>
+        {isFocusMode && (
+          <FocusModeView
+            timers={timers}
+            tasks={tasks}
+            onToggleTimer={handleToggleTimer}
+            onResetTimer={handleResetTimer}
+            onToggleTask={handleToggleTask}
+            onClose={() => setIsFocusMode(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

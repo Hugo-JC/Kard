@@ -49,7 +49,6 @@ export function SlackLogo({ className = "w-7 h-7" }: { className?: string }) {
 export function KardLogoMark({ className = "w-8 h-8" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 36 36" fill="currentColor">
-      {/* Sleek architectural Kard glyph matching the screenshot */}
       <rect x="4" y="4" width="10" height="28" rx="3" />
       <rect x="18" y="4" width="14" height="12" rx="3" />
       <rect x="18" y="20" width="14" height="12" rx="3" />
@@ -76,5 +75,32 @@ export function LinearLogo({ className = "w-7 h-7" }: { className?: string }) {
         d="M2.5 12c0-5.247 4.253-9.5 9.5-9.5s9.5 4.253 9.5 9.5-4.253 9.5-9.5 9.5-9.5-4.253-9.5-9.5zm3.62 3.62l9.74-9.74c-.98-.82-2.26-1.38-3.86-1.38-4.14 0-7.5 3.36-7.5 7.5 0 1.6.56 2.88 1.62 3.62zm11.76-7.24l-9.74 9.74c.98.82 2.26 1.38 3.86 1.38 4.14 0 7.5-3.36 7.5-7.5 0-1.6-.56-2.88-1.62-3.62z"
       />
     </svg>
+  );
+}
+
+export function ProjectLogoIcon({
+  project,
+  className = "w-3.5 h-3.5",
+}: {
+  project: string;
+  className?: string;
+}) {
+  const norm = project ? project.toLowerCase() : "";
+  if (norm.includes("google")) {
+    return <GoogleLogo className={className} />;
+  }
+  if (norm.includes("slack")) {
+    return <SlackLogo className={className} />;
+  }
+  if (norm.includes("spotify")) {
+    return <SpotifyLogo className={className} />;
+  }
+  if (norm.includes("linear")) {
+    return <LinearLogo className={className} />;
+  }
+  return (
+    <span className="flex items-center justify-center font-bold text-[10px] text-primary">
+      {project ? project.charAt(0) : "P"}
+    </span>
   );
 }

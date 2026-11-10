@@ -111,4 +111,8 @@ A comprehensive, production-grade Projects section for the Kard SaaS platform, s
 2. `components/projects/ProjectCardGrid.tsx`: Bento grid presentation with responsive cards.
 3. `components/projects/ProjectTableView.tsx`: Accessible, dense data table with status indicators and quick inline actions.
 4. `components/projects/NewProjectModal.tsx`: Comprehensive project builder modal.
-5. `components/projects/ProjectDetailsDrawer.tsx`: Flyout drawer showing task breakdown, attachments, and logged sprint time for the selected project.
+5. `components/projects/ProjectManageView.tsx`: Full project management screen with tabs for Tasks, Team/Collaborators, Activity, and Project Chat.
+6. `components/projects/InviteCollaboratorModal.tsx`: Modal to invite collaborators by email with predefined roles.
+7. `components/Header.tsx`: Notification drawer featuring GitHub-style collaboration invite cards with "Colaborar" and "Negar" actions.
+8. `components/billing/PricingPlansModal.tsx`: Complete pricing modal with comparison table, promo discount (50% OFF `FIRSTKARD50`), monthly/annual billing, and strategic features for Free, Pro, and Business tiers.
+

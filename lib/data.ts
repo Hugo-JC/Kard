@@ -4,8 +4,10 @@ export interface Member {
   name: string;
   avatar: string;
   role?: string;
+  email?: string;
   status?: MemberStatus;
   statusNote?: string;
+  invitedAt?: string;
 }
 
 export const MEMBER_STATUS_CONFIG: Record<
@@ -37,6 +39,17 @@ export const MEMBER_STATUS_CONFIG: Record<
     label: 'Offline',
   },
 };
+
+export interface ProjectInvitation {
+  id: string;
+  projectId: string;
+  projectName: string;
+  email: string;
+  role: string;
+  sentAt: string;
+  status: 'pending' | 'accepted' | 'declined';
+  invitedBy: string;
+}
 
 export interface ProjectChatMessage {
   id: string;
@@ -81,9 +94,19 @@ export interface Project {
   coverImage?: string; // Banner cover image
   accentColor?: string; // Project primary highlight color
   isArchived?: boolean; // Archived state flag
+  pendingInvitations?: ProjectInvitation[];
   chatMessages?: ProjectChatMessage[];
   documents?: ProjectDocument[];
 }
+
+export type TaskStage = 'TODO' | 'IN PROGRESS' | 'REVIEW' | 'DONE';
+
+export const TASK_STAGES: { id: TaskStage; label: string; accent: string; dot: string }[] = [
+  { id: 'TODO', label: 'To Do', accent: 'border-zinc-300 dark:border-zinc-700', dot: 'bg-zinc-400' },
+  { id: 'IN PROGRESS', label: 'In Progress', accent: 'border-blue-400/40 dark:border-blue-500/30', dot: 'bg-blue-500' },
+  { id: 'REVIEW', label: 'In Review', accent: 'border-amber-400/40 dark:border-amber-500/30', dot: 'bg-amber-500' },
+  { id: 'DONE', label: 'Done', accent: 'border-emerald-400/40 dark:border-emerald-500/30', dot: 'bg-emerald-500' },
+];
 
 export interface TaskItem {
   id: string;
@@ -97,7 +120,7 @@ export interface TaskItem {
   tags?: string[];
   dueDate?: string;
   assignee?: Member; // Contributor assigned to the task
-  stage?: 'TODO' | 'IN PROGRESS' | 'REVIEW' | 'DONE';
+  stage?: TaskStage;
 }
 
 export interface TrackedTimer {
@@ -125,7 +148,16 @@ export interface NotificationItem {
   description: string;
   time: string;
   read: boolean;
-  type: 'task' | 'comment' | 'deadline' | 'mention';
+  type: 'task' | 'comment' | 'deadline' | 'mention' | 'invitation';
+  invitationData?: {
+    projectId: string;
+    projectName: string;
+    projectLogo?: string;
+    email: string;
+    role: string;
+    invitedBy: string;
+    status: 'pending' | 'accepted' | 'declined';
+  };
 }
 
 export const AVAILABLE_CONTRIBUTORS: Member[] = [
@@ -133,6 +165,7 @@ export const AVAILABLE_CONTRIBUTORS: Member[] = [
     name: 'Angelina Smith',
     avatar: '/avatars/angelina.jpg',
     role: 'Project Manager (You)',
+    email: 'angelina@kard.dev',
     status: 'Online',
     statusNote: 'Reviewing sprint deliverables',
   },
@@ -140,6 +173,7 @@ export const AVAILABLE_CONTRIBUTORS: Member[] = [
     name: 'Courtney Henry',
     avatar: '/avatars/courtney.jpg',
     role: 'UI/UX Design Lead',
+    email: 'courtney@kard.dev',
     status: 'Online',
     statusNote: 'Refining Dark Mode components',
   },
@@ -147,6 +181,7 @@ export const AVAILABLE_CONTRIBUTORS: Member[] = [
     name: 'John Doe',
     avatar: '/avatars/johndoe.jpg',
     role: 'Lead Fullstack Dev',
+    email: 'john.doe@kard.dev',
     status: 'Focused',
     statusNote: 'Deep work on API endpoints',
   },
@@ -154,6 +189,7 @@ export const AVAILABLE_CONTRIBUTORS: Member[] = [
     name: 'Jerome Bell',
     avatar: '/avatars/jerome.jpg',
     role: 'System Architect',
+    email: 'jerome@kard.dev',
     status: 'In Meeting',
     statusNote: 'Architecture sync with client',
   },
@@ -161,6 +197,7 @@ export const AVAILABLE_CONTRIBUTORS: Member[] = [
     name: 'Arlene McCoy',
     avatar: '/avatars/arlene.jpg',
     role: 'Brand & QA Specialist',
+    email: 'arlene@kard.dev',
     status: 'Offline',
     statusNote: 'Back tomorrow at 9 AM',
   },
@@ -187,11 +224,23 @@ export const INITIAL_PROJECTS: Project[] = [
     attachmentsCount: 12,
     budget: '$54,000',
     description: 'Core iOS client wireframes, micro-interactions design system, and multi-service Google Workspace integrations.',
+    pendingInvitations: [
+      {
+        id: 'inv-google-1',
+        projectId: 'google-proj',
+        projectName: 'Google',
+        email: 'alex.mobile@google.com',
+        role: 'Mobile Specialist',
+        sentAt: 'Hoje às 11:20',
+        status: 'pending',
+        invitedBy: 'Angelina Smith',
+      },
+    ],
     members: [
-      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', status: 'Online', statusNote: 'Design token updates' },
-      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Dev Lead', status: 'Focused', statusNote: 'GraphQL resolver optim' },
-      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Architect', status: 'In Meeting', statusNote: 'Client sync' },
-      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand QA', status: 'Offline' },
+      { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', email: 'courtney@kard.dev', status: 'Online', statusNote: 'Design token updates' },
+      { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Dev Lead', email: 'john.doe@kard.dev', status: 'Focused', statusNote: 'GraphQL resolver optim' },
+      { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Architect', email: 'jerome@kard.dev', status: 'In Meeting', statusNote: 'Client sync' },
+      { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand QA', email: 'arlene@kard.dev', status: 'Offline' },
     ],
     extraMembersCount: 5,
     chatMessages: [
@@ -605,6 +654,23 @@ export const INITIAL_MESSAGES: ChatMessage[] = [
 ];
 
 export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'notif-invite-1',
+    title: 'Convite para Colaborar no Projeto',
+    description: 'Courtney Henry convidou você para colaborar no projeto Spotify Mobile como Lead Interaction Designer.',
+    time: '2m atrás',
+    read: false,
+    type: 'invitation',
+    invitationData: {
+      projectId: 'spotify-proj',
+      projectName: 'Spotify Mobile',
+      projectLogo: 'spotify',
+      email: 'angelina@kard.dev',
+      role: 'Lead Interaction Designer',
+      invitedBy: 'Courtney Henry',
+      status: 'pending',
+    },
+  },
   {
     id: 'notif-1',
     title: 'Google Project Milestone',

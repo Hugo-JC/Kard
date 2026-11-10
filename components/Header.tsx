@@ -1,8 +1,25 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { Search, Bell, Menu, Sun, Moon, Shield, User, LogOut } from "lucide-react"
+import {
+  Search,
+  Bell,
+  Menu,
+  Sun,
+  Moon,
+  Shield,
+  User,
+  LogOut,
+  Users,
+  Check,
+  X,
+  Sparkles,
+  ArrowRight,
+  Target,
+} from "lucide-react"
 import { Avatar } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/ThemeProvider"
 import { NotificationItem } from "@/lib/data"
 import { MemberStatusBadge } from "@/components/ui/MemberStatusBadge"
@@ -15,6 +32,15 @@ interface HeaderProps {
   onMarkNotificationRead: (id: string) => void
   onClearAllNotifications: () => void
   onOpenMobileMenu: () => void
+  onAcceptInvitation?: (
+    notifId: string,
+    invitationData: NonNullable<NotificationItem["invitationData"]>
+  ) => void
+  onDeclineInvitation?: (notifId: string) => void
+  onOpenPricingModal?: () => void
+  onToggleFocusMode?: () => void
+  isFocusModeActive?: boolean
+  currentTier?: "free" | "pro" | "business"
 }
 
 export function Header({
@@ -24,6 +50,12 @@ export function Header({
   onMarkNotificationRead,
   onClearAllNotifications,
   onOpenMobileMenu,
+  onAcceptInvitation,
+  onDeclineInvitation,
+  onOpenPricingModal,
+  onToggleFocusMode,
+  isFocusModeActive = false,
+  currentTier = "free",
 }: HeaderProps) {
   const [isNotifOpen, setIsNotifOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -76,27 +108,61 @@ export function Header({
         </div>
       </div>
 
-      {/* Right: Theme Toggle, Notification bell & User avatar */}
-      <div className="order-1 ml-auto flex shrink-0 items-center gap-1 sm:order-2 sm:ml-0 sm:gap-3">
-        {/* Dark/Light Theme Toggle (CSS-controlled to guarantee zero hydration mismatch) */}
+      {/* Right: Focus Mode, Theme Toggle, Kard Pro Upgrade Button, Notification bell & User avatar */}
+      <div className="order-1 ml-auto flex shrink-0 items-center gap-1.5 sm:order-2 sm:ml-0 sm:gap-2">
+        {/* Focus Mode Trigger (Requested by user) */}
+        {onToggleFocusMode && (
+          <Button
+            type="button"
+            variant={isFocusModeActive ? "default" : "outline"}
+            size="sm"
+            onClick={onToggleFocusMode}
+            className={cn(
+              "h-9 px-3 gap-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs",
+              isFocusModeActive
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "border-border/80 text-foreground hover:bg-muted"
+            )}
+            title="Alternar Modo Foco sem distrações"
+          >
+            <Target className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="hidden sm:inline">Modo Foco</span>
+          </Button>
+        )}
+
+        {/* Quick Upgrade Trigger (Linear / SaaS Style - Clean, no ugly gradient) */}
+        {onOpenPricingModal && (
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={onOpenPricingModal}
+            className="hidden md:inline-flex h-9 px-3.5 rounded-xl text-xs font-bold gap-1.5 shadow-2xs"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>{currentTier === "free" ? "Upgrade 50% OFF" : `Kard ${currentTier.toUpperCase()}`}</span>
+          </Button>
+        )}
+
+        {/* Dark/Light Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="relative flex size-11 items-center justify-center rounded-2xl border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted hover:text-foreground"
+          className="relative flex size-10 items-center justify-center rounded-2xl border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted hover:text-foreground cursor-pointer"
           aria-label="Toggle theme appearance"
           title="Toggle theme appearance"
         >
-          <Sun className="hidden dark:block w-5 h-5 text-amber-400 hover:rotate-45 transition-transform" />
-          <Moon className="block dark:hidden w-5 h-5 text-slate-600 hover:-rotate-12 transition-transform" />
+          <Sun className="hidden dark:block w-4 h-4 text-amber-400 hover:rotate-45 transition-transform" />
+          <Moon className="block dark:hidden w-4 h-4 text-slate-600 hover:-rotate-12 transition-transform" />
         </button>
 
         {/* Notification Bell */}
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setIsNotifOpen(!isNotifOpen)}
-            className="relative flex size-11 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="relative flex size-10 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
             aria-label="View notifications"
           >
-            <Bell className="w-5 h-5" />
+            <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
               <span className="absolute top-2 right-2 flex h-2 w-2">
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" />
@@ -104,15 +170,15 @@ export function Header({
             )}
           </button>
 
-          {/* Notification Dropdown */}
+          {/* Notification Dropdown with GitHub-style Colaborar / Negar cards */}
           {isNotifOpen && (
-            <div className="absolute right-0 mt-3 w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="absolute right-0 mt-3 w-[min(26rem,calc(100vw-1.5rem))] rounded-3xl border border-border bg-card p-4 text-card-foreground shadow-2xl animate-in fade-in zoom-in-95 duration-150 z-50">
               <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold text-card-foreground">Notifications</h4>
+                  <h4 className="text-sm font-bold text-card-foreground">Caixa de Notificações</h4>
                   {unreadCount > 0 && (
                     <span className="rounded-full bg-primary-subtle px-2 py-0.5 text-[10px] font-bold text-primary">
-                      {unreadCount} new
+                      {unreadCount} nova{unreadCount > 1 ? "s" : ""}
                     </span>
                   )}
                 </div>
@@ -121,46 +187,136 @@ export function Header({
                     onClick={onClearAllNotifications}
                     className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
                   >
-                    Mark all read
+                    Marcar todas como lidas
                   </button>
                 )}
               </div>
 
-              <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
+              <div className="mt-3 max-h-80 space-y-2.5 overflow-y-auto pr-0.5">
                 {notifications.length === 0 ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">
-                    No new notifications
+                    Nenhuma notificação no momento.
                   </p>
                 ) : (
-                  notifications.map((item) => (
-                    <button
-                      type="button"
-                      key={item.id}
-                      onClick={() => onMarkNotificationRead(item.id)}
-                      className={cn(
-                        "flex min-h-11 w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors",
-                        item.read ? "bg-transparent hover:bg-muted/60" : "bg-primary-subtle/50 hover:bg-primary-subtle"
-                      )}
-                    >
-                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card shadow-2xs border border-border text-primary">
-                        <Bell className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={cn("text-xs font-semibold text-card-foreground", !item.read && "font-bold text-primary")}>
-                          {item.title}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
-                          {item.description}
-                        </p>
-                        <span className="text-[10px] text-muted-foreground/70 mt-1 block">
-                          {item.time}
-                        </span>
-                      </div>
-                      {!item.read && (
-                        <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
-                      )}
-                    </button>
-                  ))
+                  notifications.map((item) => {
+                    // GitHub-style Collaborator Invitation Card
+                    if (item.type === "invitation" && item.invitationData) {
+                      const inv = item.invitationData
+                      return (
+                        <div
+                          key={item.id}
+                          className={cn(
+                            "rounded-2xl border p-3.5 space-y-2.5 transition-all",
+                            inv.status === "pending"
+                              ? "border-primary/40 bg-primary/5 dark:bg-primary/10 shadow-xs"
+                              : "border-border/80 bg-card"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className="size-7 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs">
+                                <Users className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <h5 className="text-xs font-bold text-card-foreground">
+                                  {item.title}
+                                </h5>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {item.time}
+                                </span>
+                              </div>
+                            </div>
+
+                            <Badge variant="outline" className="text-[10px] font-bold">
+                              {inv.projectName}
+                            </Badge>
+                          </div>
+
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            <strong className="text-foreground">{inv.invitedBy}</strong> convidou você para colaborar no projeto{" "}
+                            <strong className="text-foreground">{inv.projectName}</strong> como{" "}
+                            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-foreground">
+                              {inv.role}
+                            </span>.
+                          </p>
+
+                          {/* GitHub-style action buttons: Colaborar / Negar */}
+                          {inv.status === "pending" ? (
+                            <div className="flex items-center gap-2 pt-1 border-t border-border/60">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => onAcceptInvitation?.(item.id, inv)}
+                                className="flex-1 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs gap-1.5"
+                              >
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                <span>Colaborar</span>
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onDeclineInvitation?.(item.id)}
+                                className="h-8 px-3 rounded-xl border-border hover:bg-rose-500/10 hover:text-rose-500 text-xs font-semibold"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                                <span>Negar</span>
+                              </Button>
+                            </div>
+                          ) : inv.status === "accepted" ? (
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 pt-1">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              <span>Convite aceito • Você agora é colaborador</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground pt-1">
+                              <X className="w-3.5 h-3.5" />
+                              <span>Convite recusado</span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+
+                    // Standard Notification Card
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        onClick={() => onMarkNotificationRead(item.id)}
+                        className={cn(
+                          "flex min-h-11 w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors cursor-pointer",
+                          item.read
+                            ? "bg-transparent hover:bg-muted/60"
+                            : "bg-primary-subtle/50 hover:bg-primary-subtle"
+                        )}
+                      >
+                        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card shadow-2xs border border-border text-primary">
+                          <Bell className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={cn(
+                              "text-xs font-semibold text-card-foreground",
+                              !item.read && "font-bold text-primary"
+                            )}
+                          >
+                            {item.title}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                            {item.description}
+                          </p>
+                          <span className="text-[10px] text-muted-foreground/70 mt-1 block">
+                            {item.time}
+                          </span>
+                        </div>
+                        {!item.read && (
+                          <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
+                        )}
+                      </button>
+                    )
+                  })
                 )}
               </div>
             </div>
@@ -189,25 +345,58 @@ export function Header({
 
           {/* Profile Dropdown */}
           {isProfileOpen && (
-            <div className="absolute right-0 mt-3 w-64 rounded-2xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground">
+            <div className="absolute right-0 mt-3 w-64 rounded-3xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground z-50">
               <div className="flex items-center gap-3 p-2 border-b border-border pb-3">
                 <div className="relative">
                   <Avatar src="/avatars/angelina.jpg" fallback="AS" size="md" />
                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-card-foreground truncate">Angelina Smith</p>
-                  <p className="text-[11px] text-muted-foreground truncate">angelina@kard.dev</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-card-foreground truncate">
+                      Angelina Smith
+                    </p>
+                    {currentTier !== "free" && (
+                      <span className="rounded-md bg-primary text-primary-foreground text-[9px] font-extrabold px-1.5 py-0.2 uppercase">
+                        {currentTier}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    angelina@kard.dev
+                  </p>
                   <div className="mt-1">
                     <MemberStatusBadge status="Online" size="sm" />
                   </div>
                 </div>
               </div>
 
+              {/* Upgrade Promo Row inside Profile */}
+              {onOpenPricingModal && (
+                <div
+                  onClick={() => {
+                    setIsProfileOpen(false)
+                    onOpenPricingModal()
+                  }}
+                  className="mt-2 p-2.5 rounded-2xl bg-muted/60 border border-border/80 hover:border-border transition-all cursor-pointer flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <div>
+                      <p className="text-xs font-bold text-foreground">
+                        {currentTier === "free" ? "Upgrade Kard Pro" : "Gerenciar Plano"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">50% OFF 1ª compra</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                </div>
+              )}
+
               <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-muted hover:text-foreground cursor-pointer">
                   <User className="w-4 h-4 text-muted-foreground" />
-                  <span>Profile Settings</span>
+                  <span>Configurações do Perfil</span>
                 </div>
                 <div className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-muted hover:text-foreground cursor-pointer">
                   <Shield className="w-4 h-4 text-muted-foreground" />
@@ -215,7 +404,7 @@ export function Header({
                 </div>
                 <div className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-danger hover:bg-danger-subtle cursor-pointer">
                   <LogOut className="w-4 h-4 text-danger" />
-                  <span>Log out</span>
+                  <span>Sair da Conta</span>
                 </div>
               </div>
             </div>

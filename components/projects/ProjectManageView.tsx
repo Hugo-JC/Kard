@@ -28,7 +28,9 @@ import {
   Archive,
   ArchiveRestore,
   Shield,
-  Activity
+  Activity,
+  Mail,
+  UserPlus,
 } from "lucide-react"
 import {
   Project,
@@ -39,6 +41,8 @@ import {
   ProjectChatMessage,
   ProjectDocument,
   AVAILABLE_CONTRIBUTORS,
+  TaskStage,
+  ProjectInvitation,
 } from "@/lib/data"
 import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "@/components/Logos"
 import { Avatar } from "@/components/ui/avatar"
@@ -50,17 +54,27 @@ import { ProjectSelectField, memberSelectOptions, type ProjectSelectOption } fro
 import { TaskComposer } from "@/components/projects/TaskComposer"
 import { ProjectProgressSummaryCard } from "@/components/projects/ProjectProgressSummaryCard"
 import { MemberStatusBadge, MemberAvatarWithStatus } from "@/components/ui/MemberStatusBadge"
+import { ProjectTaskBoard } from "@/components/tasks/ProjectTaskBoard"
+import { InviteCollaboratorModal } from "@/components/projects/InviteCollaboratorModal"
 import { cn } from "@/lib/utils"
 
 interface ProjectManageViewProps {
   project: Project
   tasks: TaskItem[]
+  allProjects?: Project[]
   onBack: () => void
   onUpdateProject: (updated: Project) => void
   onToggleTask: (id: string) => void
   onAddTask: (newTask: Omit<TaskItem, "id" | "number">) => void
   onDeleteTask?: (id: string) => void
   onUpdateTaskAssignee?: (taskId: string, assignee: Member) => void
+  onUpdateStage?: (taskId: string, stage: TaskStage) => void
+  onReorderTasks?: (tasks: TaskItem[]) => void
+  onMoveTask?: (taskId: string, targetStage?: TaskStage, targetProject?: string) => void
+  onInviteCollaborator?: (projectId: string, email: string, role: string) => void
+  onCancelInvitation?: (projectId: string, inviteId: string) => void
+  onAcceptInvitationDirect?: (projectId: string, invite: ProjectInvitation) => void
+  onRemoveCollaborator?: (projectId: string, memberNameOrEmail: string) => void
 }
 
 const PRESET_ACCENTS = [
@@ -90,14 +104,23 @@ const PROJECT_PRIORITY_OPTIONS: ProjectSelectOption[] = [
 export function ProjectManageView({
   project,
   tasks,
+  allProjects = [],
   onBack,
   onUpdateProject,
   onToggleTask,
   onAddTask,
   onDeleteTask,
   onUpdateTaskAssignee,
+  onUpdateStage,
+  onReorderTasks,
+  onMoveTask,
+  onInviteCollaborator,
+  onCancelInvitation,
+  onAcceptInvitationDirect,
+  onRemoveCollaborator,
 }: ProjectManageViewProps) {
   const [activeTab, setActiveTab] = useState<"tasks" | "team" | "chat" | "files">("tasks")
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
   // Color picker state
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -278,13 +301,19 @@ export function ProjectManageView({
     setShowAddContributor(false)
   }
 
-  const handleRemoveContributor = (name: string) => {
+  const handleRemoveContributor = (nameOrEmail: string) => {
     if (project.members.length <= 1) return
-    const updatedMembers = project.members.filter((m) => m.name !== name)
-    onUpdateProject({
-      ...project,
-      members: updatedMembers,
-    })
+    if (onRemoveCollaborator) {
+      onRemoveCollaborator(project.id, nameOrEmail)
+    } else {
+      const updatedMembers = project.members.filter(
+        (m) => m.name !== nameOrEmail && m.email !== nameOrEmail
+      )
+      onUpdateProject({
+        ...project,
+        members: updatedMembers,
+      })
+    }
   }
 
   return (
@@ -656,200 +685,123 @@ export function ProjectManageView({
 
       {/* 4. Tab 1: Tasks & Designated Assignees */}
       {activeTab === "tasks" && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-xs sm:flex-row sm:items-end sm:justify-between sm:p-4">
-            <ProjectSelectField
-              label="Responsável"
-              value={taskFilterAssignee}
-              options={taskFilterOptions}
-              onValueChange={setTaskFilterAssignee}
-              className="w-full sm:max-w-60"
-              triggerClassName="bg-background"
-            />
-            <div
-              role="group"
-              aria-label="Filtrar tarefas por status"
-              className="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/60 p-1"
-            >
-              {[
-                { value: "ALL", label: "Todas" },
-                { value: "ACTIVE", label: "Ativas" },
-                { value: "COMPLETED", label: "Concluídas" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={taskFilterStatus === option.value}
-                  onClick={() => setTaskFilterStatus(option.value as typeof taskFilterStatus)}
-                  className={cn(
-                    "min-h-11 rounded-lg px-3 text-sm font-semibold transition-colors",
-                    taskFilterStatus === option.value
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
+        <div className="flex flex-col gap-5">
           <TaskComposer
             project={project}
             assignees={projectAssignees}
             onAddTask={onAddTask}
           />
 
-          <section aria-label="Lista de tarefas" className="flex flex-col gap-3">
-            {filteredTasks.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border bg-card-subtle p-8 text-center sm:p-10">
-                <span className="mx-auto mb-3 grid size-11 place-items-center rounded-2xl bg-primary-subtle text-primary">
-                  <CheckCircle2 aria-hidden="true" className="size-5" />
-                </span>
-                <p className="text-base font-semibold text-card-foreground">
-                  Nenhuma tarefa corresponde a esses filtros.
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Crie uma tarefa acima ou ajuste os filtros.
-                </p>
-              </div>
-            ) : (
-              filteredTasks.map((task) => (
-                <motion.article
-                  key={task.id}
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className="grid min-w-0 gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-xs transition-colors hover:border-primary/25 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-4"
-                >
-                  <Field orientation="horizontal" className="items-start gap-3">
-                    <Checkbox
-                      id={`task-${task.id}`}
-                      checked={task.completed}
-                      onCheckedChange={(checked) => {
-                        if (checked !== task.completed) {
-                          onToggleTask(task.id)
-                        }
-                      }}
-                      aria-label={
-                        task.completed
-                          ? `Reabrir tarefa: ${task.title}`
-                          : `Concluir tarefa: ${task.title}`
-                      }
-                      className="mt-0.5 size-5 rounded-md border-2 border-muted-foreground/35 bg-background transition-colors data-checked:border-success data-checked:bg-success data-checked:text-white"
-                    />
-                    <div className="flex min-w-0 flex-col gap-1.5">
-                      <FieldLabel
-                        htmlFor={`task-${task.id}`}
-                        className={cn(
-                          "cursor-pointer text-sm leading-snug sm:text-base",
-                          task.completed
-                            ? "text-muted-foreground line-through"
-                            : "text-card-foreground"
-                        )}
-                      >
-                        {task.title}
-                      </FieldLabel>
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-muted-foreground">
-                        {task.tags?.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="rounded-md px-2 py-0.5 text-xs font-semibold normal-case tracking-normal"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                        {task.dueDate && (
-                          <span className="inline-flex items-center gap-1.5">
-                            <Clock aria-hidden="true" className="size-4" />
-                            {task.dueDate}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Field>
-
-                  <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
-                    <ProjectSelectField
-                      ariaLabel={`Responsável pela tarefa ${task.title}`}
-                      value={
-                        task.assignee?.name ?? projectAssignees[0]?.name ?? ""
-                      }
-                      options={assigneeOptions}
-                      onValueChange={(value) => {
-                        const assignee = projectAssignees.find(
-                          (member) => member.name === value
-                        )
-                        if (assignee) onUpdateTaskAssignee?.(task.id, assignee)
-                      }}
-                      disabled={!onUpdateTaskAssignee}
-                      className="min-w-0 flex-1 sm:flex-none"
-                      triggerClassName="h-11 w-full sm:w-48"
-                      contentClassName="min-w-56"
-                    />
-                    <Badge
-                      variant={
-                        task.priority === "High"
-                          ? "destructive"
-                          : task.priority === "Medium"
-                          ? "warning"
-                          : "info"
-                      }
-                      className="min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase"
-                    >
-                      <Flag aria-hidden="true" className="size-3.5" />
-                      {task.priority === "High"
-                        ? "Alta"
-                        : task.priority === "Medium"
-                        ? "Média"
-                        : "Baixa"}
-                    </Badge>
-                    {onDeleteTask && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDeleteTask(task.id)}
-                        aria-label={`Excluir tarefa: ${task.title}`}
-                        title="Excluir tarefa"
-                        className="size-11 shrink-0 rounded-xl text-muted-foreground hover:bg-danger-subtle hover:text-danger-foreground"
-                      >
-                        <Trash2 aria-hidden="true" className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                </motion.article>
-              ))
-            )}
-          </section>
+          <ProjectTaskBoard
+            project={project}
+            tasks={tasks}
+            allProjects={allProjects}
+            onToggleTask={onToggleTask}
+            onAddTask={onAddTask}
+            onDeleteTask={onDeleteTask}
+            onUpdateAssignee={onUpdateTaskAssignee}
+            onUpdateStage={onUpdateStage}
+            onReorderTasks={onReorderTasks}
+            onMoveTask={onMoveTask}
+          />
         </div>
       )}
 
       {/* 5. Tab 2: Contributors & Team */}
       {activeTab === "team" && (
         <div className="space-y-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-bold text-card-foreground">
-                Project Contributors & Role Assignments
+                Colaboradores & Gestão de Acessos
               </h3>
               <p className="text-xs text-muted-foreground">
-                Engineers, designers, and managers assigned to {project.name}.
+                Membros da equipe, convites por e-mail e permissões atribuídas a {project.name}.
               </p>
             </div>
 
-            <Button
-              onClick={() => setShowAddContributor(true)}
-              size="sm"
-              className="gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Contributor</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setIsInviteModalOpen(true)}
+                size="sm"
+                className="gap-1.5 bg-primary text-primary-foreground hover:bg-blue-700 shadow-xs cursor-pointer font-bold"
+              >
+                <Mail className="w-4 h-4" />
+                <span>Convidar por E-mail</span>
+              </Button>
+
+              <Button
+                onClick={() => setShowAddContributor(true)}
+                variant="outline"
+                size="sm"
+                className="gap-1.5 cursor-pointer font-semibold"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Adicionar da Equipe</span>
+                <span className="sm:hidden">Equipe</span>
+              </Button>
+            </div>
           </div>
 
+          {/* Pending Invitations Section (Simulating GitHub-style invite inbox) */}
+          {project.pendingInvitations && project.pendingInvitations.length > 0 && (
+            <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-primary" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-card-foreground">
+                    Convites Pendentes por E-mail ({project.pendingInvitations.length})
+                  </h4>
+                </div>
+                <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                  Aguardando aceite via caixa de notificações (estilo GitHub)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {project.pendingInvitations.map((inv) => (
+                  <div
+                    key={inv.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border shadow-2xs"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-card-foreground truncate">
+                        {inv.email}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Função: <span className="font-semibold text-foreground">{inv.role}</span> • {inv.sentAt}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {onAcceptInvitationDirect && (
+                        <button
+                          type="button"
+                          onClick={() => onAcceptInvitationDirect(project.id, inv)}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] transition-colors cursor-pointer shadow-2xs"
+                          title="Simular aceite imediato do convite"
+                        >
+                          Colaborar
+                        </button>
+                      )}
+                      {onCancelInvitation && (
+                        <button
+                          type="button"
+                          onClick={() => onCancelInvitation(project.id, inv.id)}
+                          className="p-1 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger-subtle transition-colors cursor-pointer"
+                          title="Cancelar convite"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Current Collaborators Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {project.members.map((member) => {
               const assignedTasks = projectTasks.filter(
@@ -857,6 +809,9 @@ export function ProjectManageView({
               )
               const completedAssigned = assignedTasks.filter((t) => t.completed).length
               const currentStatus: MemberStatus = member.status || "Offline"
+              const memberEmail =
+                member.email ||
+                `${member.name.toLowerCase().replace(/\s+/g, ".")}@kard.dev`
 
               return (
                 <div
@@ -864,35 +819,38 @@ export function ProjectManageView({
                   className="rounded-2xl bg-card p-4 border border-border shadow-xs space-y-3.5 hover:border-primary/40 transition-colors"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <MemberAvatarWithStatus
                         avatar={member.avatar}
                         name={member.name}
                         status={currentStatus}
                         size="md"
                       />
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-card-foreground">
+                          <h4 className="text-sm font-bold text-card-foreground truncate">
                             {member.name}
                           </h4>
                           {member.name === "Angelina Smith" && (
-                            <span className="rounded-md bg-primary-subtle text-primary px-1.5 py-0.2 text-[10px] font-bold">
+                            <span className="rounded-md bg-primary-subtle text-primary px-1.5 py-0.2 text-[10px] font-bold shrink-0">
                               You
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                           {member.role || "Team Contributor"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground/80 font-mono truncate mt-0.5">
+                          {memberEmail}
                         </p>
                       </div>
                     </div>
 
                     {project.members.length > 1 && (
                       <button
-                        onClick={() => handleRemoveContributor(member.name)}
-                        className="text-muted-foreground/60 hover:text-danger p-1 cursor-pointer"
-                        title="Remove from project"
+                        onClick={() => handleRemoveContributor(member.email || member.name)}
+                        className="text-muted-foreground/60 hover:text-danger p-1 rounded-md hover:bg-danger-subtle transition-colors cursor-pointer shrink-0"
+                        title="Remover colaborador do projeto"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -924,9 +882,9 @@ export function ProjectManageView({
                   </div>
 
                   <div className="rounded-xl bg-muted/30 p-2.5 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Tasks Allocation:</span>
+                    <span className="text-muted-foreground">Tarefas Alocadas:</span>
                     <span className="font-bold text-card-foreground tabular-nums">
-                      {completedAssigned} / {assignedTasks.length} Done
+                      {completedAssigned} / {assignedTasks.length} Concluídas
                     </span>
                   </div>
                 </div>
@@ -934,24 +892,24 @@ export function ProjectManageView({
             })}
           </div>
 
-          {/* Add Contributor Drawer / Selector */}
+          {/* Add Contributor Drawer / Quick Selector */}
           {showAddContributor && (
             <div className="rounded-2xl bg-muted/30 p-5 border border-border space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Select Team Member to Add to Project
+                  Adicionar Membro Existente da Equipe
                 </h4>
                 <button
                   onClick={() => setShowAddContributor(false)}
-                  className="text-muted-foreground hover:text-foreground text-xs"
+                  className="text-muted-foreground hover:text-foreground text-xs cursor-pointer"
                 >
-                  Cancel
+                  Cancelar
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {AVAILABLE_CONTRIBUTORS.filter(
-                  (c) => !project.members.some((m) => m.name === c.name)
+                  (c) => !project.members.some((m) => m.name === c.name || m.email === c.email)
                 ).map((contributor) => (
                   <div
                     key={contributor.name}
@@ -969,7 +927,7 @@ export function ProjectManageView({
                           {contributor.name}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {contributor.role}
+                          {contributor.role} • {contributor.email}
                         </p>
                       </div>
                     </div>
@@ -1203,6 +1161,16 @@ export function ProjectManageView({
           </div>
         </div>
       )}
+
+      {/* Invite Collaborator by Email Modal (GitHub-style flow) */}
+      <InviteCollaboratorModal
+        open={isInviteModalOpen}
+        onOpenChange={setIsInviteModalOpen}
+        project={project}
+        onInviteCollaborator={(projId, email, role) => {
+          onInviteCollaborator?.(projId, email, role)
+        }}
+      />
     </div>
   )
 }

@@ -136,7 +136,7 @@ export function TaskComposer({ project, assignees, onAddTask }: TaskComposerProp
   return (
     <section
       aria-labelledby={composerHeadingId}
-      className="rounded-2xl border border-primary/15 bg-gradient-to-br from-card via-card to-primary-subtle/40 p-4 shadow-sm sm:p-5"
+      className="rounded-2xl border border-border/80 bg-card p-4 shadow-2xs sm:p-5"
     >
       <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">

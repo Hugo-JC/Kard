@@ -16,7 +16,7 @@ import {
   Archive,
   ArchiveRestore
 } from "lucide-react"
-import { Project, TaskItem, Member } from "@/lib/data"
+import { Project, TaskItem, Member, TaskStage, ProjectInvitation } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProjectCardGrid } from "./ProjectCardGrid"
@@ -40,6 +40,13 @@ interface ProjectsViewProps {
   onDeleteTask?: (id: string) => void
   onUpdateTaskAssignee?: (taskId: string, assignee: Member) => void
   onToggleArchive?: (id: string) => void
+  onUpdateStage?: (taskId: string, stage: TaskStage) => void
+  onReorderTasks?: (tasks: TaskItem[]) => void
+  onMoveTask?: (taskId: string, targetStage?: TaskStage, targetProject?: string) => void
+  onInviteCollaborator?: (projectId: string, email: string, role: string) => void
+  onCancelInvitation?: (projectId: string, inviteId: string) => void
+  onAcceptInvitationDirect?: (projectId: string, invite: ProjectInvitation) => void
+  onRemoveCollaborator?: (projectId: string, memberNameOrEmail: string) => void
   managingProjectId?: string | null
   onSetManagingProjectId?: (id: string | null) => void
 }
@@ -60,6 +67,13 @@ export function ProjectsView({
   onDeleteTask,
   onUpdateTaskAssignee,
   onToggleArchive,
+  onUpdateStage,
+  onReorderTasks,
+  onMoveTask,
+  onInviteCollaborator,
+  onCancelInvitation,
+  onAcceptInvitationDirect,
+  onRemoveCollaborator,
   managingProjectId,
   onSetManagingProjectId,
 }: ProjectsViewProps) {
@@ -139,12 +153,20 @@ export function ProjectsView({
       <ProjectManageView
         project={currentManagedProject}
         tasks={tasks}
+        allProjects={projects}
         onBack={() => setActiveManagingId(null)}
         onUpdateProject={onUpdateProject}
         onToggleTask={onToggleTask}
         onAddTask={onAddTask}
         onDeleteTask={onDeleteTask}
         onUpdateTaskAssignee={onUpdateTaskAssignee}
+        onUpdateStage={onUpdateStage}
+        onReorderTasks={onReorderTasks}
+        onMoveTask={onMoveTask}
+        onInviteCollaborator={onInviteCollaborator}
+        onCancelInvitation={onCancelInvitation}
+        onAcceptInvitationDirect={onAcceptInvitationDirect}
+        onRemoveCollaborator={onRemoveCollaborator}
       />
     )
   }
