@@ -36,6 +36,20 @@ function getServerSnapshot(): Theme {
   return "light"
 }
 
+function subscribeSystemDark(callback: () => void) {
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+  mediaQuery.addEventListener("change", callback)
+  return () => mediaQuery.removeEventListener("change", callback)
+}
+
+function getSystemDarkSnapshot(): boolean {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+}
+
+function getSystemDarkServerSnapshot(): boolean {
+  return false
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "light",
@@ -44,35 +58,26 @@ export function ThemeProvider({
   defaultTheme?: Theme
   storageKey?: string
 }) {
-  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const storedTheme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const theme = storedTheme || defaultTheme
+  const systemDark = useSyncExternalStore(
+    subscribeSystemDark,
+    getSystemDarkSnapshot,
+    getSystemDarkServerSnapshot
+  )
 
-  // Determine resolvedTheme
-  const isDark = theme === "dark"
-  const resolvedTheme: "light" | "dark" = isDark ? "dark" : "light"
+  const resolvedTheme: "light" | "dark" =
+    theme === "dark" || (theme === "system" && systemDark) ? "dark" : "light"
 
-  // Synchronize the DOM element class when theme changes
+  // Synchronize the DOM element class when resolvedTheme changes
   useEffect(() => {
     const root = document.documentElement
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-
-    const applyClass = () => {
-      const activeDark =
-        theme === "dark" || (theme === "system" && mediaQuery.matches)
-
-      if (activeDark) {
-        root.classList.add("dark")
-      } else {
-        root.classList.remove("dark")
-      }
+    if (resolvedTheme === "dark") {
+      root.classList.add("dark")
+    } else {
+      root.classList.remove("dark")
     }
-
-    applyClass()
-
-    if (theme === "system") {
-      mediaQuery.addEventListener("change", applyClass)
-      return () => mediaQuery.removeEventListener("change", applyClass)
-    }
-  }, [theme])
+  }, [resolvedTheme])
 
   const setTheme = (newTheme: Theme) => {
     try {
@@ -84,7 +89,7 @@ export function ThemeProvider({
   }
 
   const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark"
+    const nextTheme = resolvedTheme === "dark" ? "light" : "dark"
     setTheme(nextTheme)
   }
 

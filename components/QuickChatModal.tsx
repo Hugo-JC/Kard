@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
-import { Send, CheckCircle2 } from "lucide-react"
+import React, { useState, useRef, useEffect } from "react"
+import { Send } from "lucide-react"
 import { Dialog } from "@/components/ui/dialog"
 import { Avatar } from "@/components/ui/avatar"
 import { ChatMessage } from "@/lib/data"
@@ -25,13 +25,22 @@ export function QuickChatModal({
   open,
   onOpenChange,
 }: QuickChatModalProps) {
-  const [extraMessages, setExtraMessages] = useState<ChatItem[]>([])
+  const [extraMessagesById, setExtraMessagesById] = useState<Record<string, ChatItem[]>>({})
   const [replyText, setReplyText] = useState("")
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
 
   if (!message) return null
 
+  const activeMessageId = message.id
+  const extraMessages = extraMessagesById[activeMessageId] || []
   const chatLog: ChatItem[] = [
-    { id: "initial", sender: "them", text: message.text, time: message.time },
+    { id: `initial-${activeMessageId}`, sender: "them", text: message.text, time: message.time },
     ...extraMessages,
   ]
 
@@ -42,22 +51,28 @@ export function QuickChatModal({
     const newReply = replyText.trim()
     setReplyText("")
 
-    setExtraMessages((prev) => [
+    setExtraMessagesById((prev) => ({
       ...prev,
-      { id: `me-${Date.now()}`, sender: "me", text: newReply, time: "Just now" },
-    ])
+      [activeMessageId]: [
+        ...(prev[activeMessageId] || []),
+        { id: `me-${Date.now()}`, sender: "me", text: newReply, time: "Just now" },
+      ],
+    }))
 
-    // Simulated friendly instant response
-    setTimeout(() => {
-      setExtraMessages((prev) => [
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(() => {
+      setExtraMessagesById((prev) => ({
         ...prev,
-        {
-          id: `them-${Date.now()}`,
-          sender: "them",
-          text: `Thanks Angelina! I'm reviewing the updates right now. Looks great!`,
-          time: "Just now",
-        },
-      ])
+        [activeMessageId]: [
+          ...(prev[activeMessageId] || []),
+          {
+            id: `them-${Date.now()}`,
+            sender: "them",
+            text: `Thanks Angelina! I'm reviewing the updates right now. Looks great!`,
+            time: "Just now",
+          },
+        ],
+      }))
     }, 1200)
   }
 
@@ -77,9 +92,9 @@ export function QuickChatModal({
 
       {/* Messages Scroll Area */}
       <div className="p-5 space-y-3 max-h-80 overflow-y-auto bg-card min-h-[220px]">
-        {chatLog.map((chat, idx) => (
+        {chatLog.map((chat) => (
           <div
-            key={idx}
+            key={chat.id}
             className={`flex flex-col ${
               chat.sender === "me" ? "items-end" : "items-start"
             }`}

@@ -23,7 +23,10 @@ export function ProjectCard({
   onClick,
 }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false)
-  const percent = Math.round((project.completedTasks / project.totalTasks) * 100)
+  const percent =
+    project.totalTasks > 0
+      ? Math.round((project.completedTasks / project.totalTasks) * 100)
+      : 0
 
   // Tag color mapping matching the screenshot's soft pastel badges
   const getTagStyle = (tag: string) => {
@@ -115,10 +118,14 @@ export function ProjectCard({
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-9 z-20 w-48 rounded-2xl bg-card p-2 shadow-lg border border-border text-xs animate-in fade-in zoom-in-95 text-card-foreground">
+              <div
+                onClick={(event) => event.stopPropagation()}
+                className="absolute right-0 top-9 z-20 w-48 rounded-2xl bg-card p-2 shadow-lg border border-border text-xs animate-in fade-in zoom-in-95 text-card-foreground"
+              >
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(event) => {
+                    event.stopPropagation()
                     onUpdateStatus?.(project.id, "IN PROGRESS")
                     setShowMenu(false)
                   }}
@@ -128,7 +135,8 @@ export function ProjectCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(event) => {
+                    event.stopPropagation()
                     onUpdateStatus?.(project.id, "COMPLETED")
                     setShowMenu(false)
                   }}
@@ -139,7 +147,8 @@ export function ProjectCard({
                 {onToggleArchive && (
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={(event) => {
+                      event.stopPropagation()
                       onToggleArchive(project.id)
                       setShowMenu(false)
                     }}

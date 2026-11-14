@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 interface TaskBucketCardProps {
   task: TaskItem
   onToggleTask: (id: string) => void
+  onSelectTask?: (task: TaskItem) => void
   onDeleteTask?: (id: string) => void
   onUpdateAssignee?: (taskId: string, assignee: Member) => void
   availableAssignees?: Member[]
@@ -30,6 +31,7 @@ interface TaskBucketCardProps {
 export function TaskBucketCard({
   task,
   onToggleTask,
+  onSelectTask,
   onDeleteTask,
   onUpdateAssignee,
   availableAssignees = [],
@@ -139,22 +141,27 @@ export function TaskBucketCard({
         </button>
 
         <div className="min-w-0 flex-1 space-y-1">
-          <p
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelectTask?.(task)
+            }}
             className={cn(
-              "font-semibold text-sm leading-snug break-words transition-all",
+              "text-left font-semibold text-sm leading-snug break-words transition-all cursor-pointer hover:text-primary",
               task.completed
                 ? "text-muted-foreground line-through decoration-slate-400/50"
                 : "text-card-foreground"
             )}
           >
             {task.title}
-          </p>
+          </button>
 
           {/* Project Highlight: Logo + Name only */}
           {task.project && (
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/50 text-[10px] font-semibold text-muted-foreground">
-              <ProjectLogoIcon project={task.project} className="w-3 h-3 shrink-0" />
-              <span className="truncate max-w-[120px]">{task.project}</span>
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <ProjectLogoIcon project={task.project} className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate max-w-[130px]">{task.project}</span>
             </div>
           )}
         </div>

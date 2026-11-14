@@ -70,6 +70,26 @@ export interface ProjectDocument {
   type: string;
 }
 
+export interface ProjectNote {
+  id: string;
+  title: string;
+  contentMarkdown: string;
+  updatedAt: string;
+  author: string;
+}
+
+export type DeliverableStatus = 'pending_review' | 'approved' | 'changes_requested';
+
+export interface ClientDeliverable {
+  id: string;
+  title: string;
+  description: string;
+  milestone: string;
+  status: DeliverableStatus;
+  clientFeedback?: string;
+  updatedAt: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -97,6 +117,10 @@ export interface Project {
   pendingInvitations?: ProjectInvitation[];
   chatMessages?: ProjectChatMessage[];
   documents?: ProjectDocument[];
+  notes?: ProjectNote[];
+  deliverables?: ClientDeliverable[];
+  portalEnabled?: boolean;
+  portalShareCode?: string;
 }
 
 export type TaskStage = 'TODO' | 'IN PROGRESS' | 'REVIEW' | 'DONE';
@@ -107,6 +131,20 @@ export const TASK_STAGES: { id: TaskStage; label: string; accent: string; dot: s
   { id: 'REVIEW', label: 'In Review', accent: 'border-amber-400/40 dark:border-amber-500/30', dot: 'bg-amber-500' },
   { id: 'DONE', label: 'Done', accent: 'border-emerald-400/40 dark:border-emerald-500/30', dot: 'bg-emerald-500' },
 ];
+
+export interface TaskChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface TaskComment {
+  id: string;
+  author: string;
+  avatar: string;
+  text: string;
+  time: string;
+}
 
 export interface TaskItem {
   id: string;
@@ -119,8 +157,59 @@ export interface TaskItem {
   priority: 'High' | 'Medium' | 'Low';
   tags?: string[];
   dueDate?: string;
+  dueKind?: 'today' | 'overdue' | 'upcoming';
   assignee?: Member; // Contributor assigned to the task
   stage?: TaskStage;
+  descriptionMarkdown?: string;
+  checklist?: TaskChecklistItem[];
+  comments?: TaskComment[];
+  linkedNoteId?: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  day: number;
+  month: number; // 0-indexed
+  year: number;
+  dots: string[];
+  title: string;
+  isToday?: boolean;
+}
+
+export type AutomationTriggerType =
+  | 'stage_change'
+  | 'priority_high'
+  | 'task_completed'
+  | 'portal_approved'
+  | 'portal_changes_requested';
+
+export type AutomationActionType =
+  | 'mark_completed'
+  | 'move_stage'
+  | 'notify_team'
+  | 'set_priority';
+
+export interface AutomationRule {
+  id: string;
+  naturalText: string;
+  triggerType: AutomationTriggerType;
+  triggerValue?: string;
+  triggerLabel: string;
+  actionType: AutomationActionType;
+  actionValue?: string;
+  actionLabel: string;
+  enabled: boolean;
+  runsCount: number;
+  createdAt: string;
+}
+
+export interface AutomationLog {
+  id: string;
+  ruleId: string;
+  ruleText: string;
+  targetLabel: string;
+  outcome: string;
+  timestamp: string;
 }
 
 export interface TrackedTimer {
@@ -148,7 +237,7 @@ export interface NotificationItem {
   description: string;
   time: string;
   read: boolean;
-  type: 'task' | 'comment' | 'deadline' | 'mention' | 'invitation';
+  type: 'task' | 'comment' | 'deadline' | 'mention' | 'invitation' | 'portal' | 'automation';
   invitationData?: {
     projectId: string;
     projectName: string;
@@ -278,6 +367,45 @@ export const INITIAL_PROJECTS: Project[] = [
       { id: 'doc-2', name: 'iOS_Client_API_Specs.pdf', size: '3.6 MB', date: '2 days ago', type: 'PDF' },
       { id: 'doc-3', name: 'Sprint_3_Deliverables_Checklist.xlsx', size: '1.2 MB', date: '3 days ago', type: 'SHEET' },
     ],
+    portalEnabled: true,
+    portalShareCode: 'google-ios-s3',
+    notes: [
+      {
+        id: 'note-google-1',
+        title: 'Especificação de Arquitetura iOS & Tokens',
+        author: 'Courtney Henry',
+        updatedAt: 'Hoje, 09:40',
+        contentMarkdown:
+          '## Escopo da Sprint 3\n\nPadronização dos componentes iOS com suporte completo ao tema **Obsidian Dark**.\n\n### Critérios de Aceite\n- Contraste mínimo WCAG AA em todos os botões primários\n- Navegação por gestos validada com `60fps`\n- Integração com `Google Contacts API v3`',
+      },
+      {
+        id: 'note-google-2',
+        title: 'Ata da Sync com Cliente (Quinta)',
+        author: 'Angelina Smith',
+        updatedAt: 'Ontem, 17:15',
+        contentMarkdown:
+          '### Pontos alinhados\n1. Cliente aprovou o fluxo simplificado de onboarding em 2 passos.\n2. Próxima entrega para validação no Portal: **Protótipo do Wireframe iOS**.',
+      },
+    ],
+    deliverables: [
+      {
+        id: 'deliv-google-1',
+        title: 'Wireframes Core iOS & Fluxo de Contatos',
+        description: 'Telas de navegação principal, busca global e cartões de contato responsivos para iPhone 15/16.',
+        milestone: 'Sprint 3 / 6',
+        status: 'pending_review',
+        updatedAt: 'Hoje, 10:15',
+      },
+      {
+        id: 'deliv-google-2',
+        title: 'Sistema de Design Tokens (Claro & Escuro)',
+        description: 'Paleta semântica, tipografia Plus Jakarta Sans e espaçamento Bento validado.',
+        milestone: 'Sprint 2 / 6',
+        status: 'approved',
+        clientFeedback: 'Aprovado! Excelente legibilidade no modo escuro.',
+        updatedAt: '14 Jun',
+      },
+    ],
   },
   {
     id: 'slack-proj',
@@ -330,6 +458,28 @@ export const INITIAL_PROJECTS: Project[] = [
       { id: 'doc-4', name: 'Slack_Brand_Kit_2026.zip', size: '48.1 MB', date: '4 days ago', type: 'ZIP' },
       { id: 'doc-5', name: 'Reaction_Iconography_Bundle.svg', size: '2.8 MB', date: '5 days ago', type: 'SVG' },
     ],
+    portalEnabled: true,
+    portalShareCode: 'slack-brand-q2',
+    notes: [
+      {
+        id: 'note-slack-1',
+        title: 'Diretrizes de Marca & Reações Customizadas',
+        author: 'Arlene McCoy',
+        updatedAt: 'Ontem',
+        contentMarkdown:
+          '## Guia de Identidade\n\n- Manter área de respiro mínima de `16px` ao redor do logotipo.\n- Exportar todos os ícones em SVG otimizado sem preenchimento fixo.',
+      },
+    ],
+    deliverables: [
+      {
+        id: 'deliv-slack-1',
+        title: 'Kit Completo de Marca & Ícones SVG',
+        description: 'Pacote final de logotipos, variações monocromáticas e pacote de reações para iOS e Android.',
+        milestone: 'Phase 2 QA',
+        status: 'pending_review',
+        updatedAt: 'Ontem, 16:00',
+      },
+    ],
   },
   {
     id: 'spotify-proj',
@@ -381,6 +531,29 @@ export const INITIAL_PROJECTS: Project[] = [
       { id: 'doc-6', name: 'Spotify_Lockscreen_Mockups.fig', size: '18.4 MB', date: 'Yesterday', type: 'FIGMA' },
       { id: 'doc-7', name: 'Audio_SDK_Benchmarks.pdf', size: '5.2 MB', date: '3 days ago', type: 'PDF' },
     ],
+    portalEnabled: true,
+    portalShareCode: 'spotify-mobile-s4',
+    notes: [
+      {
+        id: 'note-spotify-1',
+        title: 'Benchmarks do Buffer de Áudio (42ms)',
+        author: 'John Doe',
+        updatedAt: 'Hoje, 09:30',
+        contentMarkdown:
+          '## Latência de Streaming\n\nO novo buffer reduziu o atraso de troca de faixa de `110ms` para **`42ms`** em redes 4G.',
+      },
+    ],
+    deliverables: [
+      {
+        id: 'deliv-spotify-1',
+        title: 'Widget de Tela de Bloqueio iOS',
+        description: 'Controles nativos de reprodução, progresso em tempo real e transições suaves.',
+        milestone: 'Sprint 4 / 4',
+        status: 'approved',
+        clientFeedback: 'Widget ficou muito fluido no teste em TestFlight.',
+        updatedAt: 'Hoje, 11:20',
+      },
+    ],
   },
   {
     id: 'linear-proj',
@@ -396,7 +569,7 @@ export const INITIAL_PROJECTS: Project[] = [
     accentColor: '#8B5CF6',
     tags: ['GRAPHQL', 'WORKFLOW'],
     isStarred: false,
-    isArchived: false,
+    isArchived: true,
     dueDate: '30 SEPTEMBER',
     sprintStage: 'Design Audit',
     attachmentsCount: 5,
@@ -475,9 +648,34 @@ export const INITIAL_TASKS: TaskItem[] = [
     completed: false,
     priority: 'High',
     tags: ['UI/UX'],
-    dueDate: '20 June',
+    dueDate: 'Hoje',
+    dueKind: 'today',
     assignee: { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', status: 'Online' },
     stage: 'IN PROGRESS',
+    linkedNoteId: 'note-google-1',
+    descriptionMarkdown:
+      '### Objetivo do Wireframe\nEstruturar os fluxos principais da versão **iOS v2.4**, priorizando leitura rápida e ações com uma mão.\n\n- Validar hierarquia de cartões\n- Garantir estados de erro e vazio claros\n- Vincular tokens de espaçamento do `Design System`',
+    checklist: [
+      { id: 'chk-1-1', text: 'Mapear fluxo de onboarding em 2 telas', completed: true },
+      { id: 'chk-1-2', text: 'Prototipar lista de contatos offline-first', completed: true },
+      { id: 'chk-1-3', text: 'Revisar contraste Dark Mode com Courtney', completed: false },
+    ],
+    comments: [
+      {
+        id: 'c-1-1',
+        author: 'Courtney Henry',
+        avatar: '/avatars/courtney.jpg',
+        text: 'Subi a versão v2 no Figma com os espaçamentos revisados.',
+        time: '10:15',
+      },
+      {
+        id: 'c-1-2',
+        author: 'Angelina Smith',
+        avatar: '/avatars/angelina.jpg',
+        text: 'Perfeito! Vamos validar o último item antes de enviar ao Portal do Cliente.',
+        time: '10:42',
+      },
+    ],
   },
   {
     id: 't-2',
@@ -485,41 +683,80 @@ export const INITIAL_TASKS: TaskItem[] = [
     title: 'Slack Logo Design',
     project: 'Slack',
     commentsCount: 3,
-    subtasksCount: 5,
+    subtasksCount: 3,
     completed: false,
     priority: 'Medium',
     tags: ['Branding'],
-    dueDate: '15 July',
+    dueDate: 'Ontem',
+    dueKind: 'overdue',
     assignee: { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist', status: 'Offline' },
     stage: 'IN PROGRESS',
+    linkedNoteId: 'note-slack-1',
+    descriptionMarkdown:
+      'Refinamento final do pacote de ícones e logotipo adaptável para cabeçalhos compactos.\n\n> **Atenção:** exportar versão monocromática para impressão e modo escuro.',
+    checklist: [
+      { id: 'chk-2-1', text: 'Exportar SVG otimizado em 24px e 48px', completed: true },
+      { id: 'chk-2-2', text: 'Testar redução mínima no favicon', completed: false },
+      { id: 'chk-2-3', text: 'Publicar pacote no Portal do Cliente', completed: false },
+    ],
+    comments: [
+      {
+        id: 'c-2-1',
+        author: 'Arlene McCoy',
+        avatar: '/avatars/arlene.jpg',
+        text: 'Faltam apenas os testes de redução no iOS.',
+        time: 'Ontem',
+      },
+    ],
   },
   {
     id: 't-3',
     number: '03',
     title: 'Dashboard Design',
     project: 'Google',
-    commentsCount: 4,
-    subtasksCount: 5,
+    commentsCount: 2,
+    subtasksCount: 3,
     completed: false,
     priority: 'High',
     tags: ['UI/UX', 'Web'],
-    dueDate: '22 June',
+    dueDate: 'Hoje',
+    dueKind: 'today',
     assignee: { name: 'Courtney Henry', avatar: '/avatars/courtney.jpg', role: 'UI Lead', status: 'Online' },
     stage: 'TODO',
+    descriptionMarkdown:
+      'Definir grade Bento de 12 colunas com foco em **simplicidade visual** e zero ruído de cartões empilhados.',
+    checklist: [
+      { id: 'chk-3-1', text: 'Definir pontos de quebra responsivos', completed: true },
+      { id: 'chk-3-2', text: 'Aplicar numerais tabulares nos contadores', completed: false },
+      { id: 'chk-3-3', text: 'Validar foco de teclado nos botões', completed: false },
+    ],
+    comments: [
+      {
+        id: 'c-3-1',
+        author: 'John Doe',
+        avatar: '/avatars/johndoe.jpg',
+        text: 'Estrutura de grid pronta para integração.',
+        time: '09:10',
+      },
+    ],
   },
   {
     id: 't-4',
     number: '04',
     title: 'Create Wireframe',
     project: 'Slack',
-    commentsCount: 2,
+    commentsCount: 1,
     subtasksCount: 0,
     completed: true,
     priority: 'Medium',
     tags: ['Wireframe'],
     dueDate: '10 June',
+    dueKind: 'upcoming',
     assignee: { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Fullstack Dev', status: 'Focused' },
     stage: 'DONE',
+    descriptionMarkdown: 'Wireframe inicial aprovado pela liderança técnica.',
+    checklist: [],
+    comments: [],
   },
   {
     id: 't-5',
@@ -532,8 +769,10 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'Low',
     tags: ['Asset'],
     dueDate: '12 June',
+    dueKind: 'upcoming',
     assignee: { name: 'Arlene McCoy', avatar: '/avatars/arlene.jpg', role: 'Brand Specialist', status: 'Offline' },
     stage: 'DONE',
+    checklist: [{ id: 'chk-5-1', text: 'Validar licença tipográfica', completed: true }],
   },
   {
     id: 't-6',
@@ -546,36 +785,52 @@ export const INITIAL_TASKS: TaskItem[] = [
     priority: 'Medium',
     tags: ['Iconography'],
     dueDate: '25 June',
+    dueKind: 'upcoming',
     assignee: { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Architect', status: 'In Meeting' },
     stage: 'REVIEW',
+    descriptionMarkdown: 'Revisão final do ícone adaptativo para App Store e TestFlight.',
   },
   {
     id: 't-7',
     number: '07',
     title: 'Audio Stream Buffer Optimization',
     project: 'Spotify Mobile',
-    commentsCount: 5,
-    subtasksCount: 4,
+    commentsCount: 2,
+    subtasksCount: 2,
     completed: false,
     priority: 'High',
     tags: ['Audio API', 'Backend'],
-    dueDate: '28 July',
+    dueDate: 'Hoje',
+    dueKind: 'today',
     assignee: { name: 'John Doe', avatar: '/avatars/johndoe.jpg', role: 'Senior Dev', status: 'Focused' },
     stage: 'IN PROGRESS',
+    linkedNoteId: 'note-spotify-1',
+    descriptionMarkdown:
+      'Reduzir latência do buffer de áudio para abaixo de `45ms` mantendo consumo mínimo de bateria em segundo plano.',
+    checklist: [
+      { id: 'chk-7-1', text: 'Benchmark em rede 4G simulada', completed: true },
+      { id: 'chk-7-2', text: 'Publicar build para QA', completed: false },
+    ],
   },
   {
     id: 't-8',
     number: '08',
     title: 'Bi-directional Webhook Gateway',
     project: 'Linear Sync',
-    commentsCount: 3,
+    commentsCount: 1,
     subtasksCount: 2,
     completed: false,
     priority: 'Medium',
     tags: ['GraphQL', 'Webhooks'],
     dueDate: '15 August',
+    dueKind: 'upcoming',
     assignee: { name: 'Jerome Bell', avatar: '/avatars/jerome.jpg', role: 'Tech Lead', status: 'In Meeting' },
     stage: 'TODO',
+    descriptionMarkdown: 'Mapeamento bidirecional de eventos GraphQL com assinatura HMAC-SHA256.',
+    checklist: [
+      { id: 'chk-8-1', text: 'Validar payload de atualização de status', completed: false },
+      { id: 'chk-8-2', text: 'Adicionar fila de retentativa exponencial', completed: false },
+    ],
   },
 ];
 
@@ -689,6 +944,14 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: 'notif-3',
+    title: 'Menção de @Angelina em Google',
+    description: 'Courtney Henry mencionou você: "@Angelina validar wireframe antes da entrega no Portal".',
+    time: '25m atrás',
+    read: false,
+    type: 'mention',
+  },
+  {
+    id: 'notif-4',
     title: 'Upcoming Due Date',
     description: 'Google Wireframe deliverables due on 20 June.',
     time: '3 hours ago',
@@ -696,3 +959,73 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
     type: 'deadline',
   },
 ];
+
+export const INITIAL_CALENDAR_EVENTS: CalendarEvent[] = [
+  { id: 'ev-1', day: 3, month: 0, year: 2021, dots: ['#F97316'], title: 'Sprint Planning with Google team' },
+  { id: 'ev-2', day: 5, month: 0, year: 2021, dots: ['#3B82F6'], title: 'Design Review & Wireframe kickoff', isToday: true },
+  { id: 'ev-3', day: 19, month: 0, year: 2021, dots: ['#F59E0B', '#3B82F6'], title: 'Slack Beta Release & Assets check' },
+  { id: 'ev-4', day: 20, month: 0, year: 2021, dots: ['#EF4444'], title: 'Google iOS Due Date' },
+  { id: 'ev-5', day: 15, month: 6, year: 2021, dots: ['#EF4444'], title: 'Slack Milestone Due Date' },
+];
+
+export const INITIAL_AUTOMATION_RULES: AutomationRule[] = [
+  {
+    id: 'rule-1',
+    naturalText: 'Quando tarefa for para Done, marcar como concluída e notificar equipe',
+    triggerType: 'stage_change',
+    triggerValue: 'DONE',
+    triggerLabel: 'Estágio muda para Done',
+    actionType: 'mark_completed',
+    actionValue: 'notify',
+    actionLabel: 'Concluir tarefa e notificar equipe',
+    enabled: true,
+    runsCount: 4,
+    createdAt: 'Hoje, 08:30',
+  },
+  {
+    id: 'rule-2',
+    naturalText: 'Ao aprovar entrega no Portal do Cliente, notificar gerente do projeto',
+    triggerType: 'portal_approved',
+    triggerValue: 'approved',
+    triggerLabel: 'Entrega aprovada no Portal',
+    actionType: 'notify_team',
+    actionValue: 'manager',
+    actionLabel: 'Enviar alerta na Central de Notificações',
+    enabled: true,
+    runsCount: 2,
+    createdAt: 'Ontem',
+  },
+  {
+    id: 'rule-3',
+    naturalText: 'Quando prioridade for Alta, mover automaticamente para In Progress',
+    triggerType: 'priority_high',
+    triggerValue: 'High',
+    triggerLabel: 'Prioridade definida como Alta',
+    actionType: 'move_stage',
+    actionValue: 'IN PROGRESS',
+    actionLabel: 'Mover para In Progress',
+    enabled: false,
+    runsCount: 1,
+    createdAt: '12 Jun',
+  },
+];
+
+export const INITIAL_AUTOMATION_LOGS: AutomationLog[] = [
+  {
+    id: 'alog-1',
+    ruleId: 'rule-2',
+    ruleText: 'Ao aprovar entrega no Portal do Cliente, notificar gerente do projeto',
+    targetLabel: 'Widget de Tela de Bloqueio iOS',
+    outcome: 'Notificação enviada para Angelina Smith',
+    timestamp: 'Hoje, 11:20',
+  },
+  {
+    id: 'alog-2',
+    ruleId: 'rule-1',
+    ruleText: 'Quando tarefa for para Done, marcar como concluída e notificar equipe',
+    targetLabel: 'Create Wireframe (Slack)',
+    outcome: 'Marcada como concluída e registrada',
+    timestamp: 'Ontem, 18:05',
+  },
+];
+

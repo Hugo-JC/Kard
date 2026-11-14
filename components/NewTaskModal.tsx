@@ -4,17 +4,31 @@ import React, { useState } from "react"
 import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { TaskItem } from "@/lib/data"
+import { TaskItem, Project } from "@/lib/data"
 
 interface NewTaskModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAddTask: (task: Omit<TaskItem, "id" | "number">) => void
+  projects?: Project[]
 }
 
-export function NewTaskModal({ open, onOpenChange, onAddTask }: NewTaskModalProps) {
+export function NewTaskModal({
+  open,
+  onOpenChange,
+  onAddTask,
+  projects = [],
+}: NewTaskModalProps) {
+  const activeProjectNames = projects
+    .filter((p) => !p.isArchived)
+    .map((p) => p.name)
+  const projectOptions =
+    activeProjectNames.length > 0
+      ? activeProjectNames
+      : ["Google", "Slack", "Spotify Mobile", "Linear Sync"]
+
   const [title, setTitle] = useState("")
-  const [project, setProject] = useState("Google")
+  const [project, setProject] = useState(projectOptions[0] || "Google")
   const [priority, setPriority] = useState<TaskItem["priority"]>("Medium")
   const [tag, setTag] = useState("UI/UX")
   const [dueDate, setDueDate] = useState("28 June")
@@ -69,8 +83,11 @@ export function NewTaskModal({ open, onOpenChange, onAddTask }: NewTaskModalProp
               onChange={(e) => setProject(e.target.value)}
               className="h-11 w-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/60 px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <option value="Google" className="bg-card text-card-foreground">Google</option>
-              <option value="Slack" className="bg-card text-card-foreground">Slack</option>
+              {projectOptions.map((projName) => (
+                <option key={projName} value={projName} className="bg-card text-card-foreground">
+                  {projName}
+                </option>
+              ))}
             </select>
           </div>
 

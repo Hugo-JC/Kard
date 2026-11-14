@@ -56,7 +56,10 @@ export function ProjectTableView({
           {/* Table Body */}
           <tbody className="divide-y divide-border/60">
             {projects.map((project) => {
-              const percent = Math.round((project.completedTasks / project.totalTasks) * 100)
+              const percent =
+                project.totalTasks > 0
+                  ? Math.round((project.completedTasks / project.totalTasks) * 100)
+                  : 0
 
               return (
                 <tr

@@ -98,10 +98,10 @@
   --border: #1F2228;
   --border-subtle: #181A1F;
 
-  /* Brand / Active State (Linear electric indigo) */
-  --primary: #5E6AD2;
+  /* Brand / Active State (Crisp Electric Blue - zero purple slop) */
+  --primary: #3B82F6;
   --primary-foreground: #FFFFFF;
-  --primary-subtle: rgba(94, 106, 210, 0.16);
+  --primary-subtle: rgba(59, 130, 246, 0.14);
 
   /* Secondary & Accents */
   --secondary: #16181F;
@@ -112,19 +112,19 @@
 
   /* Semantic Feedback Tokens */
   --success: #10B981;
-  --success-subtle: rgba(16, 185, 129, 0.16);
+  --success-subtle: rgba(16, 185, 129, 0.14);
   --success-foreground: #34D399;
 
   --warning: #F59E0B;
-  --warning-subtle: rgba(245, 158, 11, 0.16);
+  --warning-subtle: rgba(245, 158, 11, 0.14);
   --warning-foreground: #FBBF24;
 
   --danger: #F43F5E;
-  --danger-subtle: rgba(244, 63, 94, 0.16);
+  --danger-subtle: rgba(244, 63, 94, 0.14);
   --danger-foreground: #FDA4AF;
 
   --info: #38BDF8;
-  --info-subtle: rgba(56, 189, 248, 0.16);
+  --info-subtle: rgba(56, 189, 248, 0.14);
   --info-foreground: #7DD3FC;
 }
 
@@ -143,7 +143,7 @@ body {
   color: var(--foreground);
   font-size: 1rem;
   line-height: 1.55;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -151,7 +151,7 @@ h1,
 h2,
 h3,
 h4 {
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 

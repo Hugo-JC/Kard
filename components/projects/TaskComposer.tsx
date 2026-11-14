@@ -1,6 +1,6 @@
 "use client"
 
-import { useId, useState, type FormEvent } from "react"
+import { useId, useState, useSyncExternalStore, type FormEvent } from "react"
 import { addDays, format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import {
@@ -95,7 +95,11 @@ export function TaskComposer({ project, assignees, onAddTask }: TaskComposerProp
   const deadlineInputId = useId()
   const selectedAssignee =
     assignees.find((assignee) => assignee.name === assigneeName) ?? assignees[0]
-  const today = toDateInputValue(new Date())
+  const today = useSyncExternalStore(
+    () => () => {},
+    () => toDateInputValue(new Date()),
+    () => ""
+  )
   const deadlineLabel = deadline
     ? format(parseISO(deadline), "d 'de' MMM", { locale: ptBR })
     : "Sem prazo"
@@ -241,7 +245,7 @@ export function TaskComposer({ project, assignees, onAddTask }: TaskComposerProp
                     id={deadlineInputId}
                     type="date"
                     value={deadline}
-                    min={today}
+                    min={today || undefined}
                     onChange={(event) => {
                       setDeadline(event.target.value)
                       setDeadlineOpen(false)

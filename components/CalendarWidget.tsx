@@ -2,17 +2,15 @@
 
 import React, { useState } from "react"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react"
+import { CalendarEvent, INITIAL_CALENDAR_EVENTS } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
-interface CalendarEvent {
-  day: number
-  month: number // 0-indexed
-  year: number
-  dots: string[] // colors e.g. ['#F59E0B']
-  title: string
+interface CalendarWidgetProps {
+  events?: CalendarEvent[]
+  onAddEvent?: (event: Omit<CalendarEvent, "id">) => void
 }
 
-export function CalendarWidget() {
+export function CalendarWidget({ events: externalEvents, onAddEvent }: CalendarWidgetProps = {}) {
   // Initial date matching the screenshot Jan 2021, but fully navigable!
   const [currentMonth, setCurrentMonth] = useState(0) // Jan (0-indexed)
   const [currentYear, setCurrentYear] = useState(2021)
@@ -23,14 +21,10 @@ export function CalendarWidget() {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ]
 
-  // Sample events with indicator dots matching the screenshot
-  const events: CalendarEvent[] = [
-    { day: 3, month: 0, year: 2021, dots: ["#F97316"], title: "Sprint Planning with Google team" },
-    { day: 5, month: 0, year: 2021, dots: ["#3B82F6"], title: "Design Review & Wireframe kickoff" },
-    { day: 19, month: 0, year: 2021, dots: ["#F59E0B", "#3B82F6"], title: "Slack Beta Release & Assets check" },
-    { day: 20, month: 0, year: 2021, dots: ["#EF4444"], title: "Google iOS Due Date" },
-    { day: 15, month: 6, year: 2021, dots: ["#EF4444"], title: "Slack Milestone Due Date" },
-  ]
+  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(INITIAL_CALENDAR_EVENTS)
+  const events = externalEvents ?? localEvents
+  const [isAddingEvent, setIsAddingEvent] = useState(false)
+  const [newEventTitle, setNewEventTitle] = useState("")
 
   const prevMonth = () => {
     if (currentMonth === 0) {
@@ -100,15 +94,17 @@ export function CalendarWidget() {
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={prevMonth}
-              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8"
+              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8 cursor-pointer"
               aria-label="Previous month"
             >
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             </button>
             <button
+              type="button"
               onClick={nextMonth}
-              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8"
+              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8 cursor-pointer"
               aria-label="Next month"
             >
               <ChevronRight className="w-4 h-4 stroke-[2.5]" />
@@ -145,8 +141,12 @@ export function CalendarWidget() {
             return (
               <div key={idx} className="flex flex-col items-center justify-center py-1">
                 <button
+                  type="button"
                   onClick={() => {
-                    if (cell.isCurrentMonth) setSelectedDay(cell.day)
+                    if (cell.isCurrentMonth) {
+                      setSelectedDay(cell.day)
+                      setIsAddingEvent(false)
+                    }
                   }}
                   className={cn(
                     "relative flex h-10 w-full max-w-10 items-center justify-center rounded-xl text-[13px] font-semibold transition-all cursor-pointer", 
@@ -188,12 +188,63 @@ export function CalendarWidget() {
               {activeEvent.title}
             </span>
           </div>
+        ) : isAddingEvent ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!newEventTitle.trim()) return
+              const payload = {
+                day: selectedDay,
+                month: currentMonth,
+                year: currentYear,
+                dots: ["#3B82F6"],
+                title: newEventTitle.trim(),
+              }
+              if (onAddEvent) {
+                onAddEvent(payload)
+              } else {
+                setLocalEvents((prev) => [
+                  ...prev,
+                  { ...payload, id: `ev-${Date.now()}` },
+                ])
+              }
+              setNewEventTitle("")
+              setIsAddingEvent(false)
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={newEventTitle}
+              onChange={(e) => setNewEventTitle(e.target.value)}
+              placeholder={`Event on ${selectedDay} ${monthNames[currentMonth]}...`}
+              autoFocus
+              className="flex-1 h-8 rounded-lg border border-border bg-muted/40 px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <button
+              type="submit"
+              className="h-8 rounded-lg bg-primary px-2.5 text-[11px] font-semibold text-primary-foreground cursor-pointer"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAddingEvent(false)}
+              className="h-8 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              Cancel
+            </button>
+          </form>
         ) : (
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Selected: {selectedDay} {monthNames[currentMonth]}</span>
-            <span className="font-medium text-primary hover:underline cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setIsAddingEvent(true)}
+              className="font-medium text-primary hover:underline cursor-pointer"
+            >
               + Add Event
-            </span>
+            </button>
           </div>
         )}
       </div>

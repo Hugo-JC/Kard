@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 interface SortableTaskRowProps {
   task: TaskItem
   onToggleTask: (id: string) => void
+  onSelectTask?: (task: TaskItem) => void
   onDeleteTask?: (id: string) => void
   onUpdateAssignee?: (taskId: string, assignee: Member) => void
   onUpdateStage?: (taskId: string, stage: TaskStage) => void
@@ -31,6 +32,7 @@ interface SortableTaskRowProps {
 export function SortableTaskRow({
   task,
   onToggleTask,
+  onSelectTask,
   onDeleteTask,
   onUpdateAssignee,
   onUpdateStage,
@@ -111,20 +113,25 @@ export function SortableTaskRow({
 
         {/* Task Title & Tags */}
         <div className="min-w-0 flex-1">
-          <p
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelectTask?.(task)
+            }}
             className={cn(
-              "font-medium truncate transition-all",
+              "text-left font-medium truncate transition-all cursor-pointer hover:text-primary block max-w-full",
               task.completed
                 ? "text-muted-foreground line-through decoration-slate-400/50"
                 : "text-card-foreground"
             )}
           >
             {task.title}
-          </p>
+          </button>
 
           <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
             {task.project && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/70 border border-border/50 font-semibold text-card-foreground text-[11px]">
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <ProjectLogoIcon project={task.project} className="w-3.5 h-3.5 shrink-0" />
                 <span>{task.project}</span>
               </span>

@@ -1,11 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Play, Pause, MoreVertical, Timer, RotateCcw } from "lucide-react"
+import { Play, Pause, MoreVertical, Timer, Target } from "lucide-react"
 import { TrackedTimer } from "@/lib/data"
 import { cn } from "@/lib/utils"
-
-import { Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ProjectLogoIcon } from "@/components/Logos"
 
@@ -130,9 +128,12 @@ export function TimeTrackerCard({
         {/* Slack Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-bold text-card-foreground tracking-tight">
-              Slack
-            </h4>
+            <div className="flex items-center gap-2">
+              <ProjectLogoIcon project="Slack" className="w-4 h-4" />
+              <h4 className="text-sm font-bold text-card-foreground tracking-tight">
+                Slack
+              </h4>
+            </div>
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-muted-foreground border border-border/60">
               <Play className="w-3 h-3 fill-muted-foreground text-muted-foreground" />
             </div>
@@ -194,13 +195,23 @@ export function TimeTrackerCard({
         </div>
       </div>
 
-      {/* Footer subtle summary */}
-      <div className="mt-4 pt-3 border-t border-border/80 flex items-center justify-between text-[11px] text-muted-foreground">
-        <span>Active Tracker: Google</span>
-        <span className="text-success font-semibold flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-          Synchronized
-        </span>
+      {/* Footer summary + Focus Mode shortcut */}
+      <div className="mt-5 flex items-center justify-between gap-2 pt-2 text-xs text-muted-foreground">
+        <span>Sincronizado · Google</span>
+        {onOpenFocusMode ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onOpenFocusMode}
+            className="h-7 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-primary"
+          >
+            <Target className="w-3.5 h-3.5" />
+            <span>Modo Foco</span>
+          </Button>
+        ) : (
+          <span className="font-semibold text-success-foreground">Ativo</span>
+        )}
       </div>
     </div>
   )

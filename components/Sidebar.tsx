@@ -8,10 +8,9 @@ import {
   CheckSquare2,
   CalendarDays,
   Clock,
-  PieChart,
+  Zap,
   Settings,
   X,
-  HelpCircle,
   Sparkles
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -23,7 +22,7 @@ export type NavItemKey =
   | "my-tasks"
   | "calendar"
   | "time-manage"
-  | "reports"
+  | "automations"
   | "settings"
 
 interface SidebarProps {
@@ -49,7 +48,7 @@ export function Sidebar({
     { key: "my-tasks", label: "MY TASKS", icon: CheckSquare2 },
     { key: "calendar", label: "CALENDAR", icon: CalendarDays },
     { key: "time-manage", label: "TIME MANAGE", icon: Clock },
-    { key: "reports", label: "REPORTS", icon: PieChart },
+    { key: "automations", label: "AUTOMATIONS", icon: Zap },
     { key: "settings", label: "SETTINGS", icon: Settings },
   ]
 
@@ -128,37 +127,39 @@ export function Sidebar({
         </nav>
       </div>
 
-      {/* Bottom Pro Upgrade Banner / Status with clean breathing room */}
-      <div
-        onClick={onOpenPricingModal}
-        className="mt-6 rounded-2xl bg-muted/40 p-4 border border-border/70 hover:border-border transition-all text-center cursor-pointer shadow-2xs group"
-      >
-        <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs mb-2.5 group-hover:scale-105 transition-transform">
-          <Sparkles className="w-4 h-4 text-amber-300" />
-        </div>
-        <div className="flex items-center justify-center gap-1.5">
-          <p className="text-xs font-extrabold text-foreground">
-            {currentTier === "free" ? "Kard Pro" : `Kard ${currentTier.toUpperCase()}`}
-          </p>
+      {/* Bottom Plan Card */}
+      <div className="mt-6 rounded-2xl bg-muted/45 p-4 text-left space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-xl bg-primary-subtle text-primary">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-xs font-bold text-foreground">
+              {currentTier === "free" ? "Kard Pro" : `Kard ${currentTier.toUpperCase()}`}
+            </p>
+          </div>
           {currentTier === "free" && (
-            <span className="rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-extrabold px-1.5 py-0.2">
-              -50%
+            <span className="text-[11px] font-semibold text-success-foreground">
+              50% OFF
             </span>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
-          {currentTier === "free" ? "Desconto na 1ª compra" : "Recursos ilimitados ativos"}
+
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {currentTier === "free"
+            ? "Projetos ilimitados e sprints com desconto na 1ª compra."
+            : "Todos os recursos avançados estão ativos."}
         </p>
-        <div className="mt-3">
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            className="w-full h-8 text-[11px] font-bold rounded-xl cursor-pointer"
-          >
-            {currentTier === "free" ? "Ver Planos & Vantagens" : "Gerenciar Assinatura"}
-          </Button>
-        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onOpenPricingModal}
+          className="w-full h-8 text-xs font-semibold rounded-xl bg-card"
+        >
+          {currentTier === "free" ? "Ver planos" : "Gerenciar plano"}
+        </Button>
       </div>
     </div>
   )

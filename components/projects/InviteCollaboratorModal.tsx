@@ -1,22 +1,18 @@
 "use client"
 
-import React, { useState } from "react"
-import {
-  X,
-  Mail,
-  UserPlus,
-  Shield,
-  Send,
-  CheckCircle2,
-  Users,
-  Sparkles,
-  Info,
-} from "lucide-react"
+import React, { useState, useRef, useEffect } from "react"
+import { Mail, Send, CheckCircle2 } from "lucide-react"
 import { Project, AVAILABLE_CONTRIBUTORS } from "@/lib/data"
-import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "@/components/Logos"
+import { ProjectLogoIcon } from "@/components/Logos"
+import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Avatar } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
+import {
+  ProjectSelectField,
+  type ProjectSelectOption,
+} from "@/components/projects/ProjectSelectField"
 
 interface InviteCollaboratorModalProps {
   open: boolean
@@ -25,14 +21,14 @@ interface InviteCollaboratorModalProps {
   onInviteCollaborator: (projectId: string, email: string, role: string) => void
 }
 
-const PRESET_ROLES = [
-  "UI/UX Designer",
-  "Frontend Engineer",
-  "Fullstack Dev",
-  "Backend Engineer",
-  "Product Manager",
-  "QA Specialist",
-  "System Architect",
+const ROLE_OPTIONS: ProjectSelectOption[] = [
+  { value: "UI/UX Designer", label: "UI/UX Designer", indicatorClassName: "bg-primary" },
+  { value: "Frontend Engineer", label: "Frontend Engineer", indicatorClassName: "bg-info" },
+  { value: "Fullstack Dev", label: "Fullstack Dev", indicatorClassName: "bg-success" },
+  { value: "Backend Engineer", label: "Backend Engineer", indicatorClassName: "bg-warning" },
+  { value: "Product Manager", label: "Product Manager", indicatorClassName: "bg-primary" },
+  { value: "QA Specialist", label: "QA Specialist", indicatorClassName: "bg-muted-foreground" },
+  { value: "System Architect", label: "System Architect", indicatorClassName: "bg-danger" },
 ]
 
 export function InviteCollaboratorModal({
@@ -44,8 +40,24 @@ export function InviteCollaboratorModal({
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("UI/UX Designer")
   const [sentSuccess, setSentSuccess] = useState(false)
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  if (!open) return null
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+    }
+  }, [])
+
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+        closeTimeoutRef.current = null
+      }
+      setSentSuccess(false)
+    }
+    onOpenChange(nextOpen)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,164 +65,132 @@ export function InviteCollaboratorModal({
 
     onInviteCollaborator(project.id, email.trim(), role)
     setSentSuccess(true)
-    setTimeout(() => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+    closeTimeoutRef.current = setTimeout(() => {
       setSentSuccess(false)
       setEmail("")
       onOpenChange(false)
-    }, 1400)
+    }, 1200)
   }
 
-  // Quick fill from available contributors that aren't yet in this project
   const availableToInvite = AVAILABLE_CONTRIBUTORS.filter(
     (c) => !project.members.some((m) => m.name === c.name || m.email === c.email)
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md overflow-y-auto animate-in fade-in duration-150">
-      <div
-        className="relative w-full max-w-lg my-auto rounded-[32px] bg-card border border-border shadow-2xl text-card-foreground p-6 sm:p-7 space-y-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button */}
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors cursor-pointer"
-          aria-label="Fechar modal"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        {sentSuccess ? (
-          <div className="py-8 text-center space-y-3 animate-in zoom-in-95 duration-200">
-            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 ring-4 ring-emerald-500/15">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-bold text-card-foreground">
-              Convite Enviado com Sucesso! 🚀
-            </h3>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-              O convite foi despachado para <strong>{email}</strong> e registrado na caixa de notificações com botões de <strong>Colaborar</strong> ou <strong>Negar</strong> (estilo GitHub).
-            </p>
+    <Dialog
+      open={open}
+      onOpenChange={handleDialogOpenChange}
+      className="max-w-lg p-6 sm:p-7"
+    >
+      {sentSuccess ? (
+        <div className="py-8 text-center space-y-3">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-success-subtle text-success-foreground">
+            <CheckCircle2 className="size-7" />
           </div>
-        ) : (
-          <>
-            {/* Header with Project Badge */}
-            <div className="flex items-center gap-3 pb-3 border-b border-border/80">
-              <div className="size-11 rounded-2xl bg-muted/60 border border-border flex items-center justify-center shrink-0">
-                {project.logo === "google" ? (
-                  <GoogleLogo className="w-6 h-6" />
-                ) : project.logo === "slack" ? (
-                  <SlackLogo className="w-6 h-6" />
-                ) : project.logo === "spotify" ? (
-                  <SpotifyLogo className="w-6 h-6" />
-                ) : project.logo === "linear" ? (
-                  <LinearLogo className="w-6 h-6" />
-                ) : (
-                  <Users className="w-6 h-6 text-primary" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-card-foreground">
-                  Convidar Colaborador por E-mail
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Projeto: <strong className="text-foreground">{project.name}</strong> ({project.company})
-                </p>
-              </div>
+          <h3 className="text-lg font-bold text-foreground">
+            Convite enviado
+          </h3>
+          <p className="mx-auto max-w-xs text-xs leading-relaxed text-muted-foreground">
+            A solicitação para <strong className="text-foreground">{email}</strong> foi enviada para a caixa de notificações com as opções de Colaborar ou Negar.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="flex items-center gap-3 pr-8">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-muted/60">
+              <ProjectLogoIcon project={project.name} className="size-6" />
             </div>
-
-            {/* Explanation matching GitHub invitation flow */}
-            <div className="rounded-2xl bg-primary-subtle/50 border border-primary/20 p-3.5 flex items-start gap-3 text-xs text-primary">
-              <Info className="w-4 h-4 shrink-0 mt-0.5" />
-              <p className="leading-relaxed">
-                Ao enviar, o colaborador receberá uma solicitação na <strong>caixa de notificações</strong> com opções interativas de <strong>Colaborar</strong> ou <strong>Negar</strong> o pedido, exatamente como no GitHub.
+            <div>
+              <h3 className="text-lg font-bold tracking-tight text-foreground">
+                Convidar colaborador
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {project.name} · O convite aparecerá na caixa de notificações para aceitar ou negar.
               </p>
             </div>
+          </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  E-mail do Colaborador *
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="exemplo: desenvolvedor@empresa.com"
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-muted/30 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Field>
+              <FieldLabel htmlFor="invite-email">E-mail do colaborador</FieldLabel>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="invite-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nome@empresa.com"
+                  className="pl-10 rounded-xl"
+                />
               </div>
+            </Field>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Cargo / Função no Projeto
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl border border-border bg-muted/30 text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                >
-                  {PRESET_ROLES.map((r) => (
-                    <option key={r} value={r} className="bg-card">
-                      {r}
-                    </option>
+            <ProjectSelectField
+              label="Função no projeto"
+              value={role}
+              options={ROLE_OPTIONS}
+              onValueChange={setRole}
+            />
+
+            {availableToInvite.length > 0 && (
+              <div className="space-y-2 pt-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Sugestões da equipe
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {availableToInvite.map((contributor) => (
+                    <Button
+                      key={contributor.name}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEmail(
+                          contributor.email ||
+                            `${contributor.name.toLowerCase().replace(/\s+/g, ".")}@kard.dev`
+                        )
+                        if (contributor.role) setRole(contributor.role)
+                      }}
+                      className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-medium"
+                    >
+                      <Avatar
+                        src={contributor.avatar}
+                        fallback={contributor.name[0]}
+                        size="sm"
+                        className="size-4"
+                      />
+                      <span>{contributor.name}</span>
+                    </Button>
                   ))}
-                </select>
-              </div>
-
-              {/* Quick Suggestions from Team */}
-              {availableToInvite.length > 0 && (
-                <div className="space-y-2 pt-1">
-                  <span className="text-[11px] font-semibold text-muted-foreground">
-                    Sugestões rápidas da equipe:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {availableToInvite.map((contributor) => (
-                      <button
-                        key={contributor.name}
-                        type="button"
-                        onClick={() => {
-                          setEmail(contributor.email || `${contributor.name.toLowerCase().replace(/\s+/g, ".")}@kard.dev`)
-                          if (contributor.role) setRole(contributor.role)
-                        }}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/60 border border-border hover:border-primary text-[11px] font-medium text-foreground cursor-pointer transition-colors"
-                      >
-                        <Avatar src={contributor.avatar} fallback={contributor.name[0]} size="sm" className="w-4 h-4" />
-                        <span>{contributor.name}</span>
-                      </button>
-                    ))}
-                  </div>
                 </div>
-              )}
-
-              {/* Submit CTA */}
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  className="h-10 text-xs font-semibold rounded-xl"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!email.trim()}
-                  className="h-10 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-blue-700 shadow-sm gap-1.5 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Enviar Convite de Colaboração</span>
-                </Button>
               </div>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="h-10 rounded-xl text-xs font-semibold"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={!email.trim()}
+                className="h-10 gap-1.5 rounded-xl px-5 text-xs font-semibold"
+              >
+                <Send className="size-3.5" />
+                <span>Enviar convite</span>
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+    </Dialog>
   )
 }

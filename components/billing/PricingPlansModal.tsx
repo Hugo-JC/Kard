@@ -3,34 +3,21 @@
 import React, { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
-  X,
   Check,
-  Sparkles,
-  Zap,
   ShieldCheck,
   CreditCard,
   QrCode,
   ArrowRight,
-  Star,
-  Users,
-  FolderKanban,
-  Clock,
-  Flame,
   Award,
-  ChevronRight,
   Table,
-  CheckCircle2,
   Minus,
-  Lock,
-  Globe,
-  Bot,
-  Sliders,
-  FileSpreadsheet,
-  Layers,
-  HeartHandshake,
 } from "lucide-react"
+import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export type SubscriptionPlanTier = "free" | "pro" | "business"
@@ -57,18 +44,10 @@ export function PricingPlansModal({
   const [checkoutSuccess, setCheckoutSuccess] = useState(false)
   const [showComparisonTable, setShowComparisonTable] = useState(false)
 
-  if (!open) return null
-
-  // Pricing calculation
-  // Pro: R$ 39,90/mês. 1ª compra 50% OFF = R$ 19,90.
-  // Pro Anual: R$ 29,90/mês. 1ª compra 50% OFF = R$ 14,90/mês.
-  const proMonthly = couponApplied ? 19.90 : 39.90
-  const proAnnualMonthly = couponApplied ? 14.90 : 29.90
-
-  // Business: R$ 89,90/mês. 1ª compra 40% OFF = R$ 49,90.
-  // Business Anual: R$ 69,90/mês. 1ª compra 40% OFF = R$ 39,90/mês.
-  const busMonthly = couponApplied ? 49.90 : 89.90
-  const busAnnualMonthly = couponApplied ? 39.90 : 69.90
+  const proMonthly = couponApplied ? 19.9 : 39.9
+  const proAnnualMonthly = couponApplied ? 14.9 : 29.9
+  const busMonthly = couponApplied ? 49.9 : 89.9
+  const busAnnualMonthly = couponApplied ? 39.9 : 69.9
 
   const handleConfirmSubscription = () => {
     setIsCheckingOut(true)
@@ -76,621 +55,628 @@ export function PricingPlansModal({
       setIsCheckingOut(false)
       setCheckoutSuccess(true)
       onUpgradeSuccess?.(selectedPlan)
-    }, 1200)
+    }, 900)
   }
 
+  const handleClose = (nextOpen: boolean) => {
+    if (!nextOpen) setCheckoutSuccess(false)
+    onOpenChange(nextOpen)
+  }
+
+  const formattedTotal =
+    selectedPlan === "pro"
+      ? billingCycle === "annual"
+        ? "R$ 14,90/mês"
+        : "R$ 19,90/mês"
+      : selectedPlan === "business"
+      ? billingCycle === "annual"
+        ? "R$ 39,90/mês"
+        : "R$ 49,90/mês"
+      : "R$ 0/mês"
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/65 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-5xl my-auto rounded-[32px] bg-card border border-border shadow-2xl text-card-foreground overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Top Announcement Bar - Clean Linear aesthetic */}
-        <div className="bg-muted/80 border-b border-border/70 text-card-foreground px-4 py-2.5 text-center text-xs font-semibold flex items-center justify-center gap-2">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>OFERTA DE BOAS-VINDAS: 50% DE DESCONTO NA 1ª COMPRA NO KARD PRO</span>
-          <span className="bg-background px-2.5 py-0.5 rounded-md font-mono text-[11px] font-bold border border-border text-primary">
-            {couponCode}
-          </span>
-        </div>
+    <Dialog
+      open={open}
+      onOpenChange={handleClose}
+      className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 sm:p-8"
+    >
+      {checkoutSuccess ? (
+        <div className="py-8 text-center space-y-6">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-success-subtle text-success-foreground">
+            <Award className="size-8" />
+          </div>
 
-        {/* Close Button */}
-        <button
-          onClick={() => {
-            setCheckoutSuccess(false)
-            onOpenChange(false)
-          }}
-          className="absolute top-3.5 right-3.5 z-20 flex size-9 items-center justify-center rounded-full bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-          aria-label="Fechar modal de planos"
-        >
-          <X className="w-4 h-4" />
-        </button>
+          <div className="mx-auto max-w-md space-y-2">
+            <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+              Assinatura Kard {selectedPlan.toUpperCase()} ativada
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Seu desconto de primeira compra foi aplicado e os recursos de colaboração ilimitada, Sprint Velocity, exportação de timesheets e automações já estão disponíveis.
+            </p>
+          </div>
 
-        {checkoutSuccess ? (
-          /* Success Screen */
-          <div className="p-8 sm:p-14 text-center space-y-6 animate-in zoom-in-95 duration-200">
-            <div className="mx-auto flex size-20 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-500 ring-8 ring-emerald-500/10">
-              <Award className="w-10 h-10" />
-            </div>
-
-            <div className="space-y-2 max-w-md mx-auto">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-card-foreground">
-                Parabéns! Você agora é Kard {selectedPlan.toUpperCase()}! 🎉
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Seu desconto especial foi aplicado e todos os recursos de alta performance (Analytics de Sprint, Exportação de Timesheets, Colaboradores Ilimitados e Portais) estão liberados.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-muted/40 max-w-sm mx-auto border border-border text-xs text-left space-y-2">
+          <Card className="mx-auto max-w-sm bg-muted/40 text-left shadow-none">
+            <CardContent className="p-5 space-y-2.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Plano ativado:</span>
-                <span className="font-bold text-foreground">Kard {selectedPlan.toUpperCase()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Ciclo:</span>
+                <span className="text-muted-foreground">Plano</span>
                 <span className="font-semibold text-foreground">
-                  {billingCycle === "annual" ? "Anual (2 meses grátis inclusos)" : "Mensal"}
+                  Kard {selectedPlan.toUpperCase()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Status da assinatura:</span>
-                <span className="font-bold text-emerald-500">Ativa • Renovação automática</span>
+                <span className="text-muted-foreground">Ciclo</span>
+                <span className="font-semibold text-foreground">
+                  {billingCycle === "annual"
+                    ? "Anual (2 meses grátis)"
+                    : "Mensal flexível"}
+                </span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Pagamento</span>
+                <span className="font-semibold text-foreground">
+                  {paymentMethod === "pix" ? "PIX Instantâneo" : "Cartão de Crédito"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Status</span>
+                <span className="font-semibold text-success-foreground">
+                  Ativo
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={() => handleClose(false)}
+            className="h-11 rounded-2xl px-8 font-semibold"
+          >
+            Voltar ao Workspace
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Clean Header */}
+          <div className="mx-auto max-w-2xl space-y-3 text-center">
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="info">Primeira compra com até 50% OFF</Badge>
+              <span>Cupom ativo:</span>
+              <span className="font-mono text-xs font-semibold text-foreground">
+                {couponCode}
+              </span>
             </div>
 
-            <Button
-              onClick={() => {
-                setCheckoutSuccess(false)
-                onOpenChange(false)
-              }}
-              className="bg-primary text-primary-foreground font-bold px-8 h-11 rounded-2xl shadow-md cursor-pointer hover:bg-blue-700"
-            >
-              Aproveitar Meu Kard {selectedPlan.toUpperCase()}
-            </Button>
-          </div>
-        ) : (
-          <div className="p-4 sm:p-7 space-y-6 max-h-[88vh] overflow-y-auto">
-            {/* Header */}
-            <div className="text-center space-y-2 max-w-2xl mx-auto">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Planos Transparentes com Vantagens & Limitações Justas</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-card-foreground">
-                Escolha o plano certo para o ritmo da sua equipe
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                O <strong>Kard Free</strong> é perfeito para começar sem pegadinhas. Faça upgrade para o <strong>Pro</strong> ou <strong>Business</strong> para desbloquear recursos estratégicos de colaboração e aceleração de sprints.
-              </p>
+            <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+              Planos simples para acompanhar o ritmo do seu time
+            </h2>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Comece gratuitamente com limites justos no Kard Free ou desbloqueie projetos ilimitados, analytics de sprint e automações no Pro e Business.
+            </p>
 
-              {/* Billing Cycle Switcher & Table Toggle */}
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-                <div className="flex items-center rounded-2xl bg-muted p-1 border border-border">
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle("monthly")}
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                      billingCycle === "monthly"
-                        ? "bg-card text-foreground shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    Mensal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle("annual")}
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
-                      billingCycle === "annual"
-                        ? "bg-card text-foreground shadow-xs font-extrabold"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
+            {/* Billing Cycle Switcher (shadcn Tabs) + Comparison Toggle */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <Tabs
+                value={billingCycle}
+                onValueChange={(v) => setBillingCycle(v as "monthly" | "annual")}
+              >
+                <TabsList>
+                  <TabsTrigger value="monthly">Mensal</TabsTrigger>
+                  <TabsTrigger value="annual" className="gap-1.5">
                     <span>Anual</span>
-                    <span className="rounded-md bg-emerald-500 text-white px-1.5 py-0.2 text-[10px] font-extrabold uppercase">
-                      2 Meses Grátis
+                    <span className="text-[11px] font-semibold text-success-foreground">
+                      2 meses grátis
                     </span>
-                  </button>
-                </div>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-                <button
-                  type="button"
-                  onClick={() => setShowComparisonTable(!showComparisonTable)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer px-2 py-1"
-                >
-                  <Table className="w-3.5 h-3.5" />
-                  <span>{showComparisonTable ? "Ocultar tabela comparativa" : "Ver tabela comparativa completa"}</span>
-                </button>
-              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowComparisonTable(!showComparisonTable)}
+                className="gap-1.5 text-xs font-semibold text-primary"
+              >
+                <Table className="size-3.5" />
+                <span>
+                  {showComparisonTable
+                    ? "Ocultar comparativo"
+                    : "Comparar recursos"}
+                </span>
+              </Button>
             </div>
+          </div>
 
-            {/* 3 Main Plan Cards with Vantagens and Limitações */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
-              {/* PLAN 1: Kard Free */}
-              <div
-                onClick={() => setSelectedPlan("free")}
-                className={cn(
-                  "relative flex flex-col justify-between p-5 rounded-3xl border transition-all cursor-pointer",
-                  selectedPlan === "free"
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/25"
-                    : "border-border/80 bg-card hover:border-border"
-                )}
-              >
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-base font-bold text-card-foreground">Kard Free</h3>
-                    <p className="text-[11px] text-muted-foreground">
-                      Uso individual e squads pequenos iniciando projetos.
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-3xl font-extrabold text-card-foreground">R$ 0</span>
-                    <span className="text-xs text-muted-foreground"> /mês</span>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Sem prazo de validade</p>
-                  </div>
-
-                  {/* Vantagens Free */}
-                  <div className="space-y-2 pt-2 border-t border-border/60">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                      ✓ Vantagens Inclusas:
-                    </span>
-                    <ul className="space-y-1.5 text-xs text-card-foreground">
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>Até 3 projetos ativos</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>Até 5 colaboradores por projeto</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>Quadro Kanban e lista reordenável</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>Cronômetro Time Tracker básico</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>Chat do projeto com status</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>100 MB de armazenamento</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Limitações Free (Justas e Transparentes) */}
-                  <div className="space-y-2 pt-2 border-t border-border/60">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                      ⚠ Limitações do Plano Free:
-                    </span>
-                    <ul className="space-y-1.5 text-[11px] text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <Minus className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 mt-0.5" />
-                        <span>Máximo de 3 projetos ativos (arquivados não contam)</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Minus className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 mt-0.5" />
-                        <span>Histórico de mensagens e tarefas retido por 30 dias</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Minus className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 mt-0.5" />
-                        <span>Sem exportação de timesheets em CSV/PDF</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Minus className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 mt-0.5" />
-                        <span>Sem portal para clientes ou automações</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="pt-5">
-                  <Button
-                    variant="outline"
-                    className="w-full text-xs font-semibold rounded-xl h-10"
-                    disabled={currentTier === "free"}
-                  >
-                    {currentTier === "free" ? "Seu Plano Atual" : "Usar Free"}
-                  </Button>
-                </div>
-              </div>
-
-              {/* PLAN 2: Kard Pro (Flagship / 50% OFF) */}
-              <div
-                onClick={() => setSelectedPlan("pro")}
-                className={cn(
-                  "relative flex flex-col justify-between p-5 sm:p-6 rounded-3xl border-2 transition-all cursor-pointer shadow-lg",
-                  selectedPlan === "pro"
-                    ? "border-primary bg-card ring-4 ring-primary/20 shadow-primary/10"
-                    : "border-primary/50 bg-card hover:border-primary"
-                )}
-              >
-                {/* Popular Callout Badge */}
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-primary text-primary-foreground px-3.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-1.5 whitespace-nowrap">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Mais Popular • 50% OFF 1ª Compra</span>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-extrabold text-card-foreground">Kard Pro</h3>
-                      <p className="text-[11px] text-muted-foreground">
-                        Para devs, designers e líderes de sprint.
-                      </p>
-                    </div>
-                    <Badge variant="default" className="text-[10px] bg-emerald-500 hover:bg-emerald-600 font-bold">
-                      Cupom Ativo
-                    </Badge>
-                  </div>
-
-                  <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-card-foreground">
-                        R$ {billingCycle === "annual" ? proAnnualMonthly.toFixed(2).replace(".", ",") : proMonthly.toFixed(2).replace(".", ",")}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/mês</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground line-through">
-                        R$ {billingCycle === "annual" ? "29,90" : "39,90"}
-                      </span>
-                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        Economize 50% no 1º mês
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {billingCycle === "annual" ? "Cobrado anualmente (R$ 178,80)" : "Cobrança mensal flexível"}
-                    </p>
-                  </div>
-
-                  {/* Vantagens Pro */}
-                  <div className="space-y-2 pt-2 border-t border-border/60">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary">
-                      ⭐ Vantagens Estratégicas Pro:
-                    </span>
-                    <ul className="space-y-2 text-xs text-card-foreground">
-                      <li className="flex items-start gap-2 font-semibold">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5 stroke-[3]" />
-                        <span><strong>Projetos Ilimitados</strong> (sem limite de 3)</span>
-                      </li>
-                      <li className="flex items-start gap-2 font-semibold">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5 stroke-[3]" />
-                        <span><strong>Colaboradores Ilimitados</strong> via e-mail</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span><strong>NOVO:</strong> Sprint Velocity & Gráfico Burndown</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span><strong>NOVO:</strong> Exportação de Timesheets em PDF & CSV</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span><strong>NOVO:</strong> Modo Foco com Pomodoro Integrado</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>50 GB de armazenamento de arquivos</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>Histórico perpétuo de sprints e chat</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Limitações Pro */}
-                  <div className="space-y-1.5 pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                      ℹ Escopo do Plano:
-                    </span>
-                    <p>
-                      Indicado para 1 workspace principal. Para gerenciar múltiplos portais de clientes com domínios próprios, veja o Business.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-5">
-                  <Button
-                    className="w-full text-xs font-bold rounded-xl h-11 bg-primary text-primary-foreground hover:bg-blue-700 shadow-md cursor-pointer"
-                  >
-                    Assinar Kard Pro com 50% OFF
-                  </Button>
-                </div>
-              </div>
-
-              {/* PLAN 3: Kard Business */}
-              <div
-                onClick={() => setSelectedPlan("business")}
-                className={cn(
-                  "relative flex flex-col justify-between p-5 rounded-3xl border transition-all cursor-pointer",
-                  selectedPlan === "business"
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/25"
-                    : "border-border/80 bg-card hover:border-border"
-                )}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-card-foreground">Kard Business</h3>
-                      <p className="text-[11px] text-muted-foreground">
-                        Para agências, startups e múltiplos squads.
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] font-bold text-primary">
-                      Times & Agências
-                    </Badge>
-                  </div>
-
-                  <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-extrabold text-card-foreground">
-                        R$ {billingCycle === "annual" ? busAnnualMonthly.toFixed(2).replace(".", ",") : busMonthly.toFixed(2).replace(".", ",")}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/mês</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground line-through">
-                        R$ {billingCycle === "annual" ? "69,90" : "89,90"}
-                      </span>
-                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        40% OFF 1º trimestre
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Vantagens Business */}
-                  <div className="space-y-2 pt-2 border-t border-border/60">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                      🚀 Vantagens Nível Empresa:
-                    </span>
-                    <ul className="space-y-2 text-xs text-card-foreground">
-                      <li className="flex items-start gap-2 font-medium">
-                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <span><strong>Tudo do plano Pro</strong> incluído</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <span><strong>NOVO: Portal do Cliente com Link Seguro</strong> (clientes veem entregas sem acessar conversas internas)</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <span><strong>NOVO: Automações de Workflow</strong> (triggers estilo Zapier/Linear)</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <span>Multi-workspaces centralizados</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <span>Armazenamento em nuvem Ilimitado</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <span>Single Sign-On (SSO / SAML / Google)</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <span>Canal VIP 24/7 no Slack/Discord</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="space-y-1.5 pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                      Sem Limitações:
-                    </span>
-                    <p>Projetos, arquivos e membros 100% ilimitados para toda a organização.</p>
-                  </div>
-                </div>
-
-                <div className="pt-5">
-                  <Button
-                    variant="outline"
-                    className="w-full text-xs font-semibold rounded-xl h-10 cursor-pointer hover:bg-muted"
-                  >
-                    Escolher Business
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Comparison Table (Conditionally Expanded) */}
-            <AnimatePresence>
-              {showComparisonTable && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="rounded-2xl border border-border bg-card p-4 overflow-x-auto space-y-3"
-                >
-                  <h4 className="text-sm font-bold text-card-foreground">
-                    Comparativo Detalhado de Funcionalidades
-                  </h4>
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-border/80 text-[11px] font-bold text-muted-foreground uppercase">
-                        <th className="py-2.5 pr-4">Recurso / Capacidade</th>
-                        <th className="py-2.5 px-3">Kard Free</th>
-                        <th className="py-2.5 px-3 bg-primary/5 rounded-t-lg text-primary">Kard Pro</th>
-                        <th className="py-2.5 px-3">Kard Business</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/60 text-muted-foreground">
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Projetos Ativos Simultâneos</td>
-                        <td className="py-2.5 px-3">Até 3</td>
-                        <td className="py-2.5 px-3 bg-primary/5 font-bold text-foreground">Ilimitados</td>
-                        <td className="py-2.5 px-3 font-bold text-foreground">Ilimitados</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Colaboradores por E-mail</td>
-                        <td className="py-2.5 px-3">Até 5 por projeto</td>
-                        <td className="py-2.5 px-3 bg-primary/5 font-bold text-emerald-600 dark:text-emerald-400">Ilimitados</td>
-                        <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">Ilimitados</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Quadro Kanban & Drag-and-Drop</td>
-                        <td className="py-2.5 px-3"><Check className="w-4 h-4 text-emerald-500" /></td>
-                        <td className="py-2.5 px-3 bg-primary/5"><Check className="w-4 h-4 text-emerald-500" /></td>
-                        <td className="py-2.5 px-3"><Check className="w-4 h-4 text-emerald-500" /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Sprint Velocity & Burndown Chart</td>
-                        <td className="py-2.5 px-3"><Minus className="w-4 h-4 text-muted-foreground/50" /></td>
-                        <td className="py-2.5 px-3 bg-primary/5 font-bold text-foreground"><Check className="w-4 h-4 text-emerald-500" /></td>
-                        <td className="py-2.5 px-3 font-bold text-foreground"><Check className="w-4 h-4 text-emerald-500" /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Exportação Timesheet (CSV/PDF)</td>
-                        <td className="py-2.5 px-3"><Minus className="w-4 h-4 text-muted-foreground/50" /></td>
-                        <td className="py-2.5 px-3 bg-primary/5 font-bold text-foreground"><Check className="w-4 h-4 text-emerald-500" /></td>
-                        <td className="py-2.5 px-3 font-bold text-foreground"><Check className="w-4 h-4 text-emerald-500" /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Portal do Cliente com Link Seguro</td>
-                        <td className="py-2.5 px-3"><Minus className="w-4 h-4 text-muted-foreground/50" /></td>
-                        <td className="py-2.5 px-3 bg-primary/5"><Minus className="w-4 h-4 text-muted-foreground/50" /></td>
-                        <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400"><Check className="w-4 h-4 text-emerald-500" /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Automações de Workflow (Triggers)</td>
-                        <td className="py-2.5 px-3"><Minus className="w-4 h-4 text-muted-foreground/50" /></td>
-                        <td className="py-2.5 px-3 bg-primary/5"><Minus className="w-4 h-4 text-muted-foreground/50" /></td>
-                        <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400"><Check className="w-4 h-4 text-emerald-500" /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Espaço de Armazenamento</td>
-                        <td className="py-2.5 px-3">100 MB</td>
-                        <td className="py-2.5 px-3 bg-primary/5 font-bold text-foreground">50 GB</td>
-                        <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">Ilimitado</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 pr-4 font-medium text-foreground">Suporte Dedicado</td>
-                        <td className="py-2.5 px-3">Comunidade</td>
-                        <td className="py-2.5 px-3 bg-primary/5 font-bold text-foreground">Chat Prioritário</td>
-                        <td className="py-2.5 px-3 font-bold text-foreground">Canal VIP 24/7 Slack/Discord</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </motion.div>
+          {/* 3 Plan Cards */}
+          <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-3">
+            {/* Kard Free */}
+            <Card
+              onClick={() => setSelectedPlan("free")}
+              className={cn(
+                "flex cursor-pointer flex-col justify-between p-6 transition-all",
+                selectedPlan === "free"
+                  ? "border-primary ring-2 ring-primary/15"
+                  : "hover:border-border"
               )}
-            </AnimatePresence>
-
-            {/* Simulated Checkout Box with Instant Discount & Payment Options */}
-            <div className="rounded-2xl bg-muted/30 p-4 sm:p-5 border border-border space-y-3.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span className="text-xs font-bold text-foreground">
-                    Garantia Incondicional de 14 Dias • Cancele a Qualquer Momento
-                  </span>
+            >
+              <div className="space-y-5">
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-foreground">Kard Free</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Uso individual e squads pequenos iniciando entregas.
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("pix")}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all cursor-pointer",
-                      paymentMethod === "pix"
-                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-2xs"
-                        : "bg-card border-border text-muted-foreground"
-                    )}
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>PIX Instantâneo</span>
-                  </button>
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold tabular-nums text-foreground">
+                      R$ 0
+                    </span>
+                    <span className="text-xs text-muted-foreground">/mês</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Gratuito para sempre
+                  </p>
+                </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("card")}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all cursor-pointer",
-                      paymentMethod === "card"
-                        ? "bg-primary/10 border-primary/40 text-primary shadow-2xs"
-                        : "bg-card border-border text-muted-foreground"
-                    )}
-                  >
-                    <CreditCard className="w-3.5 h-3.5" />
-                    <span>Cartão de Crédito</span>
-                  </button>
+                <div className="space-y-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Incluído
+                  </p>
+                  <ul className="space-y-2 text-xs text-foreground">
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-success-foreground" />
+                      <span>Até 3 projetos ativos (arquivados não contam)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-success-foreground" />
+                      <span>Até 5 colaboradores por projeto</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-success-foreground" />
+                      <span>Briefing Matinal, Cartões Markdown e Modo Offline</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-success-foreground" />
+                      <span>Quadro Kanban e lista reordenável</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-success-foreground" />
+                      <span>Time Tracker e Modo Foco básico</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-success-foreground" />
+                      <span>100 MB de armazenamento</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Limites do plano
+                  </p>
+                  <ul className="space-y-1.5 text-xs text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <Minus className="mt-0.5 size-3.5 shrink-0" />
+                      <span>Histórico de mensagens de 30 dias</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Minus className="mt-0.5 size-3.5 shrink-0" />
+                      <span>Sem exportação de timesheets CSV/PDF</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Minus className="mt-0.5 size-3.5 shrink-0" />
+                      <span>Sem portal externo de clientes</span>
+                    </li>
+                  </ul>
                 </div>
               </div>
 
-              {/* Coupon and Summary Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-border/60 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Cupom 1ª Compra:</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                    {couponCode} (Ativo -50%)
-                  </span>
+              <div className="pt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 w-full rounded-xl text-xs font-semibold"
+                  disabled={currentTier === "free"}
+                >
+                  {currentTier === "free" ? "Plano atual" : "Selecionar Free"}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Kard Pro */}
+            <Card
+              onClick={() => setSelectedPlan("pro")}
+              className={cn(
+                "relative flex cursor-pointer flex-col justify-between p-6 transition-all",
+                selectedPlan === "pro"
+                  ? "border-primary ring-2 ring-primary/20 shadow-md"
+                  : "border-primary/40 hover:border-primary"
+              )}
+            >
+              <div className="space-y-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-foreground">Kard Pro</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Para devs, designers e líderes de sprint.
+                    </p>
+                  </div>
+                  <Badge variant="default">50% OFF</Badge>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <span className="text-[11px] text-muted-foreground block">Total com desconto:</span>
-                    <span className="text-sm font-extrabold text-foreground">
-                      {selectedPlan === "pro"
-                        ? billingCycle === "annual"
-                          ? "R$ 14,90/mês"
-                          : "R$ 19,90/mês"
-                        : selectedPlan === "business"
-                        ? billingCycle === "annual"
-                          ? "R$ 39,90/mês"
-                          : "R$ 49,90/mês"
-                        : "Grátis"}
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold tabular-nums text-foreground">
+                      R${" "}
+                      {(billingCycle === "annual"
+                        ? proAnnualMonthly
+                        : proMonthly
+                      )
+                        .toFixed(2)
+                        .replace(".", ",")}
                     </span>
+                    <span className="text-xs text-muted-foreground">/mês</span>
                   </div>
 
-                  <Button
-                    onClick={handleConfirmSubscription}
-                    disabled={isCheckingOut || selectedPlan === "free"}
-                    className="bg-primary hover:bg-blue-700 text-primary-foreground font-extrabold px-6 rounded-xl h-11 shadow-sm cursor-pointer"
-                  >
-                    {isCheckingOut ? (
-                      <span>Ativando plano...</span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        Assinar Kard {selectedPlan.toUpperCase()}
-                        <ArrowRight className="w-4 h-4" />
-                      </span>
-                    )}
-                  </Button>
+                  <div className="mt-1 flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground line-through tabular-nums">
+                      R$ {billingCycle === "annual" ? "29,90" : "39,90"}
+                    </span>
+                    <span className="font-semibold text-success-foreground">
+                      Desconto de 1ª compra
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {billingCycle === "annual"
+                      ? "Cobrado anualmente (R$ 178,80)"
+                      : "Cobrança mensal sem fidelidade"}
+                  </p>
                 </div>
+
+                <div className="space-y-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                    Vantagens estratégicas
+                  </p>
+                  <ul className="space-y-2 text-xs text-foreground">
+                    <li className="flex items-start gap-2 font-medium">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Projetos e colaboradores ilimitados</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Analytics de Sprint Velocity & Burndown</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Exportação de Timesheets em PDF e CSV</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Modo Foco completo com Pomodoro e áudio</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>50 GB de armazenamento e histórico perpétuo</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Escopo: 1 workspace principal com controle completo de sprints e faturamento.
+                </p>
               </div>
+
+              <div className="pt-6">
+                <Button
+                  type="button"
+                  className="h-10 w-full rounded-xl text-xs font-semibold"
+                >
+                  {currentTier === "pro"
+                    ? "Plano atual"
+                    : "Selecionar Kard Pro"}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Kard Business */}
+            <Card
+              onClick={() => setSelectedPlan("business")}
+              className={cn(
+                "flex cursor-pointer flex-col justify-between p-6 transition-all",
+                selectedPlan === "business"
+                  ? "border-primary ring-2 ring-primary/15"
+                  : "hover:border-border"
+              )}
+            >
+              <div className="space-y-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-foreground">
+                      Kard Business
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Para agências, startups e múltiplos squads.
+                    </p>
+                  </div>
+                  <Badge variant="outline">40% OFF</Badge>
+                </div>
+
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold tabular-nums text-foreground">
+                      R${" "}
+                      {(billingCycle === "annual"
+                        ? busAnnualMonthly
+                        : busMonthly
+                      )
+                        .toFixed(2)
+                        .replace(".", ",")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">/mês</span>
+                  </div>
+
+                  <div className="mt-1 flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground line-through tabular-nums">
+                      R$ {billingCycle === "annual" ? "69,90" : "89,90"}
+                    </span>
+                    <span className="font-semibold text-success-foreground">
+                      40% OFF no 1º trimestre
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {billingCycle === "annual"
+                      ? "Faturamento anual corporativo"
+                      : "Cobrança mensal por equipe"}
+                  </p>
+                </div>
+
+                <div className="space-y-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Recursos corporativos
+                  </p>
+                  <ul className="space-y-2 text-xs text-foreground">
+                    <li className="flex items-start gap-2 font-medium">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Tudo do plano Kard Pro incluído</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Portal do Cliente com link seguro de entregas</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Automações de workflow e triggers customizados</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>Multi-workspaces e armazenamento ilimitado</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                      <span>SSO / SAML e canal de suporte prioritário</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Sem limites operacionais para toda a organização.
+                </p>
+              </div>
+
+              <div className="pt-6">
+                <Button
+                  type="button"
+                  variant={selectedPlan === "business" ? "default" : "outline"}
+                  className="h-10 w-full rounded-xl text-xs font-semibold"
+                >
+                  {currentTier === "business"
+                    ? "Plano atual"
+                    : "Selecionar Business"}
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          {/* Expandable Comparison Table */}
+          <AnimatePresence>
+            {showComparisonTable && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.16 }}
+              >
+                <Card>
+                  <CardContent className="p-5 overflow-x-auto space-y-3">
+                    <h4 className="text-sm font-bold text-foreground">
+                      Comparativo de capacidades
+                    </h4>
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          <th className="py-2 pr-4">Recurso</th>
+                          <th className="py-2 px-3">Free</th>
+                          <th className="py-2 px-3 text-primary">Pro</th>
+                          <th className="py-2 px-3">Business</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-muted-foreground">
+                        <tr className="rounded-xl odd:bg-muted/30">
+                          <td className="py-2.5 pl-2 pr-4 font-medium text-foreground">
+                            Projetos ativos
+                          </td>
+                          <td className="py-2.5 px-3">Até 3</td>
+                          <td className="py-2.5 px-3 font-semibold text-foreground">
+                            Ilimitados
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-foreground">
+                            Ilimitados
+                          </td>
+                        </tr>
+                        <tr className="rounded-xl odd:bg-muted/30">
+                          <td className="py-2.5 pl-2 pr-4 font-medium text-foreground">
+                            Colaboradores por e-mail
+                          </td>
+                          <td className="py-2.5 px-3">Até 5 por projeto</td>
+                          <td className="py-2.5 px-3 font-semibold text-foreground">
+                            Ilimitados
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-foreground">
+                            Ilimitados
+                          </td>
+                        </tr>
+                        <tr className="rounded-xl odd:bg-muted/30">
+                          <td className="py-2.5 pl-2 pr-4 font-medium text-foreground">
+                            Sprint Velocity & Burndown
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Minus className="size-4 text-muted-foreground/50" />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                        </tr>
+                        <tr className="rounded-xl odd:bg-muted/30">
+                          <td className="py-2.5 pl-2 pr-4 font-medium text-foreground">
+                            Exportação Timesheet CSV/PDF
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Minus className="size-4 text-muted-foreground/50" />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                        </tr>
+                        <tr className="rounded-xl odd:bg-muted/30">
+                          <td className="py-2.5 pl-2 pr-4 font-medium text-foreground">
+                            Briefing, Markdown & Offline
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                        </tr>
+                        <tr className="rounded-xl odd:bg-muted/30">
+                          <td className="py-2.5 pl-2 pr-4 font-medium text-foreground">
+                            Portal do Cliente & Automações
+                          </td>
+                          <td className="py-2.5 px-3 text-[11px]">Prévia</td>
+                          <td className="py-2.5 px-3">
+                            <Minus className="size-4 text-muted-foreground/50" />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Check className="size-4 text-success-foreground" />
+                          </td>
+                        </tr>
+                        <tr className="rounded-xl odd:bg-muted/30">
+                          <td className="py-2.5 pl-2 pr-4 font-medium text-foreground">
+                            Armazenamento
+                          </td>
+                          <td className="py-2.5 px-3">100 MB</td>
+                          <td className="py-2.5 px-3 font-semibold text-foreground">
+                            50 GB
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-foreground">
+                            Ilimitado
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Clean Checkout Bar */}
+          <div className="rounded-2xl bg-muted/40 p-5 space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+                <ShieldCheck className="size-4 shrink-0 text-success-foreground" />
+                <span>
+                  Garantia de 14 dias sem risco · Cancele quando quiser
+                </span>
+              </div>
+
+              <Tabs
+                value={paymentMethod}
+                onValueChange={(v) => setPaymentMethod(v as "pix" | "card")}
+              >
+                <TabsList>
+                  <TabsTrigger value="pix" className="gap-1.5">
+                    <QrCode className="size-3.5" />
+                    <span>PIX</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="card" className="gap-1.5">
+                    <CreditCard className="size-3.5" />
+                    <span>Cartão</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
-            {/* Psychological Reassurance Footers */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-muted-foreground text-center">
-              <div className="p-2.5 rounded-xl bg-card border border-border/60">
-                🔒 <strong>Pagamento Seguro</strong> via SSL
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={couponCode}
+                  onChange={(e) => {
+                    const next = e.target.value.toUpperCase()
+                    setCouponCode(next)
+                    setCouponApplied(next === "FIRSTKARD50")
+                  }}
+                  aria-label="Cupom de desconto"
+                  className="h-9 w-40 rounded-xl bg-card font-mono text-xs font-semibold uppercase"
+                />
+                {couponApplied ? (
+                  <Badge variant="success">Cupom -50% aplicado</Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    Use FIRSTKARD50
+                  </span>
+                )}
               </div>
-              <div className="p-2.5 rounded-xl bg-card border border-border/60">
-                ⚡ <strong>Ativação Imediata</strong> do Workspace
-              </div>
-              <div className="p-2.5 rounded-xl bg-card border border-border/60">
-                🛡️ <strong>14 Dias de Teste</strong> sem risco
-              </div>
-              <div className="p-2.5 rounded-xl bg-card border border-border/60">
-                ❌ <strong>Cancele a qualquer hora</strong> sem multas
+
+              <div className="flex items-center justify-between gap-4 sm:justify-end">
+                <div className="text-left sm:text-right">
+                  <span className="block text-[11px] text-muted-foreground">
+                    Total estimado
+                  </span>
+                  <span className="text-base font-extrabold tabular-nums text-foreground">
+                    {formattedTotal}
+                  </span>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleConfirmSubscription}
+                  disabled={isCheckingOut || selectedPlan === "free"}
+                  className="h-10 gap-1.5 rounded-xl px-5 text-xs font-semibold"
+                >
+                  {isCheckingOut ? (
+                    <span>Ativando plano...</span>
+                  ) : (
+                    <>
+                      <span>Assinar Kard {selectedPlan.toUpperCase()}</span>
+                      <ArrowRight className="size-3.5" />
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </Dialog>
   )
 }

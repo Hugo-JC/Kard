@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Search, FolderKanban, CheckSquare2, Calendar, Clock, ArrowRight } from "lucide-react"
+import { Search, FolderKanban, CheckSquare2, Calendar, Clock, ArrowRight, Zap, Settings } from "lucide-react"
 import { Dialog } from "@/components/ui/dialog"
 import { NavItemKey } from "./Sidebar"
 
@@ -19,11 +19,13 @@ export function CommandPalette({
   const [query, setQuery] = useState("")
 
   const actions: { id: NavItemKey; title: string; category: string; icon: React.ElementType }[] = [
-    { id: "dashboard", title: "Open Dashboard View", category: "Navigation", icon: FolderKanban },
-    { id: "projects", title: "View All Projects (Google, Slack)", category: "Projects", icon: FolderKanban },
-    { id: "my-tasks", title: "Check My Tasks & Backlog", category: "Tasks", icon: CheckSquare2 },
+    { id: "dashboard", title: "Open Dashboard & Morning Briefing", category: "Navigation", icon: FolderKanban },
+    { id: "projects", title: "View All Projects & Client Portals", category: "Projects", icon: FolderKanban },
+    { id: "my-tasks", title: "Check My Tasks & Markdown Cards", category: "Tasks", icon: CheckSquare2 },
     { id: "calendar", title: "Calendar & Milestone Deadlines", category: "Schedule", icon: Calendar },
     { id: "time-manage", title: "Time Tracker & Stopwatch", category: "Productivity", icon: Clock },
+    { id: "automations", title: "Natural-Language Workflow Automations", category: "Automation", icon: Zap },
+    { id: "settings", title: "Workspace & Local-First Storage Settings", category: "System", icon: Settings },
   ]
 
   const filtered = actions.filter((a) =>

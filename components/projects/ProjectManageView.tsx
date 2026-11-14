@@ -31,6 +31,10 @@ import {
   Activity,
   Mail,
   UserPlus,
+  BookOpen,
+  Pencil,
+  Eye,
+  ShieldCheck,
 } from "lucide-react"
 import {
   Project,
@@ -40,6 +44,8 @@ import {
   MEMBER_STATUS_CONFIG,
   ProjectChatMessage,
   ProjectDocument,
+  ProjectNote,
+  ClientDeliverable,
   AVAILABLE_CONTRIBUTORS,
   TaskStage,
   ProjectInvitation,
@@ -48,23 +54,32 @@ import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "@/components/Log
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { ProjectSelectField, memberSelectOptions, type ProjectSelectOption } from "@/components/projects/ProjectSelectField"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { ProjectSelectField, type ProjectSelectOption } from "@/components/projects/ProjectSelectField"
 import { TaskComposer } from "@/components/projects/TaskComposer"
 import { ProjectProgressSummaryCard } from "@/components/projects/ProjectProgressSummaryCard"
 import { MemberStatusBadge, MemberAvatarWithStatus } from "@/components/ui/MemberStatusBadge"
 import { ProjectTaskBoard } from "@/components/tasks/ProjectTaskBoard"
 import { InviteCollaboratorModal } from "@/components/projects/InviteCollaboratorModal"
+import { ClientPortalView } from "@/components/projects/ClientPortalView"
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer"
+import { SubscriptionPlanTier } from "@/components/billing/PricingPlansModal"
 import { cn } from "@/lib/utils"
 
 interface ProjectManageViewProps {
   project: Project
   tasks: TaskItem[]
   allProjects?: Project[]
+  currentTier?: SubscriptionPlanTier
+  initialTab?: "tasks" | "team" | "chat" | "files" | "portal"
+  initialNoteId?: string | null
+  onOpenPricingModal?: () => void
   onBack: () => void
   onUpdateProject: (updated: Project) => void
   onToggleTask: (id: string) => void
+  onSelectTask?: (task: TaskItem) => void
   onAddTask: (newTask: Omit<TaskItem, "id" | "number">) => void
   onDeleteTask?: (id: string) => void
   onUpdateTaskAssignee?: (taskId: string, assignee: Member) => void
@@ -75,6 +90,16 @@ interface ProjectManageViewProps {
   onCancelInvitation?: (projectId: string, inviteId: string) => void
   onAcceptInvitationDirect?: (projectId: string, invite: ProjectInvitation) => void
   onRemoveCollaborator?: (projectId: string, memberNameOrEmail: string) => void
+  onUpdateDeliverableStatus?: (
+    projectId: string,
+    deliverableId: string,
+    status: ClientDeliverable["status"],
+    feedback?: string
+  ) => void
+  onAddDeliverable?: (
+    projectId: string,
+    deliverable: Omit<ClientDeliverable, "id" | "updatedAt">
+  ) => void
 }
 
 const PRESET_ACCENTS = [
@@ -101,13 +126,25 @@ const PROJECT_PRIORITY_OPTIONS: ProjectSelectOption[] = [
   { value: "LOW PRIORITY", label: "Baixa", indicatorClassName: "bg-info" },
 ]
 
+const MEMBER_STATUS_OPTIONS: ProjectSelectOption[] = [
+  { value: "Online", label: "Online", indicatorClassName: "bg-emerald-500" },
+  { value: "In Meeting", label: "Em reunião", indicatorClassName: "bg-amber-500" },
+  { value: "Focused", label: "Em foco", indicatorClassName: "bg-primary" },
+  { value: "Offline", label: "Offline", indicatorClassName: "bg-muted-foreground" },
+]
+
 export function ProjectManageView({
   project,
   tasks,
   allProjects = [],
+  currentTier = "free",
+  initialTab = "tasks",
+  initialNoteId = null,
+  onOpenPricingModal,
   onBack,
   onUpdateProject,
   onToggleTask,
+  onSelectTask,
   onAddTask,
   onDeleteTask,
   onUpdateTaskAssignee,
@@ -118,9 +155,17 @@ export function ProjectManageView({
   onCancelInvitation,
   onAcceptInvitationDirect,
   onRemoveCollaborator,
+  onUpdateDeliverableStatus,
+  onAddDeliverable,
 }: ProjectManageViewProps) {
-  const [activeTab, setActiveTab] = useState<"tasks" | "team" | "chat" | "files">("tasks")
+  const [activeTab, setActiveTab] = useState<"tasks" | "team" | "chat" | "files" | "portal">(initialTab)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(
+    initialNoteId || project.notes?.[0]?.id || null
+  )
+  const [isEditingNote, setIsEditingNote] = useState(false)
+  const [noteTitleDraft, setNoteTitleDraft] = useState("")
+  const [noteContentDraft, setNoteContentDraft] = useState("")
 
   // Color picker state
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -194,11 +239,6 @@ export function ProjectManageView({
 
   const percent = Math.round((project.completedTasks / Math.max(1, project.totalTasks)) * 100)
   const projectAssignees = project.members.length > 0 ? project.members : AVAILABLE_CONTRIBUTORS
-  const assigneeOptions = memberSelectOptions(projectAssignees)
-  const taskFilterOptions: ProjectSelectOption[] = [
-    { value: "ALL", label: "Todas as pessoas", indicatorClassName: "bg-primary" },
-    ...assigneeOptions,
-  ]
 
   // Handle uploading device image for project branding
   const handleDeviceImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -318,90 +358,100 @@ export function ProjectManageView({
 
   return (
     <div className="space-y-6">
-      {/* 1. Top Navigation & Breadcrumbs */}
+      {/* 1. Top Navigation & Actions */}
       <div className="flex items-center justify-between">
-        <button
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-xl bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-all cursor-pointer shadow-xs"
+          className="h-9 gap-2 rounded-xl bg-card px-3.5 text-xs font-semibold"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Projects</span>
-        </button>
+          <span>Voltar aos Projetos</span>
+        </Button>
 
         <div className="flex items-center gap-2">
-          {/* Quick star button */}
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() =>
               onUpdateProject({ ...project, isStarred: !project.isStarred })
             }
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-card border border-border text-muted-foreground hover:text-amber-400 transition-colors cursor-pointer"
-            title="Star project"
+            className="size-9 rounded-xl bg-card"
+            title="Favoritar projeto"
           >
             <Star
               className={cn(
                 "w-4 h-4",
                 project.isStarred
                   ? "fill-[#F59E0B] text-[#F59E0B]"
-                  : "text-muted-foreground/50 hover:text-muted-foreground"
+                  : "text-muted-foreground/60"
               )}
             />
-          </button>
+          </Button>
 
-          {/* Archive / Restore Button */}
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={() =>
               onUpdateProject({ ...project, isArchived: !project.isArchived })
             }
             className={cn(
-              "flex items-center gap-1.5 h-9 rounded-xl border px-3 text-xs font-semibold transition-colors cursor-pointer",
+              "h-9 gap-1.5 rounded-xl px-3 text-xs font-semibold",
               project.isArchived
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-500 dark:text-amber-400 hover:bg-amber-500/20"
-                : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                : "bg-card"
             )}
             title={
               project.isArchived
-                ? "Restore project to active board"
-                : "Archive project (removes from active dashboard, keeps data accessible via Archive filter)"
+                ? "Restaurar projeto para ativos"
+                : "Arquivar projeto"
             }
           >
             {project.isArchived ? (
               <>
                 <ArchiveRestore className="w-3.5 h-3.5 text-amber-500" />
-                <span>Restore to Active</span>
+                <span>Restaurar</span>
               </>
             ) : (
               <>
                 <Archive className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Archive Project</span>
-                <span className="sm:hidden">Archive</span>
+                <span className="hidden sm:inline">Arquivar Projeto</span>
+                <span className="sm:hidden">Arquivar</span>
               </>
             )}
-          </button>
+          </Button>
 
-          {/* Accent Color Picker trigger */}
           <div className="relative">
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setShowColorPicker(!showColorPicker)}
-              className="flex items-center gap-2 h-9 rounded-xl bg-card border border-border px-3 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="Change project highlight color"
+              className="h-9 gap-2 rounded-xl bg-card px-3 text-xs font-semibold"
+              title="Alterar cor de destaque do projeto"
             >
               <span
                 className="h-3.5 w-3.5 rounded-full ring-1 ring-border"
                 style={{ backgroundColor: accentColor }}
               />
-              <span className="hidden sm:inline">Highlight Color</span>
+              <span className="hidden sm:inline">Cor</span>
               <Palette className="w-3.5 h-3.5" />
-            </button>
+            </Button>
 
             {showColorPicker && (
               <div className="absolute right-0 mt-2 z-30 w-56 rounded-2xl bg-card p-3 shadow-xl border border-border space-y-2.5 animate-in fade-in zoom-in-95">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Project Accent Color
+                  Cor do projeto
                 </p>
                 <div className="grid grid-cols-4 gap-2">
                   {PRESET_ACCENTS.map((color) => (
                     <button
                       key={color}
+                      type="button"
                       onClick={() => {
                         handleChangeAccentColor(color)
                         setShowColorPicker(false)
@@ -436,36 +486,36 @@ export function ProjectManageView({
         </div>
       </div>
 
-      {/* Archived Notice Banner if project is archived */}
+      {/* Archived Notice Banner */}
       {project.isArchived && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 text-xs">
           <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400 font-medium">
             <Archive className="w-4 h-4 shrink-0 text-amber-500" />
             <span>
-              <strong>Archived Project:</strong> This project is hidden from the main active dashboard. Its historical data and tasks remain preserved and accessible via search and the Archived filter.
+              <strong>Projeto Arquivado:</strong> Este projeto está oculto do painel ativo, mas suas tarefas e histórico continuam preservados.
             </span>
           </div>
-          <button
+          <Button
+            type="button"
+            size="sm"
             onClick={() => onUpdateProject({ ...project, isArchived: false })}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold px-3.5 py-2 text-xs transition-colors cursor-pointer shrink-0 shadow-xs"
+            className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shrink-0"
           >
             <ArchiveRestore className="w-3.5 h-3.5" />
-            <span>Restore Project</span>
-          </button>
+            <span>Restaurar Projeto</span>
+          </Button>
         </div>
       )}
 
-      {/* 2. Hero Project Header with Accent Banner & Device Image */}
-      <div className="rounded-[32px] bg-card border border-border shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_32px_-4px_rgba(0,0,0,0.4)] overflow-hidden">
-        {/* Banner with project accent color */}
+      {/* 2. Hero Project Header */}
+      <div className="rounded-[32px] bg-card border border-border/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_32px_-4px_rgba(0,0,0,0.4)] overflow-hidden">
         <div
           className="relative h-32 sm:h-36 w-full p-6 flex items-start justify-end transition-colors"
           style={{
-            background: `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}cc 60%, #1e1b4b 100%)`,
+            background: `linear-gradient(135deg, ${accentColor} 0%, color-mix(in srgb, ${accentColor} 78%, #0f172a) 100%)`,
           }}
         >
-          {/* Subtle pattern overlay */}
-          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
 
           {/* Quick upload device image trigger from banner */}
           <button
@@ -625,66 +675,44 @@ export function ProjectManageView({
         </div>
       </div>
 
-      {/* 3. Visual Progress Summary Card (Deliverables, Remaining Time, Average Completion Radial Chart) */}
+      {/* 3. Visual Progress Summary Card */}
       <ProjectProgressSummaryCard project={project} tasks={tasks} />
 
-      {/* 4. Tabbed Navigation Bar */}
-      <div className="flex items-center gap-2 border-b border-border pb-1 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("tasks")}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-all cursor-pointer whitespace-nowrap",
-            activeTab === "tasks"
-              ? "bg-primary text-primary-foreground shadow-xs font-extrabold"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          <span>Tasks & Assignees ({projectTasks.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("team")}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-all cursor-pointer whitespace-nowrap",
-            activeTab === "team"
-              ? "bg-primary text-primary-foreground shadow-xs font-extrabold"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <Users className="w-4 h-4" />
-          <span>Contributors ({project.members.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("chat")}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-all cursor-pointer whitespace-nowrap",
-            activeTab === "chat"
-              ? "bg-primary text-primary-foreground shadow-xs font-extrabold"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>Project Chat ({projectChats.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("files")}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-all cursor-pointer whitespace-nowrap",
-            activeTab === "files"
-              ? "bg-primary text-primary-foreground shadow-xs font-extrabold"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <Paperclip className="w-4 h-4" />
-          <span>Files & Docs ({documents.length})</span>
-        </button>
-      </div>
+      {/* 4. Tabbed Navigation Bar using shadcn Tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) =>
+          setActiveTab(v as "tasks" | "team" | "chat" | "files" | "portal")
+        }
+        className="gap-5"
+      >
+        <TabsList className="w-full justify-start overflow-x-auto sm:w-fit">
+          <TabsTrigger value="tasks" className="gap-2 px-3.5 py-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Tarefas ({projectTasks.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="team" className="gap-2 px-3.5 py-2">
+            <Users className="w-4 h-4" />
+            <span>Colaboradores ({project.members.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="gap-2 px-3.5 py-2">
+            <MessageSquare className="w-4 h-4" />
+            <span>Chat ({projectChats.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="files" className="gap-2 px-3.5 py-2">
+            <BookOpen className="w-4 h-4" />
+            <span>
+              Notas & Arquivos ({(project.notes?.length || 0) + documents.length})
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="portal" className="gap-2 px-3.5 py-2">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Portal do Cliente ({project.deliverables?.length || 0})</span>
+          </TabsTrigger>
+        </TabsList>
 
       {/* 4. Tab 1: Tasks & Designated Assignees */}
-      {activeTab === "tasks" && (
+      <TabsContent value="tasks">
         <div className="flex flex-col gap-5">
           <TaskComposer
             project={project}
@@ -697,6 +725,7 @@ export function ProjectManageView({
             tasks={tasks}
             allProjects={allProjects}
             onToggleTask={onToggleTask}
+            onSelectTask={onSelectTask}
             onAddTask={onAddTask}
             onDeleteTask={onDeleteTask}
             onUpdateAssignee={onUpdateTaskAssignee}
@@ -705,10 +734,10 @@ export function ProjectManageView({
             onMoveTask={onMoveTask}
           />
         </div>
-      )}
+      </TabsContent>
 
       {/* 5. Tab 2: Contributors & Team */}
-      {activeTab === "team" && (
+      <TabsContent value="team">
         <div className="space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -722,19 +751,21 @@ export function ProjectManageView({
 
             <div className="flex items-center gap-2">
               <Button
+                type="button"
                 onClick={() => setIsInviteModalOpen(true)}
                 size="sm"
-                className="gap-1.5 bg-primary text-primary-foreground hover:bg-blue-700 shadow-xs cursor-pointer font-bold"
+                className="h-9 gap-1.5 rounded-xl px-4 text-xs font-semibold"
               >
                 <Mail className="w-4 h-4" />
                 <span>Convidar por E-mail</span>
               </Button>
 
               <Button
+                type="button"
                 onClick={() => setShowAddContributor(true)}
                 variant="outline"
                 size="sm"
-                className="gap-1.5 cursor-pointer font-semibold"
+                className="h-9 gap-1.5 rounded-xl px-3.5 text-xs font-semibold"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Adicionar da Equipe</span>
@@ -743,66 +774,68 @@ export function ProjectManageView({
             </div>
           </div>
 
-          {/* Pending Invitations Section (Simulating GitHub-style invite inbox) */}
+          {/* Pending Invitations Section */}
           {project.pendingInvitations && project.pendingInvitations.length > 0 && (
-            <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 space-y-3">
+            <div className="rounded-2xl bg-muted/40 p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-primary" />
                   <h4 className="text-xs font-bold uppercase tracking-wider text-card-foreground">
-                    Convites Pendentes por E-mail ({project.pendingInvitations.length})
+                    Convites pendentes ({project.pendingInvitations.length})
                   </h4>
                 </div>
-                <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                  Aguardando aceite via caixa de notificações (estilo GitHub)
+                <span className="hidden text-xs text-muted-foreground sm:inline">
+                  Aguardando resposta na caixa de notificações
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {project.pendingInvitations.map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border shadow-2xs"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-card-foreground truncate">
-                        {inv.email}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Função: <span className="font-semibold text-foreground">{inv.role}</span> • {inv.sentAt}
-                      </p>
-                    </div>
+                  <Card key={inv.id} className="rounded-2xl shadow-none">
+                    <CardContent className="flex items-center justify-between gap-3 p-3.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-card-foreground">
+                          {inv.email}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {inv.role} · {inv.sentAt}
+                        </p>
+                      </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {onAcceptInvitationDirect && (
-                        <button
-                          type="button"
-                          onClick={() => onAcceptInvitationDirect(project.id, inv)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] transition-colors cursor-pointer shadow-2xs"
-                          title="Simular aceite imediato do convite"
-                        >
-                          Colaborar
-                        </button>
-                      )}
-                      {onCancelInvitation && (
-                        <button
-                          type="button"
-                          onClick={() => onCancelInvitation(project.id, inv.id)}
-                          className="p-1 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger-subtle transition-colors cursor-pointer"
-                          title="Cancelar convite"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {onAcceptInvitationDirect && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onAcceptInvitationDirect(project.id, inv)}
+                            className="h-8 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700"
+                            title="Aceitar convite de colaboração"
+                          >
+                            Colaborar
+                          </Button>
+                        )}
+                        {onCancelInvitation && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onCancelInvitation(project.id, inv.id)}
+                            className="size-8 text-muted-foreground hover:text-destructive"
+                            title="Cancelar convite"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>
           )}
 
           {/* Current Collaborators Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {project.members.map((member) => {
               const assignedTasks = projectTasks.filter(
                 (t) => t.assignee?.name === member.name
@@ -814,80 +847,72 @@ export function ProjectManageView({
                 `${member.name.toLowerCase().replace(/\s+/g, ".")}@kard.dev`
 
               return (
-                <div
-                  key={member.name}
-                  className="rounded-2xl bg-card p-4 border border-border shadow-xs space-y-3.5 hover:border-primary/40 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <MemberAvatarWithStatus
-                        avatar={member.avatar}
-                        name={member.name}
-                        status={currentStatus}
-                        size="md"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-card-foreground truncate">
-                            {member.name}
-                          </h4>
-                          {member.name === "Angelina Smith" && (
-                            <span className="rounded-md bg-primary-subtle text-primary px-1.5 py-0.2 text-[10px] font-bold shrink-0">
-                              You
-                            </span>
-                          )}
+                <Card key={member.name} className="rounded-2xl">
+                  <CardContent className="space-y-4 p-5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <MemberAvatarWithStatus
+                          avatar={member.avatar}
+                          name={member.name}
+                          status={currentStatus}
+                          size="md"
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="truncate text-sm font-bold text-card-foreground">
+                              {member.name}
+                            </h4>
+                            {member.name === "Angelina Smith" && (
+                              <Badge variant="info" className="px-1.5 py-0 text-[10px]">
+                                Você
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {member.role || "Colaborador"}
+                          </p>
+                          <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground/80">
+                            {memberEmail}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {member.role || "Team Contributor"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground/80 font-mono truncate mt-0.5">
-                          {memberEmail}
-                        </p>
                       </div>
+
+                      {project.members.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveContributor(member.email || member.name)}
+                          className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
+                          title="Remover colaborador do projeto"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                     </div>
 
-                    {project.members.length > 1 && (
-                      <button
-                        onClick={() => handleRemoveContributor(member.email || member.name)}
-                        className="text-muted-foreground/60 hover:text-danger p-1 rounded-md hover:bg-danger-subtle transition-colors cursor-pointer shrink-0"
-                        title="Remover colaborador do projeto"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Status Indicator & Live Switcher */}
-                  <div className="flex items-center justify-between rounded-xl bg-muted/40 p-2.5 text-xs border border-border/60">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                        Status:
-                      </span>
+                    <div className="flex items-center justify-between gap-2 rounded-xl bg-muted/40 p-2.5 text-xs">
                       <MemberStatusBadge status={currentStatus} size="sm" />
+
+                      <ProjectSelectField
+                        ariaLabel={`Alterar status de ${member.name}`}
+                        value={currentStatus}
+                        options={MEMBER_STATUS_OPTIONS}
+                        onValueChange={(value) =>
+                          handleUpdateMemberStatus(member.name, value as MemberStatus)
+                        }
+                        triggerClassName="h-8 min-h-8 w-36 rounded-lg text-xs"
+                      />
                     </div>
 
-                    <select
-                      value={currentStatus}
-                      onChange={(e) =>
-                        handleUpdateMemberStatus(member.name, e.target.value as MemberStatus)
-                      }
-                      aria-label={`Change status for ${member.name}`}
-                      className="text-[11px] font-semibold bg-card border border-border rounded-lg px-2 py-1 text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
-                    >
-                      <option value="Online">Online</option>
-                      <option value="In Meeting">In Meeting</option>
-                      <option value="Focused">Focused</option>
-                      <option value="Offline">Offline</option>
-                    </select>
-                  </div>
-
-                  <div className="rounded-xl bg-muted/30 p-2.5 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Tarefas Alocadas:</span>
-                    <span className="font-bold text-card-foreground tabular-nums">
-                      {completedAssigned} / {assignedTasks.length} Concluídas
-                    </span>
-                  </div>
-                </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Tarefas alocadas</span>
+                      <span className="font-semibold tabular-nums text-card-foreground">
+                        {completedAssigned} / {assignedTasks.length} concluídas
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
               )
             })}
           </div>
@@ -938,10 +963,11 @@ export function ProjectManageView({
             </div>
           )}
         </div>
-      )}
+      </TabsContent>
 
       {/* 6. Tab 3: Project Team Chat with Team Status Indicators */}
-      {activeTab === "chat" && (() => {
+      <TabsContent value="chat">
+        {(() => {
         const onlineCount = project.members.filter((m) => m.status === "Online").length
         const meetingCount = project.members.filter((m) => m.status === "In Meeting").length
         const focusedCount = project.members.filter((m) => m.status === "Focused").length
@@ -962,22 +988,21 @@ export function ProjectManageView({
                     #{project.name.toLowerCase().replace(/\s+/g, "-")}-team
                   </h4>
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
-                    <span className="font-semibold">{project.members.length} members</span>
-                    <span>•</span>
-                    <span className="inline-flex items-center gap-1 font-semibold text-emerald-500">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-semibold">{project.members.length} membros</span>
+                    <span>·</span>
+                    <span className="font-semibold text-success-foreground">
                       {onlineCount} Online
                     </span>
                     {meetingCount > 0 && (
                       <>
-                        <span>•</span>
-                        <span className="font-semibold text-amber-500">{meetingCount} In Meeting</span>
+                        <span>·</span>
+                        <span className="font-semibold text-warning-foreground">{meetingCount} Em reunião</span>
                       </>
                     )}
                     {focusedCount > 0 && (
                       <>
-                        <span>•</span>
-                        <span className="font-semibold text-purple-500">{focusedCount} Focused</span>
+                        <span>·</span>
+                        <span className="font-semibold text-primary">{focusedCount} Em foco</span>
                       </>
                     )}
                   </div>
@@ -1080,89 +1105,286 @@ export function ProjectManageView({
             {/* Chat Input Bar */}
             <form
               onSubmit={handleSendChatMessage}
-              className="p-3 border-t border-border flex items-center gap-2 bg-card"
+              className="p-3 border-t border-border/70 flex items-center gap-2 bg-card"
             >
-              <input
+              <Input
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder={`Message #${project.name.toLowerCase().replace(/\s+/g, "-")}-team...`}
-                className="flex-1 h-10 rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder={`Mensagem para #${project.name.toLowerCase().replace(/\s+/g, "-")}-team...`}
+                className="flex-1 h-10 rounded-xl text-xs"
               />
-              <Button type="submit" size="sm" className="h-10 px-4 gap-1.5">
-                <span>Send</span>
+              <Button type="submit" size="sm" className="h-10 px-4 gap-1.5 rounded-xl">
+                <span>Enviar</span>
                 <Send className="w-3.5 h-3.5" />
               </Button>
             </form>
           </div>
-        )
-      })()}
+          )
+        })()}
+      </TabsContent>
 
-      {/* 7. Tab 4: Files & Deliverables */}
-      {activeTab === "files" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-card-foreground">
-                Deliverable Documents & Assets
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Figma wireframes, PDF architectural specs, and exported client bundles.
-              </p>
-            </div>
+      {/* 7. Tab 4: Coupled Markdown Notes & Files */}
+      <TabsContent value="files">
+        <div className="space-y-6">
+          {/* Coupled Project Markdown Notes */}
+          {(() => {
+            const notes: ProjectNote[] = project.notes || []
+            const activeNote =
+              notes.find((n) => n.id === selectedNoteId) || notes[0] || null
 
-            <Button
-              onClick={() => docFileInputRef.current?.click()}
-              size="sm"
-              className="gap-1.5"
-            >
-              <Upload className="w-4 h-4" />
-              <span>Upload Document</span>
-            </Button>
+            const startEditingNote = (note: ProjectNote) => {
+              setSelectedNoteId(note.id)
+              setNoteTitleDraft(note.title)
+              setNoteContentDraft(note.contentMarkdown)
+              setIsEditingNote(true)
+            }
 
-            <input
-              type="file"
-              ref={docFileInputRef}
-              onChange={handleDocUpload}
-              className="hidden"
-            />
-          </div>
+            const handleCreateNote = () => {
+              const created: ProjectNote = {
+                id: `note-${Date.now()}`,
+                title: "Nova nota do projeto",
+                contentMarkdown:
+                  "## Contexto\n\nEscreva aqui especificações, decisões ou links importantes em Markdown.",
+                updatedAt: "Agora",
+                author: "Angelina Smith",
+              }
+              const updatedNotes = [created, ...notes]
+              onUpdateProject({ ...project, notes: updatedNotes })
+              setSelectedNoteId(created.id)
+              setNoteTitleDraft(created.title)
+              setNoteContentDraft(created.contentMarkdown)
+              setIsEditingNote(true)
+            }
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {documents.map((doc) => (
-              <div
-                key={doc.id}
-                className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/80 shadow-xs"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/70 text-primary shrink-0 border border-border">
-                    <Paperclip className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-card-foreground truncate">
-                      {doc.name}
+            const handleSaveNote = () => {
+              if (!activeNote) return
+              const updatedNotes = notes.map((n) =>
+                n.id === activeNote.id
+                  ? {
+                      ...n,
+                      title: noteTitleDraft.trim() || n.title,
+                      contentMarkdown: noteContentDraft,
+                      updatedAt: "Agora",
+                    }
+                  : n
+              )
+              onUpdateProject({ ...project, notes: updatedNotes })
+              setIsEditingNote(false)
+            }
+
+            return (
+              <div className="space-y-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-card-foreground">
+                      Notas em Markdown do Projeto
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Documentação acoplada às tarefas de {project.name} sem precisar sair do Kard.
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {doc.size} • {doc.date} • {doc.type}
-                    </p>
                   </div>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleCreateNote}
+                    className="h-9 gap-1.5 rounded-xl text-xs font-semibold"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Nova nota Markdown</span>
+                  </Button>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <button
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-                    title="Download / Open file"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 items-start">
+                  <div className="space-y-2 lg:col-span-4">
+                    {notes.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+                        Nenhuma nota criada ainda.
+                      </div>
+                    ) : (
+                      notes.map((note) => (
+                        <button
+                          key={note.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedNoteId(note.id)
+                            setIsEditingNote(false)
+                          }}
+                          className={cn(
+                            "w-full rounded-2xl border p-3.5 text-left transition-all cursor-pointer",
+                            activeNote?.id === note.id
+                              ? "border-primary bg-primary-subtle/35"
+                              : "border-border bg-card hover:border-border/80"
+                          )}
+                        >
+                          <p className="truncate text-xs font-bold text-foreground">
+                            {note.title}
+                          </p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {note.author} · {note.updatedAt}
+                          </p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-8">
+                    {activeNote ? (
+                      isEditingNote ? (
+                        <div className="space-y-3">
+                          <Input
+                            value={noteTitleDraft}
+                            onChange={(e) => setNoteTitleDraft(e.target.value)}
+                            className="h-10 rounded-xl text-sm font-bold"
+                          />
+                          <textarea
+                            value={noteContentDraft}
+                            onChange={(e) => setNoteContentDraft(e.target.value)}
+                            rows={8}
+                            className="w-full rounded-xl border border-border bg-muted/20 p-3 font-mono text-xs leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          />
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setIsEditingNote(false)}
+                            >
+                              <Eye className="size-3.5" />
+                              <span>Cancelar</span>
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleSaveNote}
+                              className="rounded-xl text-xs font-semibold"
+                            >
+                              Salvar nota
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex items-start justify-between gap-3 border-b border-border/70 pb-3">
+                            <div>
+                              <h4 className="text-base font-bold text-foreground">
+                                {activeNote.title}
+                              </h4>
+                              <p className="text-xs text-muted-foreground">
+                                {activeNote.author} · Atualizado {activeNote.updatedAt}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => startEditingNote(activeNote)}
+                              className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+                            >
+                              <Pencil className="size-3.5" />
+                              <span>Editar</span>
+                            </Button>
+                          </div>
+
+                          <MarkdownRenderer content={activeNote.contentMarkdown} />
+                        </div>
+                      )
+                    ) : (
+                      <p className="py-8 text-center text-xs text-muted-foreground">
+                        Selecione ou crie uma nota Markdown para visualizar aqui.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            ))}
+            )
+          })()}
+
+          {/* Existing Files & Deliverables List */}
+          <div className="space-y-4 border-t border-border/70 pt-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-card-foreground">
+                  Arquivos & Anexos
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Wireframes Figma, especificações em PDF e pacotes exportados.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => docFileInputRef.current?.click()}
+                size="sm"
+                className="h-9 gap-1.5 rounded-xl text-xs font-semibold"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Enviar arquivo</span>
+              </Button>
+
+              <input
+                type="file"
+                ref={docFileInputRef}
+                onChange={handleDocUpload}
+                className="hidden"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/80 shadow-xs"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/70 text-primary shrink-0 border border-border">
+                      <Paperclip className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-card-foreground truncate">
+                        {doc.name}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {doc.size} · {doc.date} · {doc.type}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                      title="Download / Open file"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      )}
+      </TabsContent>
 
-      {/* Invite Collaborator by Email Modal (GitHub-style flow) */}
+      {/* 8. Tab 5: Client Portal with Deliverable Approval */}
+      <TabsContent value="portal">
+        <ClientPortalView
+          project={project}
+          currentTier={currentTier}
+          onOpenPricingModal={onOpenPricingModal}
+          onUpdateDeliverableStatus={(projId, delivId, status, feedback) =>
+            onUpdateDeliverableStatus?.(projId, delivId, status, feedback)
+          }
+          onAddDeliverable={(projId, deliverable) =>
+            onAddDeliverable?.(projId, deliverable)
+          }
+        />
+      </TabsContent>
+      </Tabs>
+
+      {/* Invite Collaborator by Email Modal */}
       <InviteCollaboratorModal
         open={isInviteModalOpen}
         onOpenChange={setIsInviteModalOpen}

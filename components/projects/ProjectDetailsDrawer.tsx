@@ -51,7 +51,10 @@ export function ProjectDetailsDrawer({
     (t) => t.project.toLowerCase() === project.name.toLowerCase()
   )
 
-  const percent = Math.round((project.completedTasks / project.totalTasks) * 100)
+  const percent =
+    project.totalTasks > 0
+      ? Math.round((project.completedTasks / project.totalTasks) * 100)
+      : 0
 
   const handleAddNewTask = (e: React.FormEvent) => {
     e.preventDefault()

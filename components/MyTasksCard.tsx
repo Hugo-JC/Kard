@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useSyncExternalStore } from "react"
 import {
   DndContext,
   DragOverlay,
@@ -38,17 +38,20 @@ interface MyTasksCardProps {
   onOpenNewTaskModal: () => void
   onDeleteTask?: (id: string) => void
   onReorderTasks?: (tasks: TaskItem[]) => void
+  onSelectTask?: (task: TaskItem) => void
 }
 
 function SortableDashboardTaskRow({
   task,
   displayIndex,
   onToggleTask,
+  onSelectTask,
   isOverlay = false,
 }: {
   task: TaskItem
   displayIndex: number
   onToggleTask: (id: string) => void
+  onSelectTask?: (task: TaskItem) => void
   isOverlay?: boolean
 }) {
   const {
@@ -105,7 +108,7 @@ function SortableDashboardTaskRow({
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           <button
             type="button"
-            onClick={() => onToggleTask(task.id)}
+            onClick={() => (onSelectTask ? onSelectTask(task) : onToggleTask(task.id))}
             className={cn(
               "text-left text-sm font-semibold transition-all duration-200 cursor-pointer truncate max-w-[200px] sm:max-w-[260px]",
               task.completed
@@ -118,9 +121,9 @@ function SortableDashboardTaskRow({
 
           {/* Project Highlight: Logo + Name only */}
           {task.project && (
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-muted/70 border border-border/60 text-[11px] font-semibold text-muted-foreground shrink-0 shadow-2xs">
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
               <ProjectLogoIcon project={task.project} className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate max-w-[90px]">{task.project}</span>
+              <span className="truncate max-w-[100px]">{task.project}</span>
             </div>
           )}
         </div>
@@ -168,10 +171,12 @@ function StaticDashboardTaskRow({
   task,
   displayIndex,
   onToggleTask,
+  onSelectTask,
 }: {
   task: TaskItem
   displayIndex: number
   onToggleTask: (id: string) => void
+  onSelectTask?: (task: TaskItem) => void
 }) {
   const formattedNumber = String(displayIndex + 1).padStart(2, "0")
 
@@ -187,7 +192,7 @@ function StaticDashboardTaskRow({
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           <button
             type="button"
-            onClick={() => onToggleTask(task.id)}
+            onClick={() => (onSelectTask ? onSelectTask(task) : onToggleTask(task.id))}
             className={cn(
               "text-left text-sm font-semibold transition-all duration-200 cursor-pointer truncate max-w-[200px] sm:max-w-[260px]",
               task.completed
@@ -198,9 +203,9 @@ function StaticDashboardTaskRow({
             {task.title}
           </button>
           {task.project && (
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-muted/70 border border-border/60 text-[11px] font-semibold text-muted-foreground shrink-0 shadow-2xs">
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
               <ProjectLogoIcon project={task.project} className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate max-w-[90px]">{task.project}</span>
+              <span className="truncate max-w-[100px]">{task.project}</span>
             </div>
           )}
         </div>
@@ -230,14 +235,15 @@ export function MyTasksCard({
   onOpenNewTaskModal,
   onDeleteTask,
   onReorderTasks,
+  onSelectTask,
 }: MyTasksCardProps) {
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all")
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   const pendingCount = tasks.filter((t) => !t.completed).length
 
@@ -319,13 +325,14 @@ export function MyTasksCard({
 
         {/* Task List with Drag & Drop or Static SSR fallback */}
         {!isMounted ? (
-          <div className="mt-2 divide-y divide-border/50">
+          <div className="mt-3 space-y-1">
             {filteredTasks.map((task, idx) => (
               <StaticDashboardTaskRow
                 key={task.id}
                 task={task}
                 displayIndex={idx}
                 onToggleTask={onToggleTask}
+                onSelectTask={onSelectTask}
               />
             ))}
           </div>
@@ -337,7 +344,7 @@ export function MyTasksCard({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="mt-2 divide-y divide-border/50">
+            <div className="mt-3 space-y-1">
               {filteredTasks.length === 0 ? (
                 <div className="py-8 text-center text-xs text-muted-foreground">
                   Nenhuma tarefa encontrada neste filtro.
@@ -353,6 +360,7 @@ export function MyTasksCard({
                       task={task}
                       displayIndex={idx}
                       onToggleTask={onToggleTask}
+                      onSelectTask={onSelectTask}
                     />
                   ))}
                 </SortableContext>

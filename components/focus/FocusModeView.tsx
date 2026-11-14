@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
+import Image from "next/image"
 import { motion, AnimatePresence } from "motion/react"
 import {
   Play,
@@ -17,13 +18,20 @@ import {
   Clock,
   Flame,
   ChevronDown,
+  ChevronUp,
   Brain,
-  ShieldAlert,
+  Sun,
+  Moon,
 } from "lucide-react"
 import { TrackedTimer, TaskItem } from "@/lib/data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProjectLogoIcon } from "@/components/Logos"
+import { useTheme } from "@/components/ThemeProvider"
 
 interface FocusModeViewProps {
   timers: TrackedTimer[]
@@ -51,7 +59,8 @@ export function FocusModeView({
   onToggleTask,
   onClose,
 }: FocusModeViewProps) {
-  // Determine active timer
+  const { toggleTheme } = useTheme()
+
   const runningTimer = timers.find((t) => t.isRunning)
   const defaultTimer = runningTimer || timers[0]
   const [selectedTimerId, setSelectedTimerId] = useState<string>(
@@ -61,49 +70,57 @@ export function FocusModeView({
   const activeTimer =
     timers.find((t) => t.id === selectedTimerId) || defaultTimer
 
-  // Match corresponding task if any
   const matchedTask = tasks.find(
     (t) =>
       t.title.toLowerCase() === activeTimer?.taskTitle.toLowerCase() ||
       t.project.toLowerCase() === activeTimer?.project.toLowerCase()
   )
 
-  // Timer mode state
   const [mode, setMode] = useState<FocusModeType>("stopwatch")
   const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState<number>(25 * 60)
   const [isTaskSwitcherOpen, setIsTaskSwitcherOpen] = useState(false)
+  const [showWorkspaceTools, setShowWorkspaceTools] = useState(false)
 
-  // Focus Checklist State
   const [subtasks, setSubtasks] = useState<FocusSubtask[]>([
     { id: "sub-1", text: "Isolar requisitos principais e wireframes", done: true },
-    { id: "sub-2", text: "Implementar layout de alta densidade sem distrações", done: false },
-    { id: "sub-3", text: "Testar atalhos de teclado e micro-interações", done: false },
+    { id: "sub-2", text: "Implementar layout limpo sem distrações", done: false },
+    { id: "sub-3", text: "Validar atalhos e micro-interações", done: false },
   ])
   const [newSubtaskText, setNewSubtaskText] = useState("")
 
-  // Focus Notes / Scratchpad
   const [focusNotes, setFocusNotes] = useState(
     "Anotações da sessão:\n- Concentração total na entrega atual\n- Sem alternância de abas até o término do bloco"
   )
 
-  // Ambient Sound State (synthesized via Web Audio API)
   const [ambientSound, setAmbientSound] = useState<AmbientSoundType>("none")
   const audioCtxRef = useRef<AudioContext | null>(null)
   const noiseNodeRef = useRef<AudioNode | null>(null)
   const gainNodeRef = useRef<GainNode | null>(null)
+  const switcherRef = useRef<HTMLDivElement>(null)
 
-  // Keyboard shortcut listener (Escape to exit)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose()
+        if (isTaskSwitcherOpen) {
+          setIsTaskSwitcherOpen(false)
+        } else {
+          onClose()
+        }
+      }
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
+        setIsTaskSwitcherOpen(false)
       }
     }
     window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [onClose])
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [onClose, isTaskSwitcherOpen])
 
-  // Pomodoro countdown effect
   useEffect(() => {
     if (mode === "stopwatch") return
     if (!activeTimer?.isRunning) return
@@ -123,7 +140,11 @@ export function FocusModeView({
 
   const playChime = () => {
     try {
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
+      const ctx = new AudioContextClass()
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.type = "sine"
@@ -140,7 +161,6 @@ export function FocusModeView({
     }
   }
 
-  // Handle ambient sound synthesis
   useEffect(() => {
     if (ambientSound === "none") {
       if (audioCtxRef.current) {
@@ -151,7 +171,10 @@ export function FocusModeView({
     }
 
     try {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
       const ctx = new AudioContextClass()
       audioCtxRef.current = ctx
 
@@ -183,20 +206,27 @@ export function FocusModeView({
         oscL.start()
         oscR.start()
         noiseNodeRef.current = merger
-      } else if (ambientSound === "whitenoise" || ambientSound === "rain") {
+      } else {
         const bufferSize = ctx.sampleRate * 2
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
         const output = noiseBuffer.getChannelData(0)
-        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
+        let b0 = 0,
+          b1 = 0,
+          b2 = 0,
+          b3 = 0,
+          b4 = 0,
+          b5 = 0,
+          b6 = 0
         for (let i = 0; i < bufferSize; i++) {
           const white = Math.random() * 2 - 1
           b0 = 0.99886 * b0 + white * 0.0555179
           b1 = 0.99332 * b1 + white * 0.0750759
-          b2 = 0.96900 * b2 + white * 0.1538520
-          b3 = 0.86650 * b3 + white * 0.3104856
-          b4 = 0.55000 * b4 + white * 0.5329522
-          b5 = -0.7616 * b5 - white * 0.0168980
-          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04
+          b2 = 0.969 * b2 + white * 0.153852
+          b3 = 0.8665 * b3 + white * 0.3104856
+          b4 = 0.55 * b4 + white * 0.5329522
+          b5 = -0.7616 * b5 - white * 0.016898
+          output[i] =
+            (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04
           b6 = white * 0.115926
         }
 
@@ -206,7 +236,10 @@ export function FocusModeView({
 
         const filter = ctx.createBiquadFilter()
         filter.type = "lowpass"
-        filter.frequency.setValueAtTime(ambientSound === "rain" ? 800 : 1800, ctx.currentTime)
+        filter.frequency.setValueAtTime(
+          ambientSound === "rain" ? 800 : 1800,
+          ctx.currentTime
+        )
 
         whiteNoise.connect(filter)
         filter.connect(masterGain)
@@ -230,21 +263,28 @@ export function FocusModeView({
     const minutes = Math.floor((totalSecs % 3600) / 60)
     const seconds = totalSecs % 60
     if (hours > 0) {
-      return {
-        main: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-        unit: "h:m:s",
-      }
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )}:${String(seconds).padStart(2, "0")}`
     }
-    return {
-      main: `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-      unit: "m:s",
-    }
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0"
+    )}`
   }
 
   const currentDisplayTime =
     mode === "stopwatch"
       ? formatSeconds(activeTimer ? activeTimer.secondsElapsed : 0)
       : formatSeconds(pomodoroSecondsLeft)
+
+  const handleModeChange = (nextMode: string) => {
+    const typed = nextMode as FocusModeType
+    setMode(typed)
+    if (typed === "pomodoro25") setPomodoroSecondsLeft(25 * 60)
+    if (typed === "pomodoro50") setPomodoroSecondsLeft(50 * 60)
+  }
 
   const handleToggleSubtask = (id: string) => {
     setSubtasks((prev) =>
@@ -255,12 +295,10 @@ export function FocusModeView({
   const handleAddSubtask = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newSubtaskText.trim()) return
-    const newSub: FocusSubtask = {
-      id: `sub-${Date.now()}`,
-      text: newSubtaskText.trim(),
-      done: false,
-    }
-    setSubtasks((prev) => [...prev, newSub])
+    setSubtasks((prev) => [
+      ...prev,
+      { id: `sub-${Date.now()}`, text: newSubtaskText.trim(), done: false },
+    ])
     setNewSubtaskText("")
   }
 
@@ -276,40 +314,52 @@ export function FocusModeView({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-slate-100 overflow-y-auto"
+      className="fixed inset-0 z-50 flex flex-col bg-background text-foreground overflow-y-auto"
     >
-      {/* 1. TOP HEADER: Clean Zen Bar with plenty of breathing room */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950">
-        {/* Left: Branding & Status */}
+      {/* Top Bar: Calm, Minimal, Dual-Theme */}
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 font-black tracking-tight text-white text-base sm:text-lg">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white text-xs font-black shadow-2xs">
-              K
-            </span>
-            <span>KARD</span>
-          </div>
-          <div className="h-4 w-px bg-slate-800" />
-          <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-[11px] font-semibold text-emerald-400">
-            <span className="relative flex h-2 w-2">
-              <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75", isRunning ? "block" : "hidden")} />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span>MODO FOCO ATIVO</span>
-          </div>
+          <Image
+            src="/kard_logo_light.svg"
+            alt="Kard"
+            width={108}
+            height={36}
+            className="h-8 w-auto dark:hidden"
+          />
+          <Image
+            src="/kard_logo_dark.svg"
+            alt="Kard"
+            width={108}
+            height={36}
+            className="hidden h-8 w-auto dark:block"
+          />
+          <span className="hidden sm:inline text-xs font-medium text-muted-foreground">
+            Modo Foco
+          </span>
         </div>
 
-        {/* Center: Quick Active Task Switcher */}
-        <div className="relative hidden md:block">
-          <button
+        {/* Center Task Switcher */}
+        <div className="relative hidden md:block" ref={switcherRef}>
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => setIsTaskSwitcherOpen(!isTaskSwitcherOpen)}
-            className="flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 px-3.5 py-1.5 text-xs text-slate-300 transition-colors cursor-pointer"
+            className="h-9 gap-2 rounded-xl bg-card px-3.5 text-xs font-medium"
           >
-            <ProjectLogoIcon project={activeTimer?.project || "Google"} className="w-3.5 h-3.5 shrink-0" />
-            <span className="font-semibold text-white">{activeTimer?.project}:</span>
-            <span className="max-w-[200px] truncate">{activeTimer?.taskTitle}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
+            <ProjectLogoIcon
+              project={activeTimer?.project || "Google"}
+              className="size-3.5 shrink-0"
+            />
+            <span className="font-semibold text-foreground">
+              {activeTimer?.project}
+            </span>
+            <span className="text-muted-foreground">·</span>
+            <span className="max-w-[200px] truncate text-muted-foreground">
+              {activeTimer?.taskTitle}
+            </span>
+            <ChevronDown className="size-3.5 text-muted-foreground" />
+          </Button>
 
           <AnimatePresence>
             {isTaskSwitcherOpen && (
@@ -317,48 +367,54 @@ export function FocusModeView({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
-                className="absolute top-full left-0 mt-2 w-64 rounded-2xl border border-slate-800 bg-slate-900 p-2 shadow-2xl z-50 divide-y divide-slate-800"
+                transition={{ duration: 0.15 }}
+                className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 rounded-2xl border border-border bg-card p-2 shadow-xl"
               >
-                <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Mudar Tarefa Ativa
-                </div>
-                <div className="space-y-1 pt-1.5">
-                  {timers.map((timer) => (
-                    <button
-                      key={timer.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedTimerId(timer.id)
-                        setIsTaskSwitcherOpen(false)
-                      }}
-                      className={cn(
-                        "w-full text-left px-2.5 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer",
-                        timer.id === activeTimer?.id
-                          ? "bg-primary text-white font-semibold"
-                          : "text-slate-300 hover:bg-slate-800"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <ProjectLogoIcon project={timer.project} className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{timer.taskTitle}</span>
-                      </div>
-                      <span className="text-[10px] opacity-70 ml-2 font-mono shrink-0">
-                        {timer.project}
-                      </span>
-                    </button>
-                  ))}
+                <p className="px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground">
+                  Trocar tarefa em foco
+                </p>
+                <div className="space-y-1">
+                  {timers.map((timer) => {
+                    const isSelected = timer.id === activeTimer?.id
+                    return (
+                      <button
+                        key={timer.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTimerId(timer.id)
+                          setIsTaskSwitcherOpen(false)
+                        }}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-colors cursor-pointer",
+                          isSelected
+                            ? "bg-primary-subtle text-primary font-semibold"
+                            : "text-foreground hover:bg-muted"
+                        )}
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          <ProjectLogoIcon
+                            project={timer.project}
+                            className="size-3.5 shrink-0"
+                          />
+                          <span className="truncate">{timer.taskTitle}</span>
+                        </div>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {timer.project}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Right: Ambient Sound Controls & Exit */}
-        <div className="flex items-center gap-2.5">
-          {/* Ambient Sound Switcher */}
+        {/* Right Controls */}
+        <div className="flex items-center gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant={ambientSound !== "none" ? "secondary" : "outline"}
             size="sm"
             onClick={() =>
               setAmbientSound((curr) =>
@@ -371,137 +427,121 @@ export function FocusModeView({
                   : "none"
               )
             }
-            className={cn(
-              "h-8 px-2.5 rounded-xl text-xs font-semibold gap-1.5 border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white",
-              ambientSound !== "none" && "border-primary/50 text-primary bg-primary/10"
-            )}
-            title="Alternar áudio de foco (Binaural 40Hz / Chuva / Ruído Rosa)"
+            className="h-9 gap-1.5 rounded-xl bg-card px-3 text-xs font-medium"
+            title="Alternar áudio de foco (40Hz / Chuva / Ruído Rosa)"
           >
             {ambientSound === "none" ? (
-              <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+              <VolumeX className="size-3.5 text-muted-foreground" />
             ) : (
-              <Volume2 className="w-3.5 h-3.5 text-primary animate-pulse" />
+              <Volume2 className="size-3.5 text-primary" />
             )}
-            <span className="text-[11px] hidden sm:inline">
+            <span className="hidden sm:inline">
               {ambientSound === "none"
                 ? "Áudio off"
                 : ambientSound === "binaural"
                 ? "40Hz Gamma"
                 : ambientSound === "rain"
-                ? "Chuva Suave"
+                ? "Chuva"
                 : "Ruído Rosa"}
             </span>
           </Button>
 
-          {/* Exit Focus Mode Button */}
           <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={toggleTheme}
+            className="size-9 rounded-xl bg-card"
+            aria-label="Alternar tema claro/escuro"
+          >
+            <Sun className="hidden size-4 text-amber-400 dark:block" />
+            <Moon className="block size-4 text-muted-foreground dark:hidden" />
+          </Button>
+
+          <Button
+            type="button"
             onClick={onClose}
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl text-xs font-semibold"
+            className="h-9 gap-1.5 rounded-xl bg-card px-3.5 text-xs font-semibold"
           >
-            <Minimize2 className="w-3.5 h-3.5" />
+            <Minimize2 className="size-3.5" />
             <span>Sair do Foco</span>
-            <kbd className="hidden sm:inline-block text-[10px] bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-400 font-mono">
+            <kbd className="hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
               ESC
             </kbd>
           </Button>
         </div>
       </header>
 
-      {/* 2. MAIN ZEN WORKSPACE: Centered Task & Huge Chronometer */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 max-w-4xl mx-auto w-full">
-        {/* Active Task Badge & Title */}
-        <div className="text-center space-y-3 mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 shadow-2xs">
-            <ProjectLogoIcon project={activeTimer?.project || "Google"} className="w-3.5 h-3.5 shrink-0" />
-            <span>{activeTimer?.project || "Geral"}</span>
+      {/* Main Focal Workspace: Single Active Task & Timer */}
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-8">
+        <div className="mb-8 flex flex-col items-center text-center space-y-3">
+          {/* Clean project identification: Logo + Name only */}
+          <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <ProjectLogoIcon
+              project={activeTimer?.project || "Google"}
+              className="size-4 shrink-0"
+            />
+            <span className="text-foreground">{activeTimer?.project || "Geral"}</span>
             {matchedTask?.priority && (
               <>
-                <span className="text-slate-700">·</span>
-                <span
-                  className={cn(
-                    "text-[10px] px-2 py-0.5 rounded font-bold uppercase",
-                    matchedTask.priority === "High"
-                      ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                      : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                  )}
-                >
-                  {matchedTask.priority}
-                </span>
+                <span>·</span>
+                <span>Prioridade {matchedTask.priority}</span>
               </>
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight max-w-2xl mx-auto">
-            {activeTimer?.taskTitle || "Sessão de Foco Livre"}
+          <h1 className="max-w-2xl text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            {activeTimer?.taskTitle || "Sessão de Foco"}
           </h1>
-
-          <p className="text-xs sm:text-sm text-slate-400">
-            Elimine distrações, foque em um único objetivo por vez até o bloco terminar.
-          </p>
         </div>
 
-        {/* Mode Selector Tabs using shadcn Buttons */}
-        <div className="flex items-center justify-center gap-1.5 p-1 rounded-2xl bg-slate-900 border border-slate-800 mb-8">
-          <Button
-            type="button"
-            variant={mode === "stopwatch" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setMode("stopwatch")}
-            className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Cronômetro</span>
-          </Button>
+        {/* Mode Tabs (shadcn Tabs) */}
+        <Tabs
+          value={mode}
+          onValueChange={handleModeChange}
+          className="mb-6 items-center"
+        >
+          <TabsList>
+            <TabsTrigger value="stopwatch" className="gap-1.5">
+              <Clock className="size-3.5" />
+              <span>Cronômetro</span>
+            </TabsTrigger>
+            <TabsTrigger value="pomodoro25" className="gap-1.5">
+              <Brain className="size-3.5" />
+              <span>Pomodoro 25m</span>
+            </TabsTrigger>
+            <TabsTrigger value="pomodoro50" className="gap-1.5">
+              <Flame className="size-3.5" />
+              <span>Sprint 50m</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-          <Button
-            type="button"
-            variant={mode === "pomodoro25" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => {
-              setMode("pomodoro25")
-              setPomodoroSecondsLeft(25 * 60)
-            }}
-            className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
-          >
-            <Brain className="w-3.5 h-3.5" />
-            <span>Pomodoro (25m)</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant={mode === "pomodoro50" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => {
-              setMode("pomodoro50")
-              setPomodoroSecondsLeft(50 * 60)
-            }}
-            className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
-          >
-            <Flame className="w-3.5 h-3.5" />
-            <span>Sprint (50m)</span>
-          </Button>
-        </div>
-
-        {/* GIANT CHRONOMETER / COUNTDOWN (Pure Monospace, Zero Slop) */}
-        <div className="flex flex-col items-center justify-center mb-10">
+        {/* Focal Timer Card */}
+        <Card className="w-full max-w-xl p-8 sm:p-10 text-center">
           <div
             className={cn(
-              "font-mono font-black tabular-nums tracking-tighter text-7xl sm:text-8xl md:text-9xl transition-colors duration-200",
-              isRunning ? "text-white" : "text-slate-400"
+              "font-mono text-6xl font-black tabular-nums tracking-tight transition-colors duration-200 sm:text-8xl",
+              isRunning ? "text-foreground" : "text-muted-foreground"
             )}
           >
-            {currentDisplayTime.main}
+            {currentDisplayTime}
           </div>
 
-          <div className="text-xs uppercase font-mono tracking-widest text-slate-500 mt-2">
-            {mode === "stopwatch" ? "Tempo decorrido" : "Tempo restante no bloco"}
-          </div>
+          <p className="mt-3 text-xs font-medium text-muted-foreground">
+            {mode === "stopwatch"
+              ? isRunning
+                ? "Tempo em andamento"
+                : "Cronômetro pausado"
+              : isRunning
+              ? "Tempo restante no bloco"
+              : "Bloco pronto para iniciar"}
+          </p>
 
-          {/* Controls Bar using shadcn Buttons */}
-          <div className="flex items-center gap-3.5 mt-8">
-            {/* Reset */}
+          {/* Timer Controls */}
+          <div className="mt-8 flex items-center justify-center gap-3">
             <Button
               type="button"
               variant="outline"
@@ -512,40 +552,33 @@ export function FocusModeView({
                   setPomodoroSecondsLeft(mode === "pomodoro25" ? 25 * 60 : 50 * 60)
                 }
               }}
-              className="size-12 rounded-2xl bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+              className="size-12 rounded-2xl"
               title="Reiniciar tempo"
             >
-              <RotateCcw className="w-5 h-5" />
+              <RotateCcw className="size-4" />
             </Button>
 
-            {/* Play/Pause Button (Giant Main CTA) */}
             <Button
               type="button"
-              variant="default"
+              variant={isRunning ? "secondary" : "default"}
               onClick={() => {
                 if (activeTimer) onToggleTimer(activeTimer.id)
               }}
-              className={cn(
-                "h-14 w-36 sm:w-44 rounded-2xl text-base font-bold shadow-md gap-2 transition-all cursor-pointer",
-                isRunning
-                  ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
-                  : "bg-primary hover:bg-blue-600 text-white"
-              )}
+              className="h-12 min-w-40 gap-2 rounded-2xl px-6 text-sm font-bold shadow-xs"
             >
               {isRunning ? (
                 <>
-                  <Pause className="w-5 h-5 fill-current" />
+                  <Pause className="size-4 fill-current" />
                   <span>Pausar</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-5 h-5 fill-current translate-x-0.5" />
-                  <span>Iniciar</span>
+                  <Play className="size-4 fill-current" />
+                  <span>Iniciar Foco</span>
                 </>
               )}
             </Button>
 
-            {/* Add +5 min */}
             <Button
               type="button"
               variant="outline"
@@ -556,148 +589,159 @@ export function FocusModeView({
                 }
               }}
               disabled={mode === "stopwatch"}
-              className={cn(
-                "size-12 rounded-2xl bg-slate-900 border-slate-800 text-xs font-bold font-mono text-slate-300 hover:bg-slate-800 hover:text-white",
-                mode === "stopwatch" && "opacity-30 cursor-not-allowed"
-              )}
+              className="size-12 rounded-2xl font-mono text-xs font-bold"
               title="Adicionar +5 minutos"
             >
               +5m
             </Button>
           </div>
-        </div>
 
-        {/* 3. SUBTASKS & SCRATCHPAD ACCORDION / BENTO GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mt-2">
-          {/* Subtasks Checklist */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-2xs">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-300 uppercase tracking-wider">
-                <ListTodo className="w-4 h-4 text-primary" />
-                <span>Micro-passos da Sessão</span>
-              </div>
-              <span className="text-[11px] font-mono text-slate-400">
-                {subtasks.filter((s) => s.done).length}/{subtasks.length} concluídos
-              </span>
-            </div>
-
-            <div className="mt-3 space-y-1.5 max-h-40 overflow-y-auto pr-1">
-              {subtasks.map((sub) => (
-                <div
-                  key={sub.id}
-                  className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-950/60 hover:bg-slate-800/50 transition-colors group"
-                >
-                  <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer min-w-0">
-                    <input
-                      type="checkbox"
-                      checked={sub.done}
-                      onChange={() => handleToggleSubtask(sub.id)}
-                      className="rounded border-slate-700 bg-slate-900 text-primary focus:ring-0 focus:ring-offset-0 size-4"
-                    />
-                    <span
-                      className={cn(
-                        "truncate",
-                        sub.done && "line-through text-slate-500"
-                      )}
-                    >
-                      {sub.text}
-                    </span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteSubtask(sub.id)}
-                    className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 p-1 transition-opacity cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={handleAddSubtask} className="mt-3 flex gap-2">
-              <input
-                type="text"
-                placeholder="+ Adicionar sub-tarefa rápida..."
-                value={newSubtaskText}
-                onChange={(e) => setNewSubtaskText(e.target.value)}
-                className="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-primary"
-              />
+          {/* Primary Task Completion Action */}
+          {matchedTask && (
+            <div className="mt-7 flex justify-center">
               <Button
-                type="submit"
-                variant="outline"
+                type="button"
+                variant={matchedTask.completed ? "secondary" : "ghost"}
                 size="sm"
-                className="h-8 bg-slate-850 hover:bg-slate-800 text-white rounded-xl text-xs px-2.5 cursor-pointer border-slate-800"
+                onClick={() => {
+                  onToggleTask(matchedTask.id)
+                  playChime()
+                }}
+                className={cn(
+                  "h-9 gap-2 rounded-xl px-4 text-xs font-semibold",
+                  matchedTask.completed && "text-success-foreground bg-success-subtle"
+                )}
               >
-                <Plus className="w-3.5 h-3.5" />
+                <CheckCircle2 className="size-4" />
+                <span>
+                  {matchedTask.completed
+                    ? "Tarefa concluída"
+                    : "Marcar tarefa como concluída"}
+                </span>
               </Button>
-            </form>
-          </div>
-
-          {/* Quick Scratchpad / Session Notes */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-2xs flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-300 uppercase tracking-wider">
-                <FileText className="w-4 h-4 text-emerald-400" />
-                <span>Bloco de Notas da Sessão</span>
-              </div>
-              <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Auto-salvo
-              </span>
             </div>
+          )}
+        </Card>
 
-            <textarea
-              value={focusNotes}
-              onChange={(e) => setFocusNotes(e.target.value)}
-              placeholder="Despeje pensamentos rápidos, ideias ou comandos aqui sem sair do foco..."
-              className="mt-3 flex-1 w-full min-h-[100px] resize-none rounded-xl bg-slate-950/60 border border-slate-800/80 p-3 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-slate-700 font-mono leading-relaxed"
-            />
-          </div>
-        </div>
-
-        {/* 4. Complete Task Action using shadcn Button */}
-        {matchedTask && (
-          <div className="mt-8 flex items-center justify-center">
+        {/* Quiet Optional Drawer for Subtasks & Scratchpad */}
+        <div className="mt-8 w-full max-w-2xl">
+          <div className="flex justify-center">
             <Button
               type="button"
-              variant={matchedTask.completed ? "default" : "outline"}
-              onClick={() => {
-                onToggleTask(matchedTask.id)
-                playChime()
-              }}
-              className={cn(
-                "h-10 px-5 rounded-2xl text-xs font-bold gap-2 cursor-pointer shadow-2xs",
-                matchedTask.completed
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850 hover:text-white"
-              )}
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowWorkspaceTools((prev) => !prev)}
+              className="gap-1.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground"
             >
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <ListTodo className="size-3.5" />
               <span>
-                {matchedTask.completed
-                  ? "Tarefa Concluída ✓"
-                  : "Marcar Tarefa como Concluída"}
+                {showWorkspaceTools
+                  ? "Ocultar notas e micro-passos"
+                  : `Notas e micro-passos (${subtasks.filter((s) => s.done).length}/${subtasks.length})`}
               </span>
+              {showWorkspaceTools ? (
+                <ChevronUp className="size-3.5" />
+              ) : (
+                <ChevronDown className="size-3.5" />
+              )}
             </Button>
           </div>
-        )}
-      </main>
 
-      {/* 5. MINIMAL FOOTER: Ambient stats & zen status */}
-      <footer className="flex items-center justify-between px-6 py-3 border-t border-slate-900 bg-slate-950 text-[11px] text-slate-500">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="w-3.5 h-3.5 text-slate-600" />
-          <span>Notificações bloqueadas durante o Modo Foco</span>
+          <AnimatePresence>
+            {showWorkspaceTools && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.18 }}
+                className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"
+              >
+                <Card>
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                        <ListTodo className="size-4 text-primary" />
+                        <span>Micro-passos</span>
+                      </div>
+                      <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                        {subtasks.filter((s) => s.done).length}/{subtasks.length}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {subtasks.map((sub) => (
+                        <div
+                          key={sub.id}
+                          className="group flex items-center justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/70"
+                        >
+                          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-xs">
+                            <Checkbox
+                              checked={sub.done}
+                              onCheckedChange={() => handleToggleSubtask(sub.id)}
+                            />
+                            <span
+                              className={cn(
+                                "truncate",
+                                sub.done && "line-through text-muted-foreground"
+                              )}
+                            >
+                              {sub.text}
+                            </span>
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteSubtask(sub.id)}
+                            className="size-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                            aria-label="Remover micro-passo"
+                          >
+                            <X className="size-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <form onSubmit={handleAddSubtask} className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Adicionar micro-passo..."
+                        value={newSubtaskText}
+                        onChange={(e) => setNewSubtaskText(e.target.value)}
+                        className="h-9 rounded-xl text-xs"
+                      />
+                      <Button type="submit" variant="outline" size="icon" className="size-9 shrink-0 rounded-xl">
+                        <Plus className="size-3.5" />
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                <Card className="flex flex-col">
+                  <CardContent className="flex flex-1 flex-col p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                        <FileText className="size-4 text-primary" />
+                        <span>Bloco de Notas</span>
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">
+                        Salvo localmente
+                      </span>
+                    </div>
+
+                    <textarea
+                      value={focusNotes}
+                      onChange={(e) => setFocusNotes(e.target.value)}
+                      placeholder="Anote ideias rápidas sem sair da sessão..."
+                      className="min-h-[128px] flex-1 w-full resize-none rounded-2xl border border-border/80 bg-muted/30 p-3 text-xs leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none"
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex items-center gap-4">
-          <span>Hoje: <strong className="text-slate-300 font-mono">1h 45m focado</strong></span>
-          <span className="hidden sm:inline">·</span>
-          <span className="hidden sm:flex items-center gap-1 text-amber-400 font-semibold">
-            <Flame className="w-3.5 h-3.5 fill-amber-400" />
-            4 dias seguidos
-          </span>
-        </div>
-      </footer>
+      </main>
     </motion.div>
   )
 }
