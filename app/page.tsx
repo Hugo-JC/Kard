@@ -953,6 +953,7 @@ export default function DashboardPage() {
             onAcceptInvitation={handleAcceptInvitation}
             onDeclineInvitation={handleDeclineInvitation}
             onOpenPricingModal={() => setIsPricingModalOpen(true)}
+            onOpenSettings={() => setActiveNav("settings")}
             onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
             isFocusModeActive={isFocusMode}
             currentTier={userTier}
@@ -1078,9 +1079,9 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-5"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start"
               >
-                <div className="lg:col-span-8">
+                <div className="lg:col-span-7">
                   <MyTasksCard
                     tasks={tasks}
                     onToggleTask={handleToggleTask}
@@ -1090,7 +1091,7 @@ export default function DashboardPage() {
                     onReorderTasks={handleReorderTasks}
                   />
                 </div>
-                <div className="lg:col-span-4 space-y-5">
+                <div className="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-5 items-start">
                   <TimeTrackerCard
                     timers={timers}
                     onToggleTimer={handleToggleTimer}
@@ -1110,15 +1111,15 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-5"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start"
               >
-                <div className="lg:col-span-8">
+                <div className="lg:col-span-7">
                   <CalendarWidget
                     events={calendarEvents}
                     onAddEvent={handleAddCalendarEvent}
                   />
                 </div>
-                <div className="lg:col-span-4">
+                <div className="lg:col-span-5">
                   <MyTasksCard
                     tasks={tasks}
                     onToggleTask={handleToggleTask}
@@ -1327,7 +1328,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* COLUMN 3: Calendar & Messages — lg:col-span-4 */}
-                  <div className="space-y-5 md:col-span-2 lg:col-span-4">
+                  <div className="md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-5 items-start">
                     <CalendarWidget
                       events={calendarEvents}
                       onAddEvent={handleAddCalendarEvent}

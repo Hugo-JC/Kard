@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { Play, Pause, MoreVertical, Timer, Target } from "lucide-react"
+import React from "react"
+import { Play, Pause, RotateCcw, Timer, Target } from "lucide-react"
 import { TrackedTimer } from "@/lib/data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,6 @@ export function TimeTrackerCard({
   onResetTimer,
   onOpenFocusMode,
 }: TimeTrackerCardProps) {
-  // Format seconds into "25m 20s" or "1h 10m 05s"
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600)
     const minutes = Math.floor((totalSeconds % 3600) / 60)
@@ -35,184 +34,121 @@ export function TimeTrackerCard({
   const googleTimers = timers.filter((t) => t.project === "Google")
   const slackTimers = timers.filter((t) => t.project === "Slack")
 
+  const renderTimerRow = (timer: TrackedTimer) => (
+    <div
+      key={timer.id}
+      className={cn(
+        "flex items-center justify-between gap-2.5 rounded-2xl p-3 transition-[background-color,border-color] duration-150 sm:p-3.5",
+        timer.isRunning
+          ? "border border-primary/25 bg-primary-subtle/50 shadow-2xs"
+          : "border border-transparent bg-muted/40 hover:bg-muted/70"
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+        <div
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors",
+            timer.isRunning
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "border border-border/60 bg-card text-muted-foreground"
+          )}
+        >
+          <Timer className={cn("size-4", timer.isRunning && "animate-spin-slow")} />
+        </div>
+        <span className="truncate text-xs font-semibold text-card-foreground sm:text-sm">
+          {timer.taskTitle}
+        </span>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+        <span
+          className={cn(
+            "font-mono text-xs font-bold tabular-nums sm:text-sm",
+            timer.isRunning ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          {formatTime(timer.secondsElapsed)}
+        </span>
+
+        <Button
+          type="button"
+          variant={timer.isRunning ? "default" : "outline"}
+          size="icon"
+          onClick={() => onToggleTimer(timer.id)}
+          className="size-9 rounded-full sm:size-8"
+          aria-label={timer.isRunning ? `Pausar ${timer.taskTitle}` : `Iniciar ${timer.taskTitle}`}
+        >
+          {timer.isRunning ? (
+            <Pause className="size-3.5 fill-current" />
+          ) : (
+            <Play className="size-3.5 translate-x-0.5 fill-current" />
+          )}
+        </Button>
+
+        {onResetTimer && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onResetTimer(timer.id)}
+            className="size-8 rounded-lg text-muted-foreground/70 hover:text-foreground"
+            title="Zerar cronômetro"
+            aria-label={`Zerar ${timer.taskTitle}`}
+          >
+            <RotateCcw className="size-3.5" />
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+
   return (
-    <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6">
-      <div>
+    <section
+      aria-label="Controle de tempo"
+      className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6"
+    >
+      <div className="space-y-5">
         {/* Google Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ProjectLogoIcon project="Google" className="w-4 h-4" />
-              <h4 className="text-sm font-bold text-card-foreground tracking-tight">
-                Google
-              </h4>
-            </div>
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-muted-foreground border border-border/60">
-              <Play className="w-3 h-3 fill-muted-foreground text-muted-foreground" />
-            </div>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2">
+            <ProjectLogoIcon project="Google" className="size-4" />
+            <h4 className="text-sm font-bold tracking-tight text-card-foreground">
+              Google
+            </h4>
           </div>
-
-          <div className="space-y-2">
-            {googleTimers.map((timer) => (
-              <div
-                key={timer.id}
-                className={cn(
-                  "flex items-center justify-between rounded-2xl p-3.5 transition-all duration-200",
-                  timer.isRunning
-                    ? "bg-primary-subtle/50 dark:bg-blue-950/25 border border-primary/20 dark:border-blue-800/40 shadow-2xs"
-                    : "bg-slate-50/70 dark:bg-slate-900/40 hover:bg-muted/70 border border-transparent"
-                )}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-xl",
-                      timer.isRunning
-                        ? "bg-primary text-primary-foreground shadow-xs"
-                        : "bg-card text-muted-foreground border border-border/60"
-                    )}
-                  >
-                    <Timer
-                      className={cn(
-                        "w-4 h-4",
-                        timer.isRunning && "animate-spin-slow"
-                      )}
-                    />
-                  </div>
-                  <span className="text-xs sm:text-sm font-semibold text-card-foreground truncate">
-                    {timer.taskTitle}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <span
-                    className={cn(
-                      "text-xs sm:text-sm font-bold tabular-nums",
-                      timer.isRunning ? "text-primary" : "text-muted-foreground"
-                    )}
-                  >
-                    {formatTime(timer.secondsElapsed)}
-                  </span>
-
-                  {/* Play/Pause Button */}
-                  <button
-                    onClick={() => onToggleTimer(timer.id)}
-                    className={cn(
-                      "flex size-11 items-center justify-center rounded-full transition-transform active:scale-95 sm:size-8",
-                      timer.isRunning
-                        ? "bg-primary text-primary-foreground shadow-2xs hover:bg-blue-700"
-                        : "border border-border text-muted-foreground hover:bg-muted hover:border-slate-400"
-                    )}
-                    aria-label={timer.isRunning ? "Pause timer" : "Start timer"}
-                  >
-                    {timer.isRunning ? (
-                      <Pause className="w-3 h-3 fill-white" />
-                    ) : (
-                      <Play className="w-3 h-3 fill-muted-foreground translate-x-0.5" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => onResetTimer?.(timer.id)}
-                    className="text-muted-foreground/60 hover:text-card-foreground p-0.5 cursor-pointer"
-                    title="Reset timer"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <div className="space-y-2">{googleTimers.map(renderTimerRow)}</div>
         </div>
 
         {/* Slack Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ProjectLogoIcon project="Slack" className="w-4 h-4" />
-              <h4 className="text-sm font-bold text-card-foreground tracking-tight">
-                Slack
-              </h4>
-            </div>
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-muted-foreground border border-border/60">
-              <Play className="w-3 h-3 fill-muted-foreground text-muted-foreground" />
-            </div>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2">
+            <ProjectLogoIcon project="Slack" className="size-4" />
+            <h4 className="text-sm font-bold tracking-tight text-card-foreground">
+              Slack
+            </h4>
           </div>
-
-          <div className="space-y-2">
-            {slackTimers.map((timer) => (
-              <div
-                key={timer.id}
-                className={cn(
-                  "flex items-center justify-between rounded-2xl p-3 transition-colors",
-                  timer.isRunning
-                    ? "bg-primary-subtle/50 dark:bg-blue-950/25 border border-primary/20 shadow-2xs"
-                    : "hover:bg-muted/70"
-                )}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground">
-                    <Timer className="w-4 h-4" />
-                  </div>
-                  <span className="text-xs font-medium text-card-foreground truncate">
-                    {timer.taskTitle}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-                    {formatTime(timer.secondsElapsed)}
-                  </span>
-
-                  <button
-                    onClick={() => onToggleTimer(timer.id)}
-                    className={cn(
-                      "flex size-11 items-center justify-center rounded-full transition-transform active:scale-95 sm:size-8",
-                      timer.isRunning
-                        ? "bg-primary text-primary-foreground shadow-2xs"
-                        : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
-                    )}
-                    aria-label={timer.isRunning ? "Pause timer" : "Start timer"}
-                  >
-                    {timer.isRunning ? (
-                      <Pause className="w-3 h-3 fill-white" />
-                    ) : (
-                      <Play className="w-3 h-3 fill-muted-foreground translate-x-0.2" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => onResetTimer?.(timer.id)}
-                    className="text-muted-foreground/60 hover:text-card-foreground p-0.5 cursor-pointer"
-                    title="Options"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <div className="space-y-2">{slackTimers.map(renderTimerRow)}</div>
         </div>
       </div>
 
       {/* Footer summary + Focus Mode shortcut */}
-      <div className="mt-5 flex items-center justify-between gap-2 pt-2 text-xs text-muted-foreground">
-        <span>Sincronizado · Google</span>
+      <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/70 pt-3.5 text-xs text-muted-foreground">
+        <span>Sincronizado · Local</span>
         {onOpenFocusMode ? (
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={onOpenFocusMode}
-            className="h-7 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-primary"
+            className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-semibold text-primary"
           >
-            <Target className="w-3.5 h-3.5" />
+            <Target className="size-3.5" />
             <span>Modo Foco</span>
           </Button>
         ) : (
           <span className="font-semibold text-success-foreground">Ativo</span>
         )}
       </div>
-    </div>
+    </section>
   )
 }

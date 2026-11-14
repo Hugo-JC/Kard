@@ -17,6 +17,7 @@ import {
 import { CalendarEvent, NotificationItem, TaskItem } from "@/lib/data"
 import { buildMorningBriefing } from "@/lib/briefing"
 import { Button } from "@/components/ui/button"
+import { TaskCheckButton } from "@/components/ui/TaskCheckButton"
 import { ProjectLogoIcon } from "@/components/Logos"
 import { cn } from "@/lib/utils"
 
@@ -166,12 +167,12 @@ export function MorningBriefingCard({
                         key={task.id}
                         className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2 border border-border/60"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <button
-                            type="button"
-                            onClick={() => onToggleTask(task.id)}
-                            aria-label={`Concluir ${task.title}`}
-                            className="flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 dark:border-slate-600 hover:border-primary cursor-pointer"
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <TaskCheckButton
+                            checked={task.completed}
+                            size="sm"
+                            onToggle={() => onToggleTask(task.id)}
+                            ariaLabel={`Concluir ${task.title}`}
                           />
                           <button
                             type="button"
@@ -247,12 +248,13 @@ export function MorningBriefingCard({
                         key={task.id}
                         className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2 border border-border/60"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <button
-                            type="button"
-                            onClick={() => onToggleTask(task.id)}
-                            aria-label={`Concluir ${task.title}`}
-                            className="flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-amber-400 hover:border-emerald-500 cursor-pointer"
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <TaskCheckButton
+                            checked={task.completed}
+                            size="sm"
+                            variant="warning"
+                            onToggle={() => onToggleTask(task.id)}
+                            ariaLabel={`Concluir ${task.title}`}
                           />
                           <button
                             type="button"

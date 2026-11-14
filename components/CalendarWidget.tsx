@@ -1,8 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { CalendarEvent, INITIAL_CALENDAR_EVENTS } from "@/lib/data"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 interface CalendarWidgetProps {
@@ -10,23 +12,40 @@ interface CalendarWidgetProps {
   onAddEvent?: (event: Omit<CalendarEvent, "id">) => void
 }
 
-export function CalendarWidget({ events: externalEvents, onAddEvent }: CalendarWidgetProps = {}) {
-  // Initial date matching the screenshot Jan 2021, but fully navigable!
+const MONTH_NAMES = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+]
+
+const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+
+export function CalendarWidget({
+  events: externalEvents,
+  onAddEvent,
+}: CalendarWidgetProps = {}) {
   const [currentMonth, setCurrentMonth] = useState(0) // Jan (0-indexed)
   const [currentYear, setCurrentYear] = useState(2021)
   const [selectedDay, setSelectedDay] = useState<number>(5)
 
-  const monthNames = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ]
-
-  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(INITIAL_CALENDAR_EVENTS)
+  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(
+    INITIAL_CALENDAR_EVENTS
+  )
   const events = externalEvents ?? localEvents
   const [isAddingEvent, setIsAddingEvent] = useState(false)
   const [newEventTitle, setNewEventTitle] = useState("")
 
   const prevMonth = () => {
+    setIsAddingEvent(false)
     if (currentMonth === 0) {
       setCurrentMonth(11)
       setCurrentYear((y) => y - 1)
@@ -36,6 +55,7 @@ export function CalendarWidget({ events: externalEvents, onAddEvent }: CalendarW
   }
 
   const nextMonth = () => {
+    setIsAddingEvent(false)
     if (currentMonth === 11) {
       setCurrentMonth(0)
       setCurrentYear((y) => y + 1)
@@ -44,15 +64,26 @@ export function CalendarWidget({ events: externalEvents, onAddEvent }: CalendarW
     }
   }
 
-  // Pure deterministic calendar calculations (UTC based, timezone-safe)
-  const firstDayOfWeek = new Date(Date.UTC(currentYear, currentMonth, 1)).getUTCDay()
-  const daysInCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).getUTCDate()
-  const daysInPrevMonth = new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate()
+  const jumpToInitialSprint = () => {
+    setCurrentMonth(0)
+    setCurrentYear(2021)
+    setSelectedDay(5)
+    setIsAddingEvent(false)
+  }
 
-  // Generate calendar days
-  const calendarCells = []
+  // Deterministic UTC calendar calculations
+  const firstDayOfWeek = new Date(
+    Date.UTC(currentYear, currentMonth, 1)
+  ).getUTCDay()
+  const daysInCurrentMonth = new Date(
+    Date.UTC(currentYear, currentMonth + 1, 0)
+  ).getUTCDate()
+  const daysInPrevMonth = new Date(
+    Date.UTC(currentYear, currentMonth, 0)
+  ).getUTCDate()
 
-  // Overflow days from previous month
+  const calendarCells: { day: number; isCurrentMonth: boolean }[] = []
+
   for (let i = firstDayOfWeek - 1; i >= 0; i--) {
     calendarCells.push({
       day: daysInPrevMonth - i,
@@ -60,7 +91,6 @@ export function CalendarWidget({ events: externalEvents, onAddEvent }: CalendarW
     })
   }
 
-  // Days of current month
   for (let d = 1; d <= daysInCurrentMonth; d++) {
     calendarCells.push({
       day: d,
@@ -68,186 +98,251 @@ export function CalendarWidget({ events: externalEvents, onAddEvent }: CalendarW
     })
   }
 
-  // Fill up to 35 or 42 cells with next month days
-  const remainingCells = 35 - calendarCells.length
-  if (remainingCells > 0) {
-    for (let d = 1; d <= remainingCells; d++) {
-      calendarCells.push({
-        day: d,
-        isCurrentMonth: false,
-      })
-    }
+  const targetCellCount = calendarCells.length > 35 ? 42 : 35
+  const remainingCells = targetCellCount - calendarCells.length
+  for (let d = 1; d <= remainingCells; d++) {
+    calendarCells.push({
+      day: d,
+      isCurrentMonth: false,
+    })
   }
 
-  const activeEvent = events.find(
-    (e) => e.day === selectedDay && e.month === currentMonth && e.year === currentYear
+  const selectedDayEvents = events.filter(
+    (e) =>
+      e.day === selectedDay &&
+      e.month === currentMonth &&
+      e.year === currentYear
   )
 
-  return (
-    <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6">
-      <div>
-        {/* Month & Navigation Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-card-foreground tracking-tight">
-            {monthNames[currentMonth]} {currentYear}
-          </h3>
+  const handleSubmitEvent = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newEventTitle.trim()) return
+    const payload = {
+      day: selectedDay,
+      month: currentMonth,
+      year: currentYear,
+      dots: ["#3B82F6"],
+      title: newEventTitle.trim(),
+    }
+    if (onAddEvent) {
+      onAddEvent(payload)
+    } else {
+      setLocalEvents((prev) => [
+        ...prev,
+        { ...payload, id: `ev-${Date.now()}` },
+      ])
+    }
+    setNewEventTitle("")
+    setIsAddingEvent(false)
+  }
 
-          <div className="flex items-center gap-2">
-            <button
+  return (
+    <section
+      aria-label="Calendário"
+      className="@container flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6"
+    >
+      <div>
+        {/* Month & Organic Navigation Header */}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h3 className="text-base font-bold tracking-tight text-card-foreground sm:text-lg">
+              {MONTH_NAMES[currentMonth]}{" "}
+              <span className="font-mono tabular-nums">{currentYear}</span>
+            </h3>
+            {(currentMonth !== 0 || currentYear !== 2021) && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={jumpToInitialSprint}
+                className="h-6 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-primary"
+              >
+                Sprint atual
+              </Button>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Button
               type="button"
+              variant="outline"
+              size="icon"
               onClick={prevMonth}
-              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8 cursor-pointer"
-              aria-label="Previous month"
+              aria-label="Mês anterior"
+              className="size-9 rounded-xl border-border/70 bg-muted/35 hover:bg-muted sm:size-8"
             >
-              <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-            </button>
-            <button
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="icon"
               onClick={nextMonth}
-              className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-colors hover:bg-blue-700 sm:size-8 cursor-pointer"
-              aria-label="Next month"
+              aria-label="Próximo mês"
+              className="size-9 rounded-xl border-border/70 bg-muted/35 hover:bg-muted sm:size-8"
             >
-              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-            </button>
+              <ChevronRight className="size-4" />
+            </Button>
           </div>
         </div>
 
         {/* Days of week header */}
-        <div className="grid grid-cols-7 text-center mb-3 text-[11px] font-bold text-muted-foreground/80 tracking-wider">
-          <span>SUN</span>
-          <span>MON</span>
-          <span>TUE</span>
-          <span>WED</span>
-          <span>THU</span>
-          <span>FRI</span>
-          <span>SAT</span>
+        <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-muted-foreground/80">
+          {WEEKDAY_LABELS.map((dayName) => (
+            <span key={dayName} className="py-1">
+              {dayName}
+            </span>
+          ))}
         </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-y-2 text-center text-xs">
+        {/* Responsive Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1 text-center text-xs @md:gap-1.5">
           {calendarCells.map((cell, idx) => {
             const isSelected = cell.isCurrentMonth && cell.day === selectedDay
-            const matchedEvent = cell.isCurrentMonth
-              ? events.find(
+            const dayEvents = cell.isCurrentMonth
+              ? events.filter(
                   (e) =>
                     e.day === cell.day &&
                     e.month === currentMonth &&
                     e.year === currentYear
                 )
-              : null
+              : []
 
             const formattedDayNumber = String(cell.day).padStart(2, "0")
+            const eventDots = dayEvents.flatMap((e) => e.dots).slice(0, 3)
 
             return (
-              <div key={idx} className="flex flex-col items-center justify-center py-1">
+              <div key={idx} className="flex flex-col items-center justify-center">
                 <button
                   type="button"
+                  disabled={!cell.isCurrentMonth}
                   onClick={() => {
                     if (cell.isCurrentMonth) {
                       setSelectedDay(cell.day)
                       setIsAddingEvent(false)
                     }
                   }}
+                  aria-label={
+                    cell.isCurrentMonth
+                      ? `${formattedDayNumber} de ${MONTH_NAMES[currentMonth]} de ${currentYear}`
+                      : undefined
+                  }
+                  aria-pressed={isSelected}
                   className={cn(
-                    "relative flex h-10 w-full max-w-10 items-center justify-center rounded-xl text-[13px] font-semibold transition-all cursor-pointer", 
+                    "relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-xl text-[13px] transition-[background-color,color,transform,box-shadow] duration-150 @md:max-w-12",
                     isSelected
-                      ? "bg-primary text-primary-foreground shadow-xs font-bold scale-105"
+                      ? "bg-primary font-bold text-primary-foreground shadow-xs cursor-pointer"
                       : cell.isCurrentMonth
-                      ? "text-card-foreground hover:bg-muted"
-                      : "text-muted-foreground/40 font-normal hover:text-muted-foreground"
+                      ? "font-medium text-card-foreground hover:bg-muted/75 cursor-pointer active:scale-95"
+                      : "font-normal text-muted-foreground/35 cursor-default"
                   )}
                 >
-                  <span className="tabular-nums">{formattedDayNumber}</span>
-                </button>
+                  <span className="tabular-nums leading-none">
+                    {formattedDayNumber}
+                  </span>
 
-                {/* Event indicator dots */}
-                <div className="flex items-center gap-1 mt-0.5 h-1.5">
-                  {matchedEvent?.dots.map((dotColor, dotIdx) => (
-                    <span
-                      key={dotIdx}
-                      className="h-1 w-1 rounded-full shrink-0"
-                      style={{ backgroundColor: dotColor }}
-                    />
-                  ))}
-                </div>
+                  {/* Subtle organic event dots inside cell bottom */}
+                  <span
+                    aria-hidden="true"
+                    className="mt-1 flex h-1 items-center gap-0.5"
+                  >
+                    {eventDots.map((dotColor, dotIdx) => (
+                      <span
+                        key={dotIdx}
+                        className="size-1 rounded-full shrink-0"
+                        style={{
+                          backgroundColor: isSelected
+                            ? "rgba(255,255,255,0.85)"
+                            : dotColor,
+                        }}
+                      />
+                    ))}
+                  </span>
+                </button>
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* Selected Day Event Summary */}
-      <div className="mt-4 pt-3 border-t border-border/80">
-        {activeEvent ? (
-          <div className="flex items-center gap-2 text-xs">
-            <span
-              className="h-2 w-2 rounded-full shrink-0"
-              style={{ backgroundColor: activeEvent.dots[0] }}
-            />
-            <span className="font-semibold text-card-foreground truncate">
-              {activeEvent.title}
-            </span>
+      {/* Selected Day Agenda Summary */}
+      <div className="mt-4 space-y-2.5 border-t border-border/70 pt-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono text-[11px] font-medium tabular-nums text-muted-foreground">
+            Dia {String(selectedDay).padStart(2, "0")} {MONTH_NAMES[currentMonth]}
+          </span>
+
+          {!isAddingEvent && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAddingEvent(true)}
+              className="h-7 gap-1 rounded-lg px-2 text-[11px] font-semibold text-primary hover:text-primary"
+            >
+              <Plus className="size-3" />
+              <span>Novo evento</span>
+            </Button>
+          )}
+        </div>
+
+        {selectedDayEvents.length > 0 ? (
+          <div className="space-y-1.5">
+            {selectedDayEvents.map((ev) => (
+              <div
+                key={ev.id}
+                className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs"
+              >
+                <span
+                  className="size-2 rounded-full shrink-0"
+                  style={{ backgroundColor: ev.dots[0] || "#3B82F6" }}
+                />
+                <span className="truncate font-medium text-card-foreground">
+                  {ev.title}
+                </span>
+              </div>
+            ))}
           </div>
-        ) : isAddingEvent ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (!newEventTitle.trim()) return
-              const payload = {
-                day: selectedDay,
-                month: currentMonth,
-                year: currentYear,
-                dots: ["#3B82F6"],
-                title: newEventTitle.trim(),
-              }
-              if (onAddEvent) {
-                onAddEvent(payload)
-              } else {
-                setLocalEvents((prev) => [
-                  ...prev,
-                  { ...payload, id: `ev-${Date.now()}` },
-                ])
-              }
-              setNewEventTitle("")
-              setIsAddingEvent(false)
-            }}
-            className="flex items-center gap-2"
-          >
-            <input
+        ) : !isAddingEvent ? (
+          <p className="text-xs text-muted-foreground">
+            Sem compromissos neste dia.
+          </p>
+        ) : null}
+
+        {isAddingEvent && (
+          <form onSubmit={handleSubmitEvent} className="space-y-2 pt-0.5">
+            <Input
               type="text"
               value={newEventTitle}
               onChange={(e) => setNewEventTitle(e.target.value)}
-              placeholder={`Event on ${selectedDay} ${monthNames[currentMonth]}...`}
+              placeholder={`Evento em ${String(selectedDay).padStart(2, "0")} ${MONTH_NAMES[currentMonth]}...`}
               autoFocus
-              className="flex-1 h-8 rounded-lg border border-border bg-muted/40 px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-9 rounded-xl bg-muted/35 text-xs"
             />
-            <button
-              type="submit"
-              className="h-8 rounded-lg bg-primary px-2.5 text-[11px] font-semibold text-primary-foreground cursor-pointer"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAddingEvent(false)}
-              className="h-8 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              Cancel
-            </button>
+            <div className="flex items-center justify-end gap-1.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsAddingEvent(false)
+                  setNewEventTitle("")
+                }}
+                className="h-8 rounded-lg px-2.5 text-xs text-muted-foreground"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-8 rounded-lg px-3 text-xs font-semibold"
+              >
+                Adicionar
+              </Button>
+            </div>
           </form>
-        ) : (
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Selected: {selectedDay} {monthNames[currentMonth]}</span>
-            <button
-              type="button"
-              onClick={() => setIsAddingEvent(true)}
-              className="font-medium text-primary hover:underline cursor-pointer"
-            >
-              + Add Event
-            </button>
-          </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }

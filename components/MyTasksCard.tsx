@@ -24,12 +24,12 @@ import {
   Plus,
   MessageSquare,
   GitBranch,
-  Check,
   GripVertical,
 } from "lucide-react"
 import { TaskItem } from "@/lib/data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { TaskCheckButton } from "@/components/ui/TaskCheckButton"
 import { ProjectLogoIcon } from "@/components/Logos"
 
 interface MyTasksCardProps {
@@ -63,6 +63,10 @@ function SortableDashboardTaskRow({
     isDragging,
   } = useSortable({
     id: task.id,
+    data: {
+      type: "task",
+      task,
+    },
     disabled: isOverlay,
   })
 
@@ -78,90 +82,97 @@ function SortableDashboardTaskRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group flex items-center justify-between py-3 px-3 rounded-2xl transition-all duration-150 select-none border border-transparent",
+        "group flex items-center justify-between gap-2.5 rounded-2xl border border-transparent px-2.5 py-2.5 transition-[background-color,border-color,box-shadow] duration-150 select-none sm:px-3 sm:py-3",
         isDragging
           ? "opacity-30 bg-muted/50 border-dashed border-border"
-          : "hover:bg-muted/40 hover:border-border/40",
+          : "hover:bg-muted/45 hover:border-border/40",
         isOverlay &&
-          "bg-card shadow-2xl border-border rounded-2xl px-4 cursor-grabbing scale-[1.02] z-50 ring-1 ring-primary/20"
+          "bg-card shadow-xl border-border rounded-2xl px-3.5 cursor-grabbing scale-[1.01] z-50 ring-1 ring-primary/20"
       )}
     >
-      {/* Left: Grip Handle, Dynamic Ordered Number, Title & Project Pill */}
-      <div className="flex items-center gap-3 min-w-0 pr-3">
-        {/* Grip Handle */}
+      {/* Left: Grip Handle, Dynamic Ordered Number, Title & Project Branding */}
+      <div className="flex min-w-0 flex-1 items-start gap-2 @md:items-center sm:gap-2.5">
         <button
           type="button"
           {...attributes}
           {...listeners}
           aria-label={`Arraste para reordenar tarefa ${task.title}`}
-          className="p-1 -ml-1 text-muted-foreground/30 group-hover:text-muted-foreground cursor-grab active:cursor-grabbing rounded hover:bg-muted transition-colors touch-none shrink-0"
+          className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/35 transition-colors hover:bg-muted hover:text-muted-foreground group-hover:text-muted-foreground/75 cursor-grab active:cursor-grabbing touch-none @md:mt-0"
         >
-          <GripVertical className="w-3.5 h-3.5" />
+          <GripVertical className="size-3.5" />
         </button>
 
-        {/* Dynamic Ordered Number (auto-updates when reordered) */}
-        <span className="text-xs font-mono font-bold text-muted-foreground/80 tabular-nums w-5 shrink-0">
+        <span className="mt-1 w-5 shrink-0 font-mono text-xs font-semibold tabular-nums text-muted-foreground/70 @md:mt-0">
           {formattedNumber}
         </span>
 
-        {/* Task Title & Project Branding */}
-        <div className="flex flex-wrap items-center gap-2 min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col gap-1 @md:flex-row @md:items-center @md:justify-between @md:gap-3">
           <button
             type="button"
             onClick={() => (onSelectTask ? onSelectTask(task) : onToggleTask(task.id))}
             className={cn(
-              "text-left text-sm font-semibold transition-all duration-200 cursor-pointer truncate max-w-[200px] sm:max-w-[260px]",
+              "min-w-0 flex-1 text-left text-[13px] font-semibold leading-snug transition-colors duration-150 cursor-pointer line-clamp-2 @md:line-clamp-1 sm:text-sm",
               task.completed
-                ? "text-muted-foreground line-through decoration-slate-400/50 decoration-1.5"
+                ? "text-muted-foreground line-through decoration-slate-400/50"
                 : "text-card-foreground hover:text-primary"
             )}
           >
             {task.title}
           </button>
 
-          {/* Project Highlight: Logo + Name only */}
-          {task.project && (
-            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
-              <ProjectLogoIcon project={task.project} className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate max-w-[100px]">{task.project}</span>
-            </div>
-          )}
+          {/* Project Highlight: Logo + Name only, plus subtle mobile metadata */}
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground shrink-0">
+            {task.project && (
+              <span className="inline-flex items-center gap-1.5 font-medium text-muted-foreground">
+                <ProjectLogoIcon project={task.project} className="size-3.5 shrink-0" />
+                <span className="truncate max-w-[120px]">{task.project}</span>
+              </span>
+            )}
+
+            {task.commentsCount > 0 && !task.completed && (
+              <span className="inline-flex items-center gap-1 font-medium tabular-nums @sm:hidden">
+                <span aria-hidden="true">·</span>
+                <MessageSquare className="size-3" />
+                <span>{task.commentsCount}</span>
+              </span>
+            )}
+
+            {task.subtasksCount > 0 && !task.completed && (
+              <span className="inline-flex items-center gap-1 font-medium tabular-nums @sm:hidden">
+                <span aria-hidden="true">·</span>
+                <GitBranch className="size-3 rotate-90" />
+                <span>{task.subtasksCount}</span>
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Right: Comments, subtasks, and Checkbox */}
-      <div className="flex items-center gap-3 shrink-0">
-        {/* Comments count */}
+      {/* Right: Counts (desktop/tablet) & Organic Check Button */}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
         {task.commentsCount > 0 && !task.completed && (
-          <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground font-medium tabular-nums">
+          <div className="hidden @sm:flex items-center gap-1 text-xs font-medium tabular-nums text-muted-foreground">
             <span>{task.commentsCount}</span>
-            <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+            <MessageSquare className="size-3.5" />
           </div>
         )}
 
-        {/* Subtasks count */}
         {task.subtasksCount > 0 && !task.completed && (
-          <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground font-medium tabular-nums">
+          <div className="hidden @sm:flex items-center gap-1 text-xs font-medium tabular-nums text-muted-foreground">
             <span>{task.subtasksCount}</span>
-            <GitBranch className="w-3.5 h-3.5 text-muted-foreground rotate-90" />
+            <GitBranch className="size-3.5 rotate-90" />
           </div>
         )}
 
-        {/* Interactive Checkbox Button */}
-        <button
-          type="button"
-          onClick={() => onToggleTask(task.id)}
-          className="relative flex size-8 items-center justify-center rounded-full transition-transform active:scale-90 cursor-pointer"
-          aria-label={task.completed ? "Marcar como pendente" : "Marcar como concluída"}
-        >
-          {task.completed ? (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xs">
-              <Check className="w-3.5 h-3.5 stroke-[3]" />
-            </div>
-          ) : (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-300 dark:border-slate-600 hover:border-primary hover:bg-primary-subtle/50 transition-colors group-hover:border-slate-400 dark:group-hover:border-slate-500" />
-          )}
-        </button>
+        <TaskCheckButton
+          checked={task.completed}
+          onToggle={() => onToggleTask(task.id)}
+          ariaLabel={
+            task.completed
+              ? `Marcar "${task.title}" como pendente`
+              : `Marcar "${task.title}" como concluída`
+          }
+        />
       </div>
     </div>
   )
@@ -181,49 +192,46 @@ function StaticDashboardTaskRow({
   const formattedNumber = String(displayIndex + 1).padStart(2, "0")
 
   return (
-    <div className="flex items-center justify-between py-3 px-3 rounded-2xl select-none hover:bg-muted/40 transition-colors">
-      <div className="flex items-center gap-3 min-w-0 pr-3">
-        <span className="p-1 -ml-1 text-muted-foreground/30">
-          <GripVertical className="w-3.5 h-3.5" />
+    <div className="flex items-center justify-between gap-2.5 rounded-2xl px-2.5 py-2.5 select-none transition-colors hover:bg-muted/45 sm:px-3 sm:py-3">
+      <div className="flex min-w-0 flex-1 items-start gap-2 @md:items-center sm:gap-2.5">
+        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center text-muted-foreground/35 @md:mt-0">
+          <GripVertical className="size-3.5" />
         </span>
-        <span className="text-xs font-mono font-bold text-muted-foreground/80 tabular-nums w-5 shrink-0">
+        <span className="mt-1 w-5 shrink-0 font-mono text-xs font-semibold tabular-nums text-muted-foreground/70 @md:mt-0">
           {formattedNumber}
         </span>
-        <div className="flex flex-wrap items-center gap-2 min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col gap-1 @md:flex-row @md:items-center @md:justify-between @md:gap-3">
           <button
             type="button"
             onClick={() => (onSelectTask ? onSelectTask(task) : onToggleTask(task.id))}
             className={cn(
-              "text-left text-sm font-semibold transition-all duration-200 cursor-pointer truncate max-w-[200px] sm:max-w-[260px]",
+              "min-w-0 flex-1 text-left text-[13px] font-semibold leading-snug transition-colors duration-150 cursor-pointer line-clamp-2 @md:line-clamp-1 sm:text-sm",
               task.completed
-                ? "text-muted-foreground line-through decoration-slate-400/50 decoration-1.5"
+                ? "text-muted-foreground line-through decoration-slate-400/50"
                 : "text-card-foreground hover:text-primary"
             )}
           >
             {task.title}
           </button>
           {task.project && (
-            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
-              <ProjectLogoIcon project={task.project} className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate max-w-[100px]">{task.project}</span>
-            </div>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground shrink-0">
+              <ProjectLogoIcon project={task.project} className="size-3.5 shrink-0" />
+              <span className="truncate max-w-[120px]">{task.project}</span>
+            </span>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-3 shrink-0">
-        <button
-          type="button"
-          onClick={() => onToggleTask(task.id)}
-          className="relative flex size-8 items-center justify-center rounded-full cursor-pointer"
-        >
-          {task.completed ? (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xs">
-              <Check className="w-3.5 h-3.5 stroke-[3]" />
-            </div>
-          ) : (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-300 dark:border-slate-600" />
-          )}
-        </button>
+
+      <div className="flex shrink-0 items-center gap-2">
+        <TaskCheckButton
+          checked={task.completed}
+          onToggle={() => onToggleTask(task.id)}
+          ariaLabel={
+            task.completed
+              ? `Marcar "${task.title}" como pendente`
+              : `Marcar "${task.title}" como concluída`
+          }
+        />
       </div>
     </div>
   )
@@ -233,7 +241,6 @@ export function MyTasksCard({
   tasks,
   onToggleTask,
   onOpenNewTaskModal,
-  onDeleteTask,
   onReorderTasks,
   onSelectTask,
 }: MyTasksCardProps) {
@@ -253,7 +260,6 @@ export function MyTasksCard({
     return true
   })
 
-  // Format pending count with leading zero e.g. (05)
   const formattedCount = String(pendingCount).padStart(2, "0")
 
   const sensors = useSensors(
@@ -281,7 +287,6 @@ export function MyTasksCard({
     const newIndex = tasks.findIndex((t) => t.id === over.id)
 
     if (oldIndex !== -1 && newIndex !== -1) {
-      // Reorder array AND auto-update number property so #1 dragged to #3 becomes #3!
       const moved = arrayMove(tasks, oldIndex, newIndex)
       const reindexed = moved.map((t, idx) => ({
         ...t,
@@ -297,35 +302,38 @@ export function MyTasksCard({
     : 0
 
   return (
-    <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-5 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6">
-      {/* Header with Title, Count, and shadcn Button */}
+    <section
+      aria-label="Minhas tarefas"
+      className="@container flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] sm:p-6"
+    >
       <div>
-        <div className="flex items-center justify-between pb-3 border-b border-border/60">
-          <div className="flex items-center gap-2.5">
-            <h3 className="text-base font-bold text-card-foreground tracking-tight">
+        {/* Header with Title, Editorial Count, and shadcn Button */}
+        <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3.5">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h3 className="text-base font-bold tracking-tight text-card-foreground">
               My Tasks
             </h3>
-            <span className="text-xs font-mono font-bold text-muted-foreground px-2 py-0.5 rounded-full bg-muted border border-border/60 tabular-nums">
-              {formattedCount}
+            <span className="font-mono text-xs font-medium tabular-nums text-muted-foreground truncate">
+              · {formattedCount} ativas
             </span>
           </div>
 
           <Button
+            type="button"
             onClick={onOpenNewTaskModal}
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+            className="h-9 sm:h-8 shrink-0 gap-1.5 rounded-xl px-3 text-xs font-semibold"
             aria-label="Adicionar nova tarefa"
-            title="Criar tarefa"
           >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span className="hidden sm:inline">Nova Tarefa</span>
+            <Plus className="size-3.5 stroke-[2.25]" />
+            <span>Nova tarefa</span>
           </Button>
         </div>
 
         {/* Task List with Drag & Drop or Static SSR fallback */}
         {!isMounted ? (
-          <div className="mt-3 space-y-1">
+          <div className="mt-2.5 space-y-1">
             {filteredTasks.map((task, idx) => (
               <StaticDashboardTaskRow
                 key={task.id}
@@ -344,10 +352,33 @@ export function MyTasksCard({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="mt-3 space-y-1">
+            <div className="mt-2.5 space-y-1">
               {filteredTasks.length === 0 ? (
-                <div className="py-8 text-center text-xs text-muted-foreground">
-                  Nenhuma tarefa encontrada neste filtro.
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma tarefa encontrada neste filtro.
+                  </p>
+                  {filter !== "all" ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFilter("all")}
+                      className="h-8 rounded-lg text-xs font-semibold text-primary"
+                    >
+                      Ver todas as tarefas
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={onOpenNewTaskModal}
+                      className="h-8 rounded-xl text-xs font-semibold"
+                    >
+                      Criar primeira tarefa
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <SortableContext
@@ -381,43 +412,49 @@ export function MyTasksCard({
         )}
       </div>
 
-      {/* Filter tabs footer using shadcn Button components */}
-      <div className="mt-5 flex flex-col items-start justify-between gap-3 border-t border-border/80 pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center">
-        <span className="font-medium text-xs">
+      {/* Responsive Segmented Filter Footer */}
+      <div className="mt-5 flex flex-col gap-3 border-t border-border/70 pt-4 text-xs text-muted-foreground @sm:flex-row @sm:items-center @sm:justify-between">
+        <span className="font-medium tabular-nums">
           <strong className="text-foreground">{pendingCount}</strong> pendentes ·{" "}
-          <strong className="text-foreground">{tasks.length - pendingCount}</strong> concluídas
+          <strong className="text-foreground">{tasks.length - pendingCount}</strong>{" "}
+          concluídas
         </span>
 
-        <div className="flex items-center gap-1.5">
-          <Button
-            type="button"
-            variant={filter === "all" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setFilter("all")}
-            className="h-7 px-2.5 text-xs font-semibold rounded-lg"
-          >
-            Todas
-          </Button>
-          <Button
-            type="button"
-            variant={filter === "pending" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setFilter("pending")}
-            className="h-7 px-2.5 text-xs font-semibold rounded-lg"
-          >
-            Ativas
-          </Button>
-          <Button
-            type="button"
-            variant={filter === "completed" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setFilter("completed")}
-            className="h-7 px-2.5 text-xs font-semibold rounded-lg"
-          >
-            Concluídas
-          </Button>
+        <div
+          role="tablist"
+          aria-label="Filtrar tarefas"
+          className="inline-flex w-full items-center gap-0.5 rounded-xl border border-border/50 bg-muted/60 p-1 @sm:w-auto"
+        >
+          {(
+            [
+              { id: "all", label: "Todas" },
+              { id: "pending", label: "Ativas" },
+              { id: "completed", label: "Concluídas" },
+            ] as const
+          ).map((tab) => {
+            const isActive = filter === tab.id
+            return (
+              <Button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                variant="ghost"
+                size="sm"
+                onClick={() => setFilter(tab.id)}
+                className={cn(
+                  "h-8 flex-1 rounded-lg px-2.5 text-xs @sm:h-7 @sm:flex-initial",
+                  isActive
+                    ? "bg-card text-foreground font-semibold shadow-2xs hover:bg-card"
+                    : "text-muted-foreground font-medium hover:text-foreground hover:bg-transparent"
+                )}
+              >
+                {tab.label}
+              </Button>
+            )
+          })}
         </div>
       </div>
-    </div>
+    </section>
   )
 }

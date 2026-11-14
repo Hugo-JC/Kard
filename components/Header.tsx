@@ -9,7 +9,6 @@ import {
   Moon,
   Shield,
   User,
-  LogOut,
   Users,
   Check,
   X,
@@ -40,6 +39,7 @@ interface HeaderProps {
   ) => void
   onDeclineInvitation?: (notifId: string) => void
   onOpenPricingModal?: () => void
+  onOpenSettings?: () => void
   onToggleFocusMode?: () => void
   isFocusModeActive?: boolean
   currentTier?: "free" | "pro" | "business"
@@ -57,6 +57,7 @@ export function Header({
   onAcceptInvitation,
   onDeclineInvitation,
   onOpenPricingModal,
+  onOpenSettings,
   onToggleFocusMode,
   isFocusModeActive = false,
   currentTier = "free",
@@ -144,7 +145,12 @@ export function Header({
             className="h-9 gap-1.5 rounded-xl px-3 text-xs font-semibold"
             title="Alternar Modo Foco sem distrações"
           >
-            <Target className="w-3.5 h-3.5 text-primary" />
+            <Target
+              className={cn(
+                "w-3.5 h-3.5",
+                isFocusModeActive ? "text-primary-foreground" : "text-primary"
+              )}
+            />
             <span className="hidden sm:inline">Modo Foco</span>
           </Button>
         )}
@@ -411,17 +417,20 @@ export function Header({
               )}
 
               <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-muted hover:text-foreground cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen(false)
+                    onOpenSettings?.()
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-muted hover:text-foreground cursor-pointer"
+                >
                   <User className="w-4 h-4 text-muted-foreground" />
                   <span>Configurações do Perfil</span>
-                </div>
-                <div className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-muted hover:text-foreground cursor-pointer">
+                </button>
+                <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
                   <Shield className="w-4 h-4 text-muted-foreground" />
                   <span>Workspace: Admin</span>
-                </div>
-                <div className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-danger hover:bg-danger-subtle cursor-pointer">
-                  <LogOut className="w-4 h-4 text-danger" />
-                  <span>Sair da Conta</span>
                 </div>
               </div>
             </div>

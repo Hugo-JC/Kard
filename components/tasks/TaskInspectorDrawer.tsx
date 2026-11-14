@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar } from "@/components/ui/avatar"
+import { TaskCheckButton } from "@/components/ui/TaskCheckButton"
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer"
 import { ProjectLogoIcon } from "@/components/Logos"
 import {
@@ -580,34 +581,29 @@ function TaskInspectorContent({
               {checklist.map((item) => (
                 <div
                   key={item.id}
-                  className="group flex items-center justify-between gap-2 rounded-xl border border-border/70 bg-card px-3 py-2"
+                  className="group flex items-center justify-between gap-2 rounded-xl border border-border/70 bg-card px-2.5 py-1.5"
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleToggleChecklistItem(item.id)}
-                    className="flex flex-1 items-center gap-2.5 text-left cursor-pointer"
-                  >
-                    <span
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                    <TaskCheckButton
+                      checked={item.completed}
+                      shape="rounded"
+                      size="sm"
+                      onToggle={() => handleToggleChecklistItem(item.id)}
+                      ariaLabel={`Alternar subtarefa ${item.text}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleToggleChecklistItem(item.id)}
                       className={cn(
-                        "flex size-4 shrink-0 items-center justify-center rounded border transition-colors",
-                        item.completed
-                          ? "border-emerald-500 bg-emerald-500 text-white"
-                          : "border-slate-300 dark:border-slate-600"
-                      )}
-                    >
-                      {item.completed && <Check className="size-3 stroke-[3]" />}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-xs font-medium transition-colors",
+                        "flex-1 truncate text-left text-xs font-medium transition-colors cursor-pointer",
                         item.completed
                           ? "line-through text-muted-foreground"
                           : "text-card-foreground"
                       )}
                     >
                       {item.text}
-                    </span>
-                  </button>
+                    </button>
+                  </div>
 
                   <Button
                     type="button"
@@ -615,7 +611,7 @@ function TaskInspectorContent({
                     size="icon"
                     onClick={() => handleDeleteChecklistItem(item.id)}
                     aria-label="Remover subtarefa"
-                    className="size-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-danger"
+                    className="size-7 opacity-75 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-muted-foreground hover:text-danger"
                   >
                     <Trash2 className="size-3.5" />
                   </Button>
