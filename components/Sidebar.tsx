@@ -99,6 +99,7 @@ export function Sidebar({
             return (
               <button
                 key={item.key}
+                type="button"
                 onClick={() => {
                   onSelectNav(item.key)
                   if (onCloseMobile) onCloseMobile()

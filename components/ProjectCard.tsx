@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Star, MoreVertical, Calendar, CheckCircle2, Clock, Archive, ArchiveRestore } from "lucide-react"
 import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "./Logos"
 import { Avatar } from "@/components/ui/avatar"
@@ -23,6 +23,25 @@ export function ProjectCard({
   onClick,
 }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showMenu) return
+    const handleOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowMenu(false)
+    }
+    document.addEventListener("mousedown", handleOutside)
+    window.addEventListener("keydown", handleEsc)
+    return () => {
+      document.removeEventListener("mousedown", handleOutside)
+      window.removeEventListener("keydown", handleEsc)
+    }
+  }, [showMenu])
   const percent =
     project.totalTasks > 0
       ? Math.round((project.completedTasks / project.totalTasks) * 100)
@@ -48,7 +67,19 @@ export function ProjectCard({
 
   return (
     <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault()
+                onClick()
+              }
+            }
+          : undefined
+      }
       className={cn(
         "relative rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] transition-all duration-200 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] sm:p-6",
         onClick && "cursor-pointer"
@@ -104,7 +135,7 @@ export function ProjectCard({
             />
           </button>
 
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button
               onClick={(event) => {
                 event.stopPropagation()

@@ -33,13 +33,17 @@ export function NewTaskModal({
   const [tag, setTag] = useState("UI/UX")
   const [dueDate, setDueDate] = useState("28 June")
 
+  const effectiveProject = projectOptions.includes(project)
+    ? project
+    : projectOptions[0] || ""
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
+    if (!title.trim() || !effectiveProject) return
 
     onAddTask({
       title: title.trim(),
-      project,
+      project: effectiveProject,
       priority,
       commentsCount: 0,
       subtasksCount: 0,
@@ -79,7 +83,7 @@ export function NewTaskModal({
               Project
             </label>
             <select
-              value={project}
+              value={effectiveProject}
               onChange={(e) => setProject(e.target.value)}
               className="h-11 w-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/60 px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             >

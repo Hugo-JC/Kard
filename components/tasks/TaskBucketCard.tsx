@@ -99,7 +99,7 @@ export function TaskBucketCard({
                 ? "warning"
                 : "info"
             }
-            className="text-[9px] font-bold px-1.5 py-0.2 uppercase tracking-wider rounded-md"
+            className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wider rounded-md"
           >
             {task.priority}
           </Badge>
@@ -173,7 +173,7 @@ export function TaskBucketCard({
           {task.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-md bg-muted/70 px-1.5 py-0.2 text-[10px] font-medium text-muted-foreground"
+              className="rounded-md bg-muted/70 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
             >
               {tag}
             </span>

@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import { Mail, Send, CheckCircle2 } from "lucide-react"
-import { Project, AVAILABLE_CONTRIBUTORS } from "@/lib/data"
+import { Project, AVAILABLE_CONTRIBUTORS, ProjectRole } from "@/lib/data"
+import { canInviteRole, PROJECT_ROLE_LABELS } from "@/lib/rbac"
 import { ProjectLogoIcon } from "@/components/Logos"
 import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -18,7 +19,13 @@ interface InviteCollaboratorModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   project: Project
-  onInviteCollaborator: (projectId: string, email: string, role: string) => void
+  actorRole?: ProjectRole
+  onInviteCollaborator: (
+    projectId: string,
+    email: string,
+    role: string,
+    projectRole?: ProjectRole
+  ) => void
 }
 
 const ROLE_OPTIONS: ProjectSelectOption[] = [
@@ -35,12 +42,31 @@ export function InviteCollaboratorModal({
   open,
   onOpenChange,
   project,
+  actorRole = "owner",
   onInviteCollaborator,
 }: InviteCollaboratorModalProps) {
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("UI/UX Designer")
+  const [projectRole, setProjectRole] = useState<ProjectRole>("colaborador")
   const [sentSuccess, setSentSuccess] = useState(false)
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const rbacOptions: ProjectSelectOption[] = [
+    ...(canInviteRole(actorRole, "gestor")
+      ? [
+          {
+            value: "gestor",
+            label: `${PROJECT_ROLE_LABELS.gestor} (Entrega & R2 Entregáveis)`,
+            indicatorClassName: "bg-primary",
+          },
+        ]
+      : []),
+    {
+      value: "colaborador",
+      label: `${PROJECT_ROLE_LABELS.colaborador} (Execução & R2 Interno)`,
+      indicatorClassName: "bg-success",
+    },
+  ]
 
   useEffect(() => {
     return () => {
@@ -63,7 +89,10 @@ export function InviteCollaboratorModal({
     e.preventDefault()
     if (!email.trim()) return
 
-    onInviteCollaborator(project.id, email.trim(), role)
+    const effectiveRole = canInviteRole(actorRole, projectRole)
+      ? projectRole
+      : "colaborador"
+    onInviteCollaborator(project.id, email.trim(), role, effectiveRole)
     setSentSuccess(true)
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
     closeTimeoutRef.current = setTimeout(() => {
@@ -92,7 +121,7 @@ export function InviteCollaboratorModal({
             Convite enviado
           </h3>
           <p className="mx-auto max-w-xs text-xs leading-relaxed text-muted-foreground">
-            A solicitação para <strong className="text-foreground">{email}</strong> foi enviada para a caixa de notificações com as opções de Colaborar ou Negar.
+            A solicitação para <strong className="text-foreground">{email}</strong> ({PROJECT_ROLE_LABELS[projectRole]}) foi enviada para a caixa de notificações.
           </p>
         </div>
       ) : (
@@ -107,7 +136,7 @@ export function InviteCollaboratorModal({
                 Convidar colaborador
               </h3>
               <p className="text-xs text-muted-foreground">
-                {project.name} · O convite aparecerá na caixa de notificações para aceitar ou negar.
+                {project.name} · Cargo sincronizado entre Firestore e Cloudflare R2.
               </p>
             </div>
           </div>
@@ -129,12 +158,21 @@ export function InviteCollaboratorModal({
               </div>
             </Field>
 
-            <ProjectSelectField
-              label="Função no projeto"
-              value={role}
-              options={ROLE_OPTIONS}
-              onValueChange={setRole}
-            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ProjectSelectField
+                label="Cargo RBAC (Firestore & R2)"
+                value={canInviteRole(actorRole, projectRole) ? projectRole : "colaborador"}
+                options={rbacOptions}
+                onValueChange={(val) => setProjectRole(val as ProjectRole)}
+              />
+
+              <ProjectSelectField
+                label="Especialidade"
+                value={role}
+                options={ROLE_OPTIONS}
+                onValueChange={setRole}
+              />
+            </div>
 
             {availableToInvite.length > 0 && (
               <div className="space-y-2 pt-1">

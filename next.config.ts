@@ -13,7 +13,16 @@ export default function nextConfig(phase: string): NextConfig {
     typescript: {
       ignoreBuildErrors: false,
     },
-    // Allow access to remote image placeholder.
+    experimental: {
+      optimizePackageImports: [
+        'lucide-react',
+        'motion',
+        'date-fns',
+        '@dnd-kit/core',
+        '@dnd-kit/sortable',
+      ],
+    },
+    // Allow access to remote image placeholder and Google user avatars.
     images: {
       remotePatterns: [
         {
@@ -21,6 +30,12 @@ export default function nextConfig(phase: string): NextConfig {
           hostname: 'picsum.photos',
           port: '',
           pathname: '/**', // This allows any path under the hostname
+        },
+        {
+          protocol: 'https',
+          hostname: 'lh3.googleusercontent.com',
+          port: '',
+          pathname: '/**',
         },
       ],
     },

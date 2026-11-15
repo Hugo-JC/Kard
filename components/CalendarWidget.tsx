@@ -1,15 +1,19 @@
 "use client"
 
 import React, { useState } from "react"
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { CalendarPlus, ChevronLeft, ChevronRight, Plus, RefreshCw } from "lucide-react"
 import { CalendarEvent, INITIAL_CALENDAR_EVENTS } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useFirebase } from "@/components/auth/FirebaseProvider"
+import { CalendarEventConfirmModal } from "@/components/workspace/CalendarEventConfirmModal"
 import { cn } from "@/lib/utils"
 
 interface CalendarWidgetProps {
   events?: CalendarEvent[]
   onAddEvent?: (event: Omit<CalendarEvent, "id">) => void
+  onSyncGoogleCalendar?: () => void
+  isSyncingGoogleCalendar?: boolean
 }
 
 const MONTH_NAMES = [
@@ -32,8 +36,17 @@ const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 export function CalendarWidget({
   events: externalEvents,
   onAddEvent,
+  onSyncGoogleCalendar,
+  isSyncingGoogleCalendar = false,
 }: CalendarWidgetProps = {}) {
-  const [currentMonth, setCurrentMonth] = useState(0) // Jan (0-indexed)
+  const {
+    hasWorkspaceConnected,
+    isConnectingWorkspace,
+    workspaceAccessToken,
+    connectWorkspace,
+  } = useFirebase()
+
+  const [currentMonth, setCurrentMonth] = useState(0)
   const [currentYear, setCurrentYear] = useState(2021)
   const [selectedDay, setSelectedDay] = useState<number>(5)
 
@@ -43,6 +56,7 @@ export function CalendarWidget({
   const events = externalEvents ?? localEvents
   const [isAddingEvent, setIsAddingEvent] = useState(false)
   const [newEventTitle, setNewEventTitle] = useState("")
+  const [isGoogleConfirmOpen, setIsGoogleConfirmOpen] = useState(false)
 
   const prevMonth = () => {
     setIsAddingEvent(false)
@@ -65,9 +79,16 @@ export function CalendarWidget({
   }
 
   const jumpToInitialSprint = () => {
-    setCurrentMonth(0)
-    setCurrentYear(2021)
-    setSelectedDay(5)
+    const today = new Date()
+    if (hasWorkspaceConnected) {
+      setCurrentMonth(today.getMonth())
+      setCurrentYear(today.getFullYear())
+      setSelectedDay(today.getDate())
+    } else {
+      setCurrentMonth(0)
+      setCurrentYear(2021)
+      setSelectedDay(5)
+    }
     setIsAddingEvent(false)
   }
 
@@ -114,15 +135,21 @@ export function CalendarWidget({
       e.year === currentYear
   )
 
+  const selectedDateIso = `${currentYear}-${String(currentMonth + 1).padStart(
+    2,
+    "0"
+  )}-${String(selectedDay).padStart(2, "0")}`
+
   const handleSubmitEvent = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newEventTitle.trim()) return
-    const payload = {
+    const payload: Omit<CalendarEvent, "id"> = {
       day: selectedDay,
       month: currentMonth,
       year: currentYear,
       dots: ["#3B82F6"],
       title: newEventTitle.trim(),
+      source: "local",
     }
     if (onAddEvent) {
       onAddEvent(payload)
@@ -143,23 +170,21 @@ export function CalendarWidget({
     >
       <div>
         {/* Month & Organic Navigation Header */}
-        <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-baseline gap-2">
             <h3 className="text-base font-bold tracking-tight text-card-foreground sm:text-lg">
               {MONTH_NAMES[currentMonth]}{" "}
               <span className="font-mono tabular-nums">{currentYear}</span>
             </h3>
-            {(currentMonth !== 0 || currentYear !== 2021) && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={jumpToInitialSprint}
-                className="h-6 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-primary"
-              >
-                Sprint atual
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={jumpToInitialSprint}
+              className="h-6 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-primary"
+            >
+              {hasWorkspaceConnected ? "Hoje" : "Sprint atual"}
+            </Button>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
@@ -184,6 +209,60 @@ export function CalendarWidget({
               <ChevronRight className="size-4" />
             </Button>
           </div>
+        </div>
+
+        {/* Google Calendar Sync Row */}
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-border/70 bg-muted/25 px-3 py-2 text-[11px]">
+          {hasWorkspaceConnected ? (
+            <>
+              <span className="font-semibold text-success-foreground truncate">
+                Google Calendar sincronizado
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const today = new Date()
+                  setCurrentMonth(today.getMonth())
+                  setCurrentYear(today.getFullYear())
+                  setSelectedDay(today.getDate())
+                  onSyncGoogleCalendar?.()
+                }}
+                disabled={isSyncingGoogleCalendar}
+                className="inline-flex shrink-0 items-center gap-1 font-semibold text-primary hover:underline cursor-pointer"
+              >
+                <RefreshCw
+                  className={cn(
+                    "size-3",
+                    isSyncingGoogleCalendar && "animate-spin"
+                  )}
+                />
+                <span>Atualizar</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="truncate text-muted-foreground">
+                Agenda externa desconectada
+              </span>
+              <button
+                type="button"
+                disabled={isConnectingWorkspace}
+                onClick={async () => {
+                  const token = await connectWorkspace()
+                  if (token) {
+                    const today = new Date()
+                    setCurrentMonth(today.getMonth())
+                    setCurrentYear(today.getFullYear())
+                    setSelectedDay(today.getDate())
+                    onSyncGoogleCalendar?.()
+                  }
+                }}
+                className="shrink-0 font-semibold text-primary hover:underline cursor-pointer"
+              >
+                {isConnectingWorkspace ? "Conectando..." : "Conectar Google"}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Days of week header */}
@@ -291,15 +370,22 @@ export function CalendarWidget({
             {selectedDayEvents.map((ev) => (
               <div
                 key={ev.id}
-                className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs"
+                className="flex items-center justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs"
               >
-                <span
-                  className="size-2 rounded-full shrink-0"
-                  style={{ backgroundColor: ev.dots[0] || "#3B82F6" }}
-                />
-                <span className="truncate font-medium text-card-foreground">
-                  {ev.title}
-                </span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="size-2 rounded-full shrink-0"
+                    style={{ backgroundColor: ev.dots[0] || "#3B82F6" }}
+                  />
+                  <span className="truncate font-medium text-card-foreground">
+                    {ev.title}
+                  </span>
+                </div>
+                {ev.source === "google_calendar" && (
+                  <span className="shrink-0 font-mono text-[10px] font-semibold text-success-foreground">
+                    Google
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -319,30 +405,76 @@ export function CalendarWidget({
               autoFocus
               className="h-9 rounded-xl bg-muted/35 text-xs"
             />
-            <div className="flex items-center justify-end gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-1.5">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => {
-                  setIsAddingEvent(false)
-                  setNewEventTitle("")
-                }}
-                className="h-8 rounded-lg px-2.5 text-xs text-muted-foreground"
+                onClick={() => setIsGoogleConfirmOpen(true)}
+                className="h-8 gap-1 rounded-lg px-2.5 text-[11px] font-semibold"
               >
-                Cancelar
+                <CalendarPlus className="size-3 text-primary" />
+                <span>Google Calendar</span>
               </Button>
-              <Button
-                type="submit"
-                size="sm"
-                className="h-8 rounded-lg px-3 text-xs font-semibold"
-              >
-                Adicionar
-              </Button>
+
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsAddingEvent(false)
+                    setNewEventTitle("")
+                  }}
+                  className="h-8 rounded-lg px-2.5 text-xs text-muted-foreground"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="h-8 rounded-lg px-3 text-xs font-semibold"
+                >
+                  Salvar local
+                </Button>
+              </div>
             </div>
           </form>
         )}
       </div>
+
+      <CalendarEventConfirmModal
+        open={isGoogleConfirmOpen}
+        onOpenChange={setIsGoogleConfirmOpen}
+        initialSummary={newEventTitle.trim() || `Reunião Kard (${String(selectedDay).padStart(2, "0")}/${String(currentMonth + 1).padStart(2, "0")})`}
+        initialDate={selectedDateIso}
+        hasWorkspaceConnected={hasWorkspaceConnected}
+        onConnectWorkspace={connectWorkspace}
+        workspaceAccessToken={workspaceAccessToken}
+        onEventCreated={(created) => {
+          const parsedDate = new Date(`${created.date}T12:00:00`)
+          const payload: Omit<CalendarEvent, "id"> = {
+            day: parsedDate.getDate(),
+            month: parsedDate.getMonth(),
+            year: parsedDate.getFullYear(),
+            dots: ["#10B981"],
+            title: created.summary,
+            source: "google_calendar",
+            googleEventId: created.id,
+          }
+          if (onAddEvent) {
+            onAddEvent(payload)
+          } else {
+            setLocalEvents((prev) => [
+              ...prev,
+              { ...payload, id: `gcal-${created.id}` },
+            ])
+          }
+          setNewEventTitle("")
+          setIsAddingEvent(false)
+          onSyncGoogleCalendar?.()
+        }}
+      />
     </section>
   )
 }

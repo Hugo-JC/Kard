@@ -17,12 +17,17 @@ import {
   Target,
   WifiOff,
   HardDrive,
+  Cloud,
+  LogOut,
+  Calendar,
+  FolderSync,
 } from "lucide-react"
 import { Avatar } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/ThemeProvider"
-import { NotificationItem } from "@/lib/data"
+import { useFirebase } from "@/components/auth/FirebaseProvider"
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton"
+import { MemberStatus, MEMBER_STATUS_CONFIG, NotificationItem } from "@/lib/data"
 import { MemberStatusBadge } from "@/components/ui/MemberStatusBadge"
 import { cn } from "@/lib/utils"
 
@@ -43,6 +48,8 @@ interface HeaderProps {
   onToggleFocusMode?: () => void
   isFocusModeActive?: boolean
   currentTier?: "free" | "pro" | "business"
+  userStatus?: MemberStatus
+  userStatusNote?: string
   isOffline?: boolean
   lastSavedAt?: string | null
 }
@@ -61,16 +68,40 @@ export function Header({
   onToggleFocusMode,
   isFocusModeActive = false,
   currentTier = "free",
+  userStatus = "Online",
+  userStatusNote = "",
   isOffline = false,
   lastSavedAt = null,
 }: HeaderProps) {
+  const statusConfig = MEMBER_STATUS_CONFIG[userStatus] || MEMBER_STATUS_CONFIG.Online
   const [isNotifOpen, setIsNotifOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
   const { toggleTheme } = useTheme()
+  const {
+    user,
+    authReady,
+    isSigningIn,
+    hasWorkspaceConnected,
+    isConnectingWorkspace,
+    r2Configured,
+    signInGoogle,
+    connectWorkspace,
+    disconnectWorkspace,
+    signOut,
+  } = useFirebase()
 
   const unreadCount = notifications.filter((n) => !n.read).length
+  const displayName = user?.displayName || user?.email?.split("@")[0] || "Modo Local"
+  const displayEmail = user?.email || "Rascunho offline no navegador"
+  const avatarSrc = user?.photoURL || "/avatars/angelina.jpg"
+  const avatarFallback = displayName
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
 
   // Click outside listener for dropdowns
   useEffect(() => {
@@ -91,6 +122,7 @@ export function Header({
       {/* Left: Mobile hamburger & Search bar */}
       <div className="order-2 flex w-full min-w-0 items-center gap-2 sm:order-1 sm:flex-1 sm:gap-3">
         <button
+          type="button"
           onClick={onOpenMobileMenu}
           className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted lg:hidden"
           aria-label="Open navigation menu"
@@ -115,7 +147,7 @@ export function Header({
         </div>
       </div>
 
-      {/* Right: Local-First Status, Focus Mode, Theme Toggle, Kard Pro Upgrade Button, Notification bell & User avatar */}
+      {/* Right: Sync status, Focus Mode, Plans, Theme Toggle, Notifications & Google Account */}
       <div className="order-1 ml-auto flex shrink-0 items-center gap-1.5 sm:order-2 sm:ml-0 sm:gap-2">
         {isOffline ? (
           <span
@@ -125,13 +157,21 @@ export function Header({
             <WifiOff className="size-3.5" />
             <span>Offline · Local</span>
           </span>
+        ) : user ? (
+          <span
+            title="Sincronizado em tempo real com Firebase Firestore"
+            className="hidden xl:inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold text-success-foreground"
+          >
+            <Cloud className="size-3.5" />
+            <span>Nuvem Ativa</span>
+          </span>
         ) : lastSavedAt ? (
           <span
             title="Persistência local-first ativa no navegador"
             className="hidden xl:inline-flex items-center gap-1.5 px-2 py-1 font-mono text-[11px] tabular-nums text-muted-foreground"
           >
             <HardDrive className="size-3.5 text-success-foreground" />
-            <span>Salvo {lastSavedAt}</span>
+            <span>Local {lastSavedAt}</span>
           </span>
         ) : null}
 
@@ -171,6 +211,7 @@ export function Header({
 
         {/* Dark/Light Theme Toggle */}
         <button
+          type="button"
           onClick={toggleTheme}
           className="relative flex size-10 items-center justify-center rounded-2xl border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted hover:text-foreground cursor-pointer"
           aria-label="Toggle theme appearance"
@@ -183,6 +224,7 @@ export function Header({
         {/* Notification Bell */}
         <div className="relative" ref={notifRef}>
           <button
+            type="button"
             onClick={() => setIsNotifOpen(!isNotifOpen)}
             className="relative flex size-10 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
             aria-label="View notifications"
@@ -209,6 +251,7 @@ export function Header({
                 </div>
                 {unreadCount > 0 && (
                   <button
+                    type="button"
                     onClick={onClearAllNotifications}
                     className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
                   >
@@ -346,96 +389,200 @@ export function Header({
           )}
         </div>
 
-        {/* User Profile Avatar with Presence Indicator */}
-        <div className="relative" ref={profileRef}>
-          <button
-            onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="relative flex items-center gap-2.5 rounded-full p-0.5 hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
-            title="Angelina Smith (Online)"
-          >
-            <Avatar
-              src="/avatars/angelina.jpg"
-              fallback="AS"
-              alt="Angelina Smith"
-              size="md"
-              className="ring-2 ring-card shadow-xs"
-            />
-            <span
-              className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card"
-              title="Online"
-            />
-          </button>
+        {/* User Auth & Profile Dropdown */}
+        {authReady && !user ? (
+          <GoogleSignInButton
+            onClick={signInGoogle}
+            disabled={isSigningIn}
+            size="sm"
+          />
+        ) : (
+          <div className="relative" ref={profileRef}>
+            <button
+              type="button"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="relative flex items-center gap-2.5 rounded-full p-0.5 hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
+              title={`${displayName} · ${statusConfig.label}${userStatusNote ? ` (${userStatusNote})` : ""}`}
+              aria-label="Abrir menu do perfil"
+            >
+              <Avatar
+                src={avatarSrc}
+                fallback={avatarFallback}
+                alt={displayName}
+                size="md"
+                className="ring-2 ring-card shadow-xs"
+              />
+              <span
+                className={cn(
+                  "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                  statusConfig.dot
+                )}
+                title={statusConfig.label}
+              />
+            </button>
 
-          {/* Profile Dropdown */}
-          {isProfileOpen && (
-            <div className="absolute right-0 mt-3 w-64 rounded-3xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground z-50">
-              <div className="flex items-center gap-3 p-2 border-b border-border pb-3">
-                <div className="relative">
-                  <Avatar src="/avatars/angelina.jpg" fallback="AS" size="md" />
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-bold text-card-foreground truncate">
-                      Angelina Smith
+            {/* Profile Dropdown */}
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-3 w-72 rounded-3xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground z-50">
+                <div className="flex items-center gap-3 p-2 border-b border-border pb-3">
+                  <div className="relative">
+                    <Avatar src={avatarSrc} fallback={avatarFallback} size="md" />
+                    <span
+                      className={cn(
+                        "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                        statusConfig.dot
+                      )}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-card-foreground truncate">
+                        {displayName}
+                      </p>
+                      {currentTier !== "free" && (
+                        <span className="rounded-md bg-primary text-primary-foreground text-[9px] font-extrabold px-1.5 py-0.5 uppercase">
+                          {currentTier}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {displayEmail}
                     </p>
-                    {currentTier !== "free" && (
-                      <span className="rounded-md bg-primary text-primary-foreground text-[9px] font-extrabold px-1.5 py-0.2 uppercase">
-                        {currentTier}
-                      </span>
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      <MemberStatusBadge status={userStatus} size="sm" />
+                      {onOpenSettings && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsProfileOpen(false)
+                            onOpenSettings()
+                          }}
+                          className="text-[10.5px] font-semibold text-primary hover:underline cursor-pointer"
+                        >
+                          Alterar
+                        </button>
+                      )}
+                    </div>
+                    {userStatusNote && (
+                      <p className="mt-1 truncate text-[10.5px] text-muted-foreground">
+                        {userStatusNote}
+                      </p>
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    angelina@kard.dev
-                  </p>
-                  <div className="mt-1">
-                    <MemberStatusBadge status="Online" size="sm" />
+                </div>
+
+                {/* Ecosystem Integrations Quick Status */}
+                <div className="mt-2 space-y-1.5 rounded-2xl border border-border/70 bg-muted/30 p-2.5 text-[11px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Cloud className="size-3.5 text-success-foreground" />
+                      <span>Firestore Nuvem</span>
+                    </span>
+                    <span className="font-semibold text-success-foreground">
+                      {user ? "Conectado" : "Local"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <FolderSync className="size-3.5 text-primary" />
+                      <span>Cloudflare R2</span>
+                    </span>
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        r2Configured ? "text-success-foreground" : "text-warning-foreground"
+                      )}
+                    >
+                      {r2Configured ? "Pronto" : "Configurar env"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-0.5">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Calendar className="size-3.5 text-amber-500" />
+                      <span>Calendar & Drive</span>
+                    </span>
+                    {hasWorkspaceConnected ? (
+                      <button
+                        type="button"
+                        onClick={disconnectWorkspace}
+                        className="font-semibold text-muted-foreground hover:text-destructive cursor-pointer"
+                      >
+                        Desconectar
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={isConnectingWorkspace}
+                        onClick={() => connectWorkspace()}
+                        className="font-semibold text-primary hover:underline cursor-pointer"
+                      >
+                        {isConnectingWorkspace ? "Conectando..." : "Conectar"}
+                      </button>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Upgrade Promo Row inside Profile */}
-              {onOpenPricingModal && (
-                <div
-                  onClick={() => {
-                    setIsProfileOpen(false)
-                    onOpenPricingModal()
-                  }}
-                  className="mt-2 p-2.5 rounded-2xl bg-muted/60 border border-border/80 hover:border-border transition-all cursor-pointer flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <div>
-                      <p className="text-xs font-bold text-foreground">
-                        {currentTier === "free" ? "Upgrade Kard Pro" : "Gerenciar Plano"}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">50% OFF 1ª compra</p>
+                {/* Upgrade Promo Row inside Profile */}
+                {onOpenPricingModal && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileOpen(false)
+                      onOpenPricingModal()
+                    }}
+                    className="mt-2 w-full p-2.5 rounded-2xl bg-muted/60 border border-border/80 hover:border-border transition-all cursor-pointer flex items-center justify-between text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <div>
+                        <p className="text-xs font-bold text-foreground">
+                          {currentTier === "free" ? "Upgrade Kard Pro" : "Gerenciar Plano"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">50% OFF 1ª compra</p>
+                      </div>
                     </div>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-primary" />
-                </div>
-              )}
+                    <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                  </button>
+                )}
 
-              <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProfileOpen(false)
-                    onOpenSettings?.()
-                  }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-muted hover:text-foreground cursor-pointer"
-                >
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  <span>Configurações do Perfil</span>
-                </button>
-                <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
-                  <Shield className="w-4 h-4 text-muted-foreground" />
-                  <span>Workspace: Admin</span>
+                <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileOpen(false)
+                      onOpenSettings?.()
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-muted hover:text-foreground cursor-pointer"
+                  >
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span>Configurações & Integrações</span>
+                  </button>
+
+                  {user ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false)
+                        signOut()
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-danger-foreground hover:bg-danger-subtle/60 cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sair da conta</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
+                      <Shield className="w-4 h-4 text-muted-foreground" />
+                      <span>Modo Local-First</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   )

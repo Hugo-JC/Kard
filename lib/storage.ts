@@ -11,6 +11,7 @@ import {
   INITIAL_PROJECTS,
   INITIAL_TASKS,
   INITIAL_TIMERS,
+  MemberStatus,
   NotificationItem,
   Project,
   TaskItem,
@@ -34,6 +35,8 @@ export interface KardPersistedWorkspace {
   automationLogs: AutomationLog[]
   userTier: SubscriptionPlanTier
   briefingCollapsed?: boolean
+  userStatus?: MemberStatus
+  userStatusNote?: string
 }
 
 export interface WorkspaceSnapshot {
@@ -47,6 +50,8 @@ export interface WorkspaceSnapshot {
   automationLogs: AutomationLog[]
   userTier: SubscriptionPlanTier
   briefingCollapsed: boolean
+  userStatus: MemberStatus
+  userStatusNote: string
   lastSavedAt: string | null
 }
 
@@ -61,6 +66,8 @@ export const DEFAULT_WORKSPACE_SNAPSHOT: WorkspaceSnapshot = {
   automationLogs: INITIAL_AUTOMATION_LOGS,
   userTier: "free",
   briefingCollapsed: false,
+  userStatus: "Online",
+  userStatusNote: "",
   lastSavedAt: null,
 }
 
@@ -144,6 +151,8 @@ function mergePersistedSnapshot(saved: KardPersistedWorkspace): WorkspaceSnapsho
     userTier: saved.userTier || "free",
     briefingCollapsed:
       typeof saved.briefingCollapsed === "boolean" ? saved.briefingCollapsed : false,
+    userStatus: saved.userStatus || "Online",
+    userStatusNote: typeof saved.userStatusNote === "string" ? saved.userStatusNote : "",
     lastSavedAt: saved.savedAt || null,
   }
 }
@@ -198,6 +207,8 @@ export function updateWorkspaceStore(
     automationLogs: next.automationLogs,
     userTier: next.userTier,
     briefingCollapsed: next.briefingCollapsed,
+    userStatus: next.userStatus,
+    userStatusNote: next.userStatusNote,
   })
   workspaceSnapshot = {
     ...next,

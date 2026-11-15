@@ -22,26 +22,42 @@ import {
   Project,
   TaskItem,
   Member,
+  MemberStatus,
   TaskStage,
   ProjectInvitation,
   ClientDeliverable,
+  ProjectNote,
+  ProjectRole,
 } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import dynamic from "next/dynamic"
 import { ProjectCardGrid } from "./ProjectCardGrid"
 import { ProjectTableView } from "./ProjectTableView"
-import { NewProjectModal } from "./NewProjectModal"
-import { ProjectManageView } from "./ProjectManageView"
-import { SubscriptionPlanTier } from "@/components/billing/PricingPlansModal"
+import type { SubscriptionPlanTier } from "@/components/billing/PricingPlansModal"
 import { cn } from "@/lib/utils"
+
+const NewProjectModal = dynamic(
+  () => import("./NewProjectModal").then((m) => m.NewProjectModal),
+  { ssr: false }
+)
+const ProjectManageView = dynamic(
+  () => import("./ProjectManageView").then((m) => m.ProjectManageView),
+  { ssr: false }
+)
 
 interface ProjectsViewProps {
   projects: Project[]
   tasks: TaskItem[]
   currentTier?: SubscriptionPlanTier
+  userStatus?: MemberStatus
+  userStatusNote?: string
+  currentUserName?: string
+  currentUserAvatar?: string
   initialProjectTab?: "tasks" | "team" | "chat" | "files" | "portal"
   initialNoteId?: string | null
   onOpenPricingModal?: () => void
+  onOpenSettings?: () => void
   onToggleStar: (id: string) => void
   onUpdateStatus: (id: string, newStatus: Project["status"]) => void
   onAddProject: (
@@ -52,13 +68,19 @@ interface ProjectsViewProps {
   onSelectTask?: (task: TaskItem) => void
   onAddTask: (newTaskData: Omit<TaskItem, "id" | "number">) => void
   onUpdateProject: (project: Project) => void
+  onSaveNote?: (projectId: string, note: ProjectNote, isNew: boolean) => void
   onDeleteTask?: (id: string) => void
   onUpdateTaskAssignee?: (taskId: string, assignee: Member) => void
   onToggleArchive?: (id: string) => void
   onUpdateStage?: (taskId: string, stage: TaskStage) => void
   onReorderTasks?: (tasks: TaskItem[]) => void
   onMoveTask?: (taskId: string, targetStage?: TaskStage, targetProject?: string) => void
-  onInviteCollaborator?: (projectId: string, email: string, role: string) => void
+  onInviteCollaborator?: (
+    projectId: string,
+    email: string,
+    role: string,
+    projectRole?: ProjectRole
+  ) => void
   onCancelInvitation?: (projectId: string, inviteId: string) => void
   onAcceptInvitationDirect?: (projectId: string, invite: ProjectInvitation) => void
   onRemoveCollaborator?: (projectId: string, memberNameOrEmail: string) => void
@@ -84,9 +106,14 @@ export function ProjectsView({
   projects,
   tasks,
   currentTier = "free",
+  userStatus = "Online",
+  userStatusNote = "",
+  currentUserName,
+  currentUserAvatar,
   initialProjectTab = "tasks",
   initialNoteId = null,
   onOpenPricingModal,
+  onOpenSettings,
   onToggleStar,
   onUpdateStatus,
   onAddProject,
@@ -94,6 +121,7 @@ export function ProjectsView({
   onSelectTask,
   onAddTask,
   onUpdateProject,
+  onSaveNote,
   onDeleteTask,
   onUpdateTaskAssignee,
   onToggleArchive,
@@ -195,11 +223,15 @@ export function ProjectsView({
         tasks={tasks}
         allProjects={projects}
         currentTier={currentTier}
+        userStatus={userStatus}
+        userStatusNote={userStatusNote}
         initialTab={initialProjectTab}
         initialNoteId={initialNoteId}
         onOpenPricingModal={onOpenPricingModal}
+        onOpenSettings={onOpenSettings}
         onBack={() => setActiveManagingId(null)}
         onUpdateProject={onUpdateProject}
+        onSaveNote={onSaveNote}
         onToggleTask={onToggleTask}
         onSelectTask={onSelectTask}
         onAddTask={onAddTask}
@@ -238,6 +270,7 @@ export function ProjectsView({
 
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             onClick={() => {
               if (isAtFreeProjectLimit) {
                 setFreeLimitAlert(true)
@@ -299,6 +332,7 @@ export function ProjectsView({
         {/* Status Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0">
           <button
+            type="button"
             onClick={() => setStatusFilter("ALL")}
             className={cn(
               "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
@@ -311,6 +345,7 @@ export function ProjectsView({
           </button>
 
           <button
+            type="button"
             onClick={() => setStatusFilter("IN PROGRESS")}
             className={cn(
               "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
@@ -323,6 +358,7 @@ export function ProjectsView({
           </button>
 
           <button
+            type="button"
             onClick={() => setStatusFilter("COMPLETED")}
             className={cn(
               "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
@@ -335,6 +371,7 @@ export function ProjectsView({
           </button>
 
           <button
+            type="button"
             onClick={() => setStatusFilter("ON HOLD")}
             className={cn(
               "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9",
@@ -347,6 +384,7 @@ export function ProjectsView({
           </button>
 
           <button
+            type="button"
             onClick={() => setStatusFilter("ARCHIVED")}
             className={cn(
               "min-h-11 shrink-0 rounded-xl px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:min-h-9 flex items-center gap-1.5",
@@ -377,6 +415,8 @@ export function ProjectsView({
             />
             {searchQuery && (
               <button
+                type="button"
+                aria-label="Clear search"
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               >
@@ -403,6 +443,7 @@ export function ProjectsView({
           {/* View Mode Toggle (Grid vs Table) */}
           <div className="flex items-center rounded-xl bg-muted/50 p-1 border border-border/80">
             <button
+              type="button"
               onClick={() => setViewMode("grid")}
               className={cn(
                 "flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all sm:min-h-9",
@@ -417,6 +458,7 @@ export function ProjectsView({
             </button>
 
             <button
+              type="button"
               onClick={() => setViewMode("table")}
               className={cn(
                 "flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all sm:min-h-9",
@@ -467,6 +509,8 @@ export function ProjectsView({
         open={isNewProjectModalOpen}
         onOpenChange={setIsNewProjectModalOpen}
         onAddProject={onAddProject}
+        currentUserName={currentUserName}
+        currentUserAvatar={currentUserAvatar}
       />
     </div>
   )

@@ -21,8 +21,10 @@ import {
   Heading3,
   BookOpen,
   ExternalLink,
+  CalendarPlus,
 } from "lucide-react"
 import {
+  CalendarEvent,
   Member,
   Project,
   ProjectNote,
@@ -38,6 +40,8 @@ import { Avatar } from "@/components/ui/avatar"
 import { TaskCheckButton } from "@/components/ui/TaskCheckButton"
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer"
 import { ProjectLogoIcon } from "@/components/Logos"
+import { useFirebase } from "@/components/auth/FirebaseProvider"
+import { CalendarEventConfirmModal } from "@/components/workspace/CalendarEventConfirmModal"
 import {
   ProjectSelectField,
   type ProjectSelectOption,
@@ -51,6 +55,7 @@ interface TaskInspectorDrawerProps {
   onUpdateTask: (updatedTask: TaskItem) => void
   onToggleTask: (taskId: string) => void
   onOpenProjectNote?: (projectId: string, noteId: string) => void
+  onScheduleCalendarEvent?: (event: Omit<CalendarEvent, "id">) => void
 }
 
 const PRIORITY_OPTIONS: ProjectSelectOption[] = [
@@ -72,6 +77,7 @@ interface TaskInspectorContentProps {
   onUpdateTask: (updatedTask: TaskItem) => void
   onToggleTask: (taskId: string) => void
   onOpenProjectNote?: (projectId: string, noteId: string) => void
+  onScheduleCalendarEvent?: (event: Omit<CalendarEvent, "id">) => void
 }
 
 function TaskInspectorContent({
@@ -81,13 +87,21 @@ function TaskInspectorContent({
   onUpdateTask,
   onToggleTask,
   onOpenProjectNote,
+  onScheduleCalendarEvent,
 }: TaskInspectorContentProps) {
+  const {
+    user,
+    hasWorkspaceConnected,
+    workspaceAccessToken,
+    connectWorkspace,
+  } = useFirebase()
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [markdownDraft, setMarkdownDraft] = useState(task.descriptionMarkdown || "")
   const [isEditingMarkdown, setIsEditingMarkdown] = useState(!task.descriptionMarkdown)
   const [newChecklistText, setNewChecklistText] = useState("")
   const [newCommentText, setNewCommentText] = useState("")
   const [dueDraft, setDueDraft] = useState(task.dueDate || "")
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
 
   const linkedProject = projects.find(
     (p) => p.name.toLowerCase() === task.project.toLowerCase()
@@ -199,8 +213,8 @@ function TaskInspectorContent({
     if (!newCommentText.trim()) return
     const nextComment: TaskComment = {
       id: `cmt-${Date.now()}`,
-      author: "Angelina Smith",
-      avatar: "/avatars/angelina.jpg",
+      author: user?.displayName || user?.email?.split("@")[0] || "Você",
+      avatar: user?.photoURL || "/avatars/angelina.jpg",
       text: newCommentText.trim(),
       time: "Agora",
     }
@@ -256,6 +270,18 @@ function TaskInspectorContent({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+              title="Agendar prazo no Google Calendar"
+            >
+              <CalendarPlus className="size-3.5 text-primary" />
+              <span className="hidden sm:inline">Google Calendar</span>
+            </Button>
+
             <Button
               type="button"
               variant={task.completed ? "secondary" : "outline"}
@@ -684,6 +710,31 @@ function TaskInspectorContent({
           </section>
         </div>
       </motion.aside>
+
+      <CalendarEventConfirmModal
+        open={isScheduleModalOpen}
+        onOpenChange={setIsScheduleModalOpen}
+        initialSummary={`[${task.project}] ${task.title}`}
+        initialDescription={
+          task.descriptionMarkdown ||
+          `Tarefa #${task.number} do projeto ${task.project}`
+        }
+        hasWorkspaceConnected={hasWorkspaceConnected}
+        onConnectWorkspace={connectWorkspace}
+        workspaceAccessToken={workspaceAccessToken}
+        onEventCreated={(created) => {
+          const parsedDate = new Date(`${created.date}T12:00:00`)
+          onScheduleCalendarEvent?.({
+            day: parsedDate.getDate(),
+            month: parsedDate.getMonth(),
+            year: parsedDate.getFullYear(),
+            dots: ["#10B981"],
+            title: created.summary,
+            source: "google_calendar",
+            googleEventId: created.id,
+          })
+        }}
+      />
     </div>
   )
 }
@@ -695,6 +746,7 @@ export function TaskInspectorDrawer({
   onUpdateTask,
   onToggleTask,
   onOpenProjectNote,
+  onScheduleCalendarEvent,
 }: TaskInspectorDrawerProps) {
   return (
     <AnimatePresence>
@@ -707,6 +759,7 @@ export function TaskInspectorDrawer({
           onUpdateTask={onUpdateTask}
           onToggleTask={onToggleTask}
           onOpenProjectNote={onOpenProjectNote}
+          onScheduleCalendarEvent={onScheduleCalendarEvent}
         />
       )}
     </AnimatePresence>

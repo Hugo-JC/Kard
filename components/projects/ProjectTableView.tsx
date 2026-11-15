@@ -213,7 +213,7 @@ export function ProjectTableView({
                     <span className="font-medium text-card-foreground">
                       {project.sprintStage || "Sprint 1"}
                     </span>
-                    {project.attachmentsCount && (
+                    {(project.attachmentsCount ?? 0) > 0 && (
                       <span className="ml-2 inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/70">
                         <Paperclip className="w-2.5 h-2.5" />
                         {project.attachmentsCount}

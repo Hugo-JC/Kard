@@ -127,6 +127,7 @@ export function PricingPlansModal({
           </Card>
 
           <Button
+            type="button"
             onClick={() => handleClose(false)}
             className="h-11 rounded-2xl px-8 font-semibold"
           >

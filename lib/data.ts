@@ -1,9 +1,13 @@
 export type MemberStatus = 'Online' | 'In Meeting' | 'Focused' | 'Offline';
 
+export type ProjectRole = 'owner' | 'gestor' | 'colaborador';
+
 export interface Member {
+  uid?: string;
   name: string;
   avatar: string;
   role?: string;
+  projectRole?: ProjectRole;
   email?: string;
   status?: MemberStatus;
   statusNote?: string;
@@ -24,13 +28,13 @@ export const MEMBER_STATUS_CONFIG: Record<
     color: 'text-amber-500 dark:text-amber-400',
     bg: 'bg-amber-500/10 border-amber-500/25',
     dot: 'bg-amber-500',
-    label: 'In Meeting',
+    label: 'Em reunião',
   },
   Focused: {
     color: 'text-purple-500 dark:text-purple-400',
     bg: 'bg-purple-500/10 border-purple-500/25',
     dot: 'bg-purple-500',
-    label: 'Focused',
+    label: 'Em foco',
   },
   Offline: {
     color: 'text-zinc-500 dark:text-zinc-400',
@@ -51,6 +55,27 @@ export interface ProjectInvitation {
   invitedBy: string;
 }
 
+export interface ChatReaction {
+  emoji: string;
+  count: number;
+  reactedByMe?: boolean;
+}
+
+export interface ChatReplyReference {
+  id: string;
+  user: string;
+  avatar?: string;
+  text: string;
+}
+
+export interface ChatEmbedCard {
+  title: string;
+  description?: string;
+  color?: string;
+  fields?: { name: string; value: string }[];
+  footer?: string;
+}
+
 export interface ProjectChatMessage {
   id: string;
   user: string;
@@ -60,14 +85,29 @@ export interface ProjectChatMessage {
   time: string;
   isMe?: boolean;
   userStatus?: MemberStatus;
+  reactions?: ChatReaction[];
+  replyTo?: ChatReplyReference;
+  embed?: ChatEmbedCard;
 }
+
+export type ProjectAssetSource = 'r2' | 'google_drive' | 'local';
+export type ProjectAssetScope = 'internal' | 'deliverable' | 'cover';
 
 export interface ProjectDocument {
   id: string;
   name: string;
   size: string;
+  sizeBytes?: number;
   date: string;
   type: string;
+  mimeType?: string;
+  source?: ProjectAssetSource;
+  scope?: ProjectAssetScope;
+  r2Key?: string;
+  driveFileId?: string;
+  driveExternalUrl?: string;
+  uploadedBy?: string;
+  uploadedByName?: string;
 }
 
 export interface ProjectNote {
@@ -114,6 +154,8 @@ export interface Project {
   coverImage?: string; // Banner cover image
   accentColor?: string; // Project primary highlight color
   isArchived?: boolean; // Archived state flag
+  ownerId?: string;
+  coverAssetKey?: string;
   pendingInvitations?: ProjectInvitation[];
   chatMessages?: ProjectChatMessage[];
   documents?: ProjectDocument[];
@@ -174,6 +216,10 @@ export interface CalendarEvent {
   dots: string[];
   title: string;
   isToday?: boolean;
+  source?: 'local' | 'google_calendar';
+  googleEventId?: string;
+  timeLabel?: string;
+  startIso?: string;
 }
 
 export type AutomationTriggerType =
@@ -339,8 +385,21 @@ export const INITIAL_PROJECTS: Project[] = [
         avatar: '/avatars/courtney.jpg',
         role: 'UI Lead',
         userStatus: 'Online',
-        text: 'Uploaded the updated Figma design tokens for the Dark Mode color palette.',
-        time: '10:15 AM',
+        text: 'Atualizei os tokens semânticos de **Dark Mode** e publiquei no arquivo #Google_Design_System_v2.4.fig.\n> Contraste ajustado para `WCAG AA` nos cartões Bento.',
+        time: 'Hoje às 10:15',
+        reactions: [
+          { emoji: '🔥', count: 3, reactedByMe: true },
+          { emoji: '✅', count: 2 },
+        ],
+      },
+      {
+        id: 'gc-1b',
+        user: 'Courtney Henry',
+        avatar: '/avatars/courtney.jpg',
+        role: 'UI Lead',
+        userStatus: 'Online',
+        text: '-# Dica: clique no anexo acima para inspecionar a revisão da Sprint 3.',
+        time: 'Hoje às 10:16',
       },
       {
         id: 'gc-2',
@@ -348,18 +407,36 @@ export const INITIAL_PROJECTS: Project[] = [
         avatar: '/avatars/johndoe.jpg',
         role: 'Dev Lead',
         userStatus: 'Focused',
-        text: 'Reviewing the API endpoints for the contact sync milestone. Looking rock solid!',
-        time: '10:42 AM',
+        replyTo: {
+          id: 'gc-1',
+          user: 'Courtney Henry',
+          avatar: '/avatars/courtney.jpg',
+          text: 'Atualizei os tokens semânticos de Dark Mode e publiquei no arquivo #Google_Design_System_v2.4.fig.',
+        },
+        text: '@Angelina Smith endpoints de sincronização validados conforme #iOS_Client_API_Specs.pdf (`60fps` garantido).',
+        time: 'Hoje às 10:42',
+        embed: {
+          title: 'Milestone · Contact Sync API v3',
+          description: 'Verificação automática concluída antes da entrega de 20 de Junho.',
+          color: '#10B981',
+          fields: [
+            { name: 'Latência P95', value: '42 ms' },
+            { name: 'Cobertura', value: '94% testes' },
+          ],
+          footer: 'Kard Sprint Tracker',
+        },
+        reactions: [{ emoji: '👍', count: 4, reactedByMe: false }],
       },
       {
         id: 'gc-3',
         user: 'Angelina Smith',
         avatar: '/avatars/angelina.jpg',
-        role: 'Project Manager (You)',
+        role: 'Owner do projeto',
         userStatus: 'Online',
-        text: 'Great work team! We are on track for the 20 June delivery.',
-        time: '11:05 AM',
+        text: 'Excelente @Courtney Henry e @John Doe! Estamos no ritmo perfeito para a entrega — detalhes finais em ||build 3.4.0-rc2||.',
+        time: 'Hoje às 11:05',
         isMe: true,
+        reactions: [{ emoji: '🚀', count: 2, reactedByMe: true }],
       },
     ],
     documents: [

@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils"
 interface ClientPortalViewProps {
   project: Project
   currentTier: SubscriptionPlanTier
+  canPublishDeliverables?: boolean
   onOpenPricingModal?: () => void
   onUpdateDeliverableStatus: (
     projectId: string,
@@ -43,6 +44,7 @@ interface ClientPortalViewProps {
 export function ClientPortalView({
   project,
   currentTier,
+  canPublishDeliverables = true,
   onOpenPricingModal,
   onUpdateDeliverableStatus,
   onAddDeliverable,
@@ -80,7 +82,7 @@ export function ClientPortalView({
 
   const handleCreateDeliverable = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newTitle.trim()) return
+    if (!newTitle.trim() || !canPublishDeliverables) return
     onAddDeliverable(project.id, {
       title: newTitle.trim(),
       description:
@@ -125,7 +127,7 @@ export function ClientPortalView({
             </span>
           </Button>
 
-          {!isClientPreviewMode && (
+          {!isClientPreviewMode && canPublishDeliverables && (
             <Button
               type="button"
               variant="outline"

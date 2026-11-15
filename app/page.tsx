@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useSyncExternalStore } from "react"
+import React, { useState, useEffect, useSyncExternalStore, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { Sidebar, NavItemKey } from "@/components/Sidebar"
 import { Header } from "@/components/Header"
@@ -9,17 +9,55 @@ import { MyTasksCard } from "@/components/MyTasksCard"
 import { TimeTrackerCard } from "@/components/TimeTrackerCard"
 import { CalendarWidget } from "@/components/CalendarWidget"
 import { MessageWidget } from "@/components/MessageWidget"
-import { NewTaskModal } from "@/components/NewTaskModal"
-import { QuickChatModal } from "@/components/QuickChatModal"
-import { CommandPalette } from "@/components/CommandPalette"
-import { ProjectsView } from "@/components/projects/ProjectsView"
+import dynamic from "next/dynamic"
 import { MorningBriefingCard } from "@/components/dashboard/MorningBriefingCard"
-import { TaskInspectorDrawer } from "@/components/tasks/TaskInspectorDrawer"
-import { AutomationsPanel } from "@/components/automations/AutomationsPanel"
+
+const NewTaskModal = dynamic(
+  () => import("@/components/NewTaskModal").then((m) => m.NewTaskModal),
+  { ssr: false }
+)
+const QuickChatModal = dynamic(
+  () => import("@/components/QuickChatModal").then((m) => m.QuickChatModal),
+  { ssr: false }
+)
+const CommandPalette = dynamic(
+  () => import("@/components/CommandPalette").then((m) => m.CommandPalette),
+  { ssr: false }
+)
+const ProjectsView = dynamic(
+  () => import("@/components/projects/ProjectsView").then((m) => m.ProjectsView),
+  { ssr: false }
+)
+const TaskInspectorDrawer = dynamic(
+  () => import("@/components/tasks/TaskInspectorDrawer").then((m) => m.TaskInspectorDrawer),
+  { ssr: false }
+)
+const AutomationsPanel = dynamic(
+  () => import("@/components/automations/AutomationsPanel").then((m) => m.AutomationsPanel),
+  { ssr: false }
+)
+import { useFirebase } from "@/components/auth/FirebaseProvider"
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton"
+import {
+  createCloudProject,
+  deleteCloudAutomationRule,
+  deleteCloudTask,
+  saveCloudAutomationRule,
+  saveCloudCalendarEvent,
+  saveCloudDeliverable,
+  saveCloudNote,
+  saveCloudTask,
+  subscribeUserCloudWorkspace,
+  updateCloudProjectFields,
+  updateCloudUserPresence,
+  updateCloudUserTier,
+} from "@/lib/firestoreSync"
 import {
   Project,
   TaskItem,
   Member,
+  MemberStatus,
+  MEMBER_STATUS_CONFIG,
   TrackedTimer,
   ChatMessage,
   NotificationItem,
@@ -30,6 +68,8 @@ import {
   AutomationLog,
   ClientDeliverable,
   AutomationTriggerType,
+  ProjectNote,
+  ProjectRole,
 } from "@/lib/data"
 import { evaluateAutomationRules } from "@/lib/automations"
 import {
@@ -43,15 +83,49 @@ import {
   subscribeWorkspace,
   updateWorkspaceStore,
 } from "@/lib/storage"
-import { PricingPlansModal, SubscriptionPlanTier } from "@/components/billing/PricingPlansModal"
-import { FocusModeView } from "@/components/focus/FocusModeView"
+import type { SubscriptionPlanTier } from "@/components/billing/PricingPlansModal"
+
+const PricingPlansModal = dynamic(
+  () => import("@/components/billing/PricingPlansModal").then((m) => m.PricingPlansModal),
+  { ssr: false }
+)
+const FocusModeView = dynamic(
+  () => import("@/components/focus/FocusModeView").then((m) => m.FocusModeView),
+  { ssr: false }
+)
 import { useTheme } from "@/components/ThemeProvider"
-import { Moon, Sun, RotateCcw, HardDrive, WifiOff, Zap } from "lucide-react"
+import {
+  Moon,
+  Sun,
+  RotateCcw,
+  HardDrive,
+  WifiOff,
+  Zap,
+  Cloud,
+  Calendar,
+  FolderSync,
+  AlertCircle,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { MemberStatusBadge } from "@/components/ui/MemberStatusBadge"
 import { cn } from "@/lib/utils"
 
 export default function DashboardPage() {
   const { toggleTheme } = useTheme()
+  const {
+    user,
+    workspaceAccessToken,
+    hasWorkspaceConnected,
+    isConnectingWorkspace,
+    r2Configured,
+    isSigningIn,
+    authError,
+    signInGoogle,
+    connectWorkspace,
+    disconnectWorkspace,
+    clearAuthError,
+  } = useFirebase()
 
   // Navigation State
   const [activeNav, setActiveNav] = useState<NavItemKey>("dashboard")
@@ -86,10 +160,35 @@ export default function DashboardPage() {
     automationLogs,
     userTier,
     briefingCollapsed,
+    userStatus,
+    userStatusNote,
     lastSavedAt,
   } = workspace
 
+  const handleUpdateUserPresence = (nextStatus: MemberStatus, nextNote: string) => {
+    updateWorkspaceStore((prev) => ({
+      ...prev,
+      userStatus: nextStatus,
+      userStatusNote: nextNote,
+      projects: prev.projects.map((proj) => ({
+        ...proj,
+        members: proj.members.map((m) => {
+          const isMe =
+            (user?.uid && m.uid === user.uid) ||
+            (user?.email && m.email?.toLowerCase() === user.email.toLowerCase()) ||
+            (!user && m.name === "Angelina Smith")
+          return isMe ? { ...m, status: nextStatus, statusNote: nextNote } : m
+        }),
+      })),
+    }))
+    if (user) {
+      updateCloudUserPresence(user, projects, nextStatus, nextNote).catch(console.error)
+    }
+  }
+
   const [freeLimitNotice, setFreeLimitNotice] = useState<string | null>(null)
+  const [googleCalendarEvents, setGoogleCalendarEvents] = useState<CalendarEvent[]>([])
+  const [isSyncingGoogleCalendar, setIsSyncingGoogleCalendar] = useState(false)
 
   // Modal, Plan, Inspector & Search States
   const [searchQuery, setSearchQuery] = useState("")
@@ -181,6 +280,108 @@ export default function DashboardPage() {
     hydrateWorkspaceFromStorage()
   }, [])
 
+  // Subscribe to real-time Firestore workspace when authenticated
+  useEffect(() => {
+    if (!user) return
+    const unsubscribe = subscribeUserCloudWorkspace(user, {
+      onProjectsLoaded: (cloudProjects) => {
+        updateWorkspaceStore((prev) => ({
+          ...prev,
+          projects: cloudProjects,
+        }))
+      },
+      onTasksLoaded: (cloudTasks) => {
+        updateWorkspaceStore((prev) => ({
+          ...prev,
+          tasks: cloudTasks,
+        }))
+      },
+      onCalendarEventsLoaded: (cloudEvents) => {
+        updateWorkspaceStore((prev) => ({
+          ...prev,
+          calendarEvents: cloudEvents,
+        }))
+      },
+      onAutomationsLoaded: (cloudRules) => {
+        updateWorkspaceStore((prev) => ({
+          ...prev,
+          automationRules: cloudRules,
+        }))
+      },
+    })
+    return () => unsubscribe()
+  }, [user])
+
+  // Fetch Google Calendar events when Workspace OAuth is connected (token kept strictly in memory)
+  const syncGoogleCalendar = useCallback(async (token: string) => {
+    setIsSyncingGoogleCalendar(true)
+    try {
+      const res = await fetch("/api/workspace/calendar", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      })
+      if (!res.ok) return
+      const data = (await res.json()) as {
+        items?: {
+          id: string
+          summary?: string
+          start?: { dateTime?: string; date?: string }
+        }[]
+      }
+      const mapped: CalendarEvent[] = (data.items || [])
+        .map((item) => {
+          const rawStart = item.start?.dateTime || item.start?.date
+          if (!rawStart) return null
+          const parsed = new Date(rawStart.length === 10 ? `${rawStart}T12:00:00` : rawStart)
+          if (Number.isNaN(parsed.getTime())) return null
+          const timeLabel = item.start?.dateTime
+            ? parsed.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+            : "Dia todo"
+          return {
+            id: `gcal-${item.id}`,
+            day: parsed.getDate(),
+            month: parsed.getMonth(),
+            year: parsed.getFullYear(),
+            dots: ["#10B981"],
+            title: `${timeLabel} · ${item.summary || "Evento Google"}`,
+            source: "google_calendar" as const,
+            googleEventId: item.id,
+            startIso: rawStart,
+          }
+        })
+        .filter(Boolean) as CalendarEvent[]
+      setGoogleCalendarEvents(mapped)
+    } catch (err) {
+      console.error("Failed to fetch Google Calendar events:", err)
+    } finally {
+      setIsSyncingGoogleCalendar(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!workspaceAccessToken) return
+    let cancelled = false
+    Promise.resolve().then(() => {
+      if (!cancelled) {
+        void syncGoogleCalendar(workspaceAccessToken)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [workspaceAccessToken, syncGoogleCalendar])
+
+  const mergedCalendarEvents = useMemo(() => {
+    const activeGoogleEvents = workspaceAccessToken ? googleCalendarEvents : []
+    const seenGoogleIds = new Set(
+      calendarEvents.map((e) => e.googleEventId).filter(Boolean)
+    )
+    const extraGoogle = activeGoogleEvents.filter(
+      (g) => !g.googleEventId || !seenGoogleIds.has(g.googleEventId)
+    )
+    return [...calendarEvents, ...extraGoogle]
+  }, [calendarEvents, googleCalendarEvents, workspaceAccessToken])
+
   // Live Timer Interval (Chronometer ticks up every second when any timer is running)
   const isAnyTimerRunning = timers.some((t) => t.isRunning)
   useEffect(() => {
@@ -217,6 +418,21 @@ export default function DashboardPage() {
     if (result.newLogs.length > 0) {
       setAutomationRules(result.updatedRules)
       setAutomationLogs((prev) => [...result.newLogs, ...prev])
+      const anchorProject = projects[0]
+      if (user && anchorProject) {
+        result.updatedRules.forEach((updatedRule) => {
+          const prevRule = automationRules.find((r) => r.id === updatedRule.id)
+          if (prevRule && prevRule.runsCount !== updatedRule.runsCount) {
+            saveCloudAutomationRule(
+              user,
+              anchorProject.id,
+              anchorProject.ownerId || user.uid,
+              updatedRule,
+              false
+            ).catch(console.error)
+          }
+        })
+      }
     }
     if (result.newNotifications.length > 0) {
       setNotifications((prev) => [...result.newNotifications, ...prev])
@@ -234,6 +450,28 @@ export default function DashboardPage() {
           }
         })
       )
+      if (user) {
+        result.taskPatches.forEach((patch) => {
+          const origTask = tasks.find((t) => t.id === patch.taskId)
+          if (!origTask) return
+          const targetProject = projects.find(
+            (p) => p.name.toLowerCase() === origTask.project.toLowerCase()
+          )
+          if (!targetProject) return
+          saveCloudTask(
+            user,
+            targetProject.id,
+            targetProject.ownerId || user.uid,
+            {
+              ...origTask,
+              completed: patch.completed ?? origTask.completed,
+              stage: patch.stage ?? origTask.stage,
+              priority: patch.priority ?? origTask.priority,
+            },
+            false
+          ).catch(console.error)
+        })
+      }
     }
   }
 
@@ -243,6 +481,11 @@ export default function DashboardPage() {
     if (!target) return
 
     const updatedCompleted = !target.completed
+    const nextStage: TaskStage = updatedCompleted
+      ? "DONE"
+      : target.stage === "DONE"
+      ? "IN PROGRESS"
+      : target.stage || "TODO"
     const diff = updatedCompleted ? 1 : -1
 
     setTasks((prev) =>
@@ -251,10 +494,14 @@ export default function DashboardPage() {
           ? {
               ...t,
               completed: updatedCompleted,
-              stage: updatedCompleted ? "DONE" : t.stage === "DONE" ? "IN PROGRESS" : t.stage,
+              stage: nextStage,
             }
           : t
       )
+    )
+
+    const targetProject = projects.find(
+      (p) => p.name.toLowerCase() === target.project.toLowerCase()
     )
 
     setProjects((pList) =>
@@ -269,6 +516,34 @@ export default function DashboardPage() {
       })
     )
 
+    if (user && targetProject) {
+      const nextCompletedCount = Math.max(
+        0,
+        Math.min(targetProject.totalTasks, targetProject.completedTasks + diff)
+      )
+      const projectTasksSnapshot = tasks
+        .filter((t) => t.project.toLowerCase() === targetProject.name.toLowerCase())
+        .map((t) =>
+          t.id === id ? { ...t, completed: updatedCompleted, stage: nextStage } : t
+        )
+      updateCloudProjectFields(
+        targetProject.id,
+        { completedTasks: nextCompletedCount },
+        {
+          user,
+          fullProject: { ...targetProject, completedTasks: nextCompletedCount },
+          projectTasks: projectTasksSnapshot,
+        }
+      ).catch(console.error)
+      saveCloudTask(
+        user,
+        targetProject.id,
+        targetProject.ownerId || user.uid,
+        { ...target, completed: updatedCompleted, stage: nextStage },
+        false
+      ).catch(console.error)
+    }
+
     if (updatedCompleted) {
       runAutomationsForEvent("task_completed", "true", target.title, target.id)
     }
@@ -278,6 +553,10 @@ export default function DashboardPage() {
   const handleUpdateTask = (updatedTask: TaskItem) => {
     const previous = tasks.find((t) => t.id === updatedTask.id)
     setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)))
+
+    const targetProject = projects.find(
+      (p) => p.name.toLowerCase() === updatedTask.project.toLowerCase()
+    )
 
     if (previous && previous.completed !== updatedTask.completed) {
       const diff = updatedTask.completed ? 1 : -1
@@ -292,9 +571,37 @@ export default function DashboardPage() {
           return p
         })
       )
+      if (user && targetProject) {
+        const nextCompletedCount = Math.max(
+          0,
+          Math.min(targetProject.totalTasks, targetProject.completedTasks + diff)
+        )
+        const projectTasksSnapshot = tasks
+          .filter((t) => t.project.toLowerCase() === targetProject.name.toLowerCase())
+          .map((t) => (t.id === updatedTask.id ? updatedTask : t))
+        updateCloudProjectFields(
+          targetProject.id,
+          { completedTasks: nextCompletedCount },
+          {
+            user,
+            fullProject: { ...targetProject, completedTasks: nextCompletedCount },
+            projectTasks: projectTasksSnapshot,
+          }
+        ).catch(console.error)
+      }
       if (updatedTask.completed) {
         runAutomationsForEvent("task_completed", "true", updatedTask.title, updatedTask.id)
       }
+    }
+
+    if (user && targetProject) {
+      saveCloudTask(
+        user,
+        targetProject.id,
+        targetProject.ownerId || user.uid,
+        updatedTask,
+        false
+      ).catch(console.error)
     }
 
     if (previous && previous.stage !== updatedTask.stage && updatedTask.stage) {
@@ -330,6 +637,10 @@ export default function DashboardPage() {
       }))
     )
 
+    const targetProject = projects.find(
+      (p) => p.name.toLowerCase() === newTask.project.toLowerCase()
+    )
+
     // Update project total task count
     setProjects((prev) =>
       prev.map((p) => {
@@ -343,6 +654,40 @@ export default function DashboardPage() {
         return p
       })
     )
+
+    if (user && targetProject) {
+      const nextTotal = targetProject.totalTasks + 1
+      const nextCompleted = newTask.completed
+        ? targetProject.completedTasks + 1
+        : targetProject.completedTasks
+      const projectTasksSnapshot = [
+        newTask,
+        ...tasks.filter((t) => t.project.toLowerCase() === targetProject.name.toLowerCase()),
+      ]
+      updateCloudProjectFields(
+        targetProject.id,
+        {
+          totalTasks: nextTotal,
+          completedTasks: nextCompleted,
+        },
+        {
+          user,
+          fullProject: {
+            ...targetProject,
+            totalTasks: nextTotal,
+            completedTasks: nextCompleted,
+          },
+          projectTasks: projectTasksSnapshot,
+        }
+      ).catch(console.error)
+      saveCloudTask(
+        user,
+        targetProject.id,
+        targetProject.ownerId || user.uid,
+        newTask,
+        true
+      ).catch(console.error)
+    }
   }
 
   // Handle adding a new project (with 3-active-project Free limit enforcement)
@@ -359,9 +704,20 @@ export default function DashboardPage() {
       return
     }
 
+    const baseNow = Date.now()
+    const createdTasks: TaskItem[] =
+      initialTasks && initialTasks.length > 0
+        ? initialTasks.map((t, idx) => ({
+            ...t,
+            id: `task-${baseNow}-${idx}`,
+            number: String(idx + 1).padStart(2, "0"),
+          }))
+        : []
+
     const newProject: Project = {
       ...newProjectData,
-      id: `proj-${Date.now()}`,
+      id: `proj-${baseNow}`,
+      ownerId: user?.uid,
       completedTasks: 0,
       portalEnabled: true,
       portalShareCode: newProjectData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -371,18 +727,17 @@ export default function DashboardPage() {
     setProjects((prev) => [newProject, ...prev])
     setFreeLimitNotice(null)
 
-    if (initialTasks && initialTasks.length > 0) {
-      const createdTasks: TaskItem[] = initialTasks.map((t, idx) => ({
-        ...t,
-        id: `task-${Date.now()}-${idx}`,
-        number: String(idx + 1).padStart(2, "0"),
-      }))
+    if (createdTasks.length > 0) {
       setTasks((prev) =>
         [...createdTasks, ...prev].map((t, idx) => ({
           ...t,
           number: String(idx + 1).padStart(2, "0"),
         }))
       )
+    }
+
+    if (user) {
+      createCloudProject(user, newProject, createdTasks).catch(console.error)
     }
   }
 
@@ -400,6 +755,67 @@ export default function DashboardPage() {
     }
     setFreeLimitNotice(null)
     setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+
+    if (user) {
+      if (!prevProject) {
+        updateCloudProjectFields(updated.id, updated).catch(console.error)
+        return
+      }
+
+      const diff: Partial<Project> = {}
+      if (updated.name !== prevProject.name) diff.name = updated.name
+      if (updated.company !== prevProject.company) diff.company = updated.company
+      if (updated.logo !== prevProject.logo) diff.logo = updated.logo
+      if (updated.status !== prevProject.status) diff.status = updated.status
+      if (updated.priority !== prevProject.priority) diff.priority = updated.priority
+      if (updated.completedTasks !== prevProject.completedTasks) {
+        diff.completedTasks = updated.completedTasks
+      }
+      if (updated.totalTasks !== prevProject.totalTasks) diff.totalTasks = updated.totalTasks
+      if (updated.accentColor !== prevProject.accentColor) diff.accentColor = updated.accentColor
+      if (updated.progressColor !== prevProject.progressColor) {
+        diff.progressColor = updated.progressColor
+      }
+      if (updated.progressTrack !== prevProject.progressTrack) {
+        diff.progressTrack = updated.progressTrack
+      }
+      if (JSON.stringify(updated.tags) !== JSON.stringify(prevProject.tags)) {
+        diff.tags = updated.tags
+      }
+      if (updated.isStarred !== prevProject.isStarred) diff.isStarred = updated.isStarred
+      if (updated.isArchived !== prevProject.isArchived) diff.isArchived = updated.isArchived
+      if (updated.dueDate !== prevProject.dueDate) diff.dueDate = updated.dueDate
+      if (updated.sprintStage !== prevProject.sprintStage) diff.sprintStage = updated.sprintStage
+      if (updated.attachmentsCount !== prevProject.attachmentsCount) {
+        diff.attachmentsCount = updated.attachmentsCount
+      }
+      if (updated.budget !== prevProject.budget) diff.budget = updated.budget
+      if (updated.description !== prevProject.description) diff.description = updated.description
+      if (updated.coverAssetKey !== prevProject.coverAssetKey) {
+        diff.coverAssetKey = updated.coverAssetKey
+      }
+      if (updated.customImage !== prevProject.customImage) diff.customImage = updated.customImage
+      if (updated.portalEnabled !== prevProject.portalEnabled) {
+        diff.portalEnabled = updated.portalEnabled
+      }
+      if (updated.portalShareCode !== prevProject.portalShareCode) {
+        diff.portalShareCode = updated.portalShareCode
+      }
+      if (updated.extraMembersCount !== prevProject.extraMembersCount) {
+        diff.extraMembersCount = updated.extraMembersCount
+      }
+
+      if (Object.keys(diff).length > 0) {
+        const projectTasksSnapshot = tasks.filter(
+          (t) => t.project.toLowerCase() === updated.name.toLowerCase()
+        )
+        updateCloudProjectFields(updated.id, diff, {
+          user,
+          fullProject: updated,
+          projectTasks: projectTasksSnapshot,
+        }).catch(console.error)
+      }
+    }
   }
 
   // Handle deleting a task
@@ -415,6 +831,9 @@ export default function DashboardPage() {
     )
 
     if (target) {
+      const targetProject = projects.find(
+        (p) => p.name.toLowerCase() === target.project.toLowerCase()
+      )
       setProjects((prev) =>
         prev.map((p) => {
           if (p.name.toLowerCase() === target.project.toLowerCase()) {
@@ -429,14 +848,55 @@ export default function DashboardPage() {
           return p
         })
       )
+      if (user && targetProject) {
+        const nextTotal = Math.max(0, targetProject.totalTasks - 1)
+        const nextCompleted = target.completed
+          ? Math.max(0, targetProject.completedTasks - 1)
+          : targetProject.completedTasks
+        const projectTasksSnapshot = tasks.filter(
+          (t) => t.id !== taskId && t.project.toLowerCase() === targetProject.name.toLowerCase()
+        )
+        deleteCloudTask(targetProject.id, taskId).catch(console.error)
+        updateCloudProjectFields(
+          targetProject.id,
+          {
+            totalTasks: nextTotal,
+            completedTasks: nextCompleted,
+          },
+          {
+            user,
+            fullProject: {
+              ...targetProject,
+              totalTasks: nextTotal,
+              completedTasks: nextCompleted,
+            },
+            projectTasks: projectTasksSnapshot,
+          }
+        ).catch(console.error)
+      }
     }
   }
 
   // Handle updating task assignee
   const handleUpdateTaskAssignee = (taskId: string, assignee: Member) => {
+    const target = tasks.find((t) => t.id === taskId)
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, assignee } : t))
     )
+    if (user && target) {
+      const targetProject = projects.find(
+        (p) => p.name.toLowerCase() === target.project.toLowerCase()
+      )
+      if (targetProject) {
+        saveCloudTask(
+          user,
+          targetProject.id,
+          targetProject.ownerId || user.uid,
+          { ...target, assignee },
+          false
+        ).catch(console.error)
+      }
+    }
   }
 
   // Handle reordering tasks array (DnD within list/dashboard) - automatically updates task numbers
@@ -476,14 +936,51 @@ export default function DashboardPage() {
       )
     )
 
+    if (user) {
+      const oldProjObj = projects.find(
+        (p) => p.name.toLowerCase() === prevProject.toLowerCase()
+      )
+      const newProjObj = projects.find(
+        (p) => p.name.toLowerCase() === newProject.toLowerCase()
+      )
+      const updatedTaskObj: TaskItem = {
+        ...task,
+        stage: newStage,
+        completed: isNowDone,
+        project: newProject,
+      }
+      if (oldProjObj && newProjObj && oldProjObj.id === newProjObj.id) {
+        saveCloudTask(
+          user,
+          newProjObj.id,
+          newProjObj.ownerId || user.uid,
+          updatedTaskObj,
+          false
+        ).catch(console.error)
+      } else {
+        if (oldProjObj) deleteCloudTask(oldProjObj.id, task.id).catch(console.error)
+        if (newProjObj) {
+          saveCloudTask(
+            user,
+            newProjObj.id,
+            newProjObj.ownerId || user.uid,
+            updatedTaskObj,
+            true
+          ).catch(console.error)
+        }
+      }
+    }
+
     // Update project statistics if project ownership or completion changed
     if (
       prevProject.toLowerCase() !== newProject.toLowerCase() ||
       prevCompleted !== isNowDone
     ) {
+      const updatedProjectCounters: Project[] = []
       setProjects((projList) =>
         projList.map((p) => {
           const updated = { ...p }
+          let touched = false
           // Leaving old project
           if (
             p.name.toLowerCase() === prevProject.toLowerCase() &&
@@ -493,6 +990,7 @@ export default function DashboardPage() {
             if (prevCompleted) {
               updated.completedTasks = Math.max(0, updated.completedTasks - 1)
             }
+            touched = true
           }
           // Entering new project
           if (
@@ -503,6 +1001,7 @@ export default function DashboardPage() {
             if (isNowDone) {
               updated.completedTasks = updated.completedTasks + 1
             }
+            touched = true
           }
           // Same project, status flipped
           if (
@@ -515,11 +1014,22 @@ export default function DashboardPage() {
                 0,
                 Math.min(updated.totalTasks, updated.completedTasks + diff)
               )
+              touched = true
             }
           }
+          if (touched) updatedProjectCounters.push(updated)
           return updated
         })
       )
+
+      if (user) {
+        updatedProjectCounters.forEach((projAfter) => {
+          updateCloudProjectFields(projAfter.id, {
+            totalTasks: projAfter.totalTasks,
+            completedTasks: projAfter.completedTasks,
+          }).catch(console.error)
+        })
+      }
     }
     if (targetStage && task.stage !== targetStage) {
       runAutomationsForEvent("stage_change", targetStage, task.title, task.id)
@@ -533,16 +1043,45 @@ export default function DashboardPage() {
 
   // Handle star toggle
   const handleToggleStar = (projectId: string) => {
+    const target = projects.find((p) => p.id === projectId)
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, isStarred: !p.isStarred } : p))
     )
+    if (user && target) {
+      const nextStarred = !target.isStarred
+      updateCloudProjectFields(
+        projectId,
+        { isStarred: nextStarred },
+        {
+          user,
+          fullProject: { ...target, isStarred: nextStarred },
+          projectTasks: tasks.filter(
+            (t) => t.project.toLowerCase() === target.name.toLowerCase()
+          ),
+        }
+      ).catch(console.error)
+    }
   }
 
   // Handle project status update
   const handleUpdateStatus = (projectId: string, newStatus: Project["status"]) => {
+    const target = projects.find((p) => p.id === projectId)
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, status: newStatus } : p))
     )
+    if (user && target) {
+      updateCloudProjectFields(
+        projectId,
+        { status: newStatus },
+        {
+          user,
+          fullProject: { ...target, status: newStatus },
+          projectTasks: tasks.filter(
+            (t) => t.project.toLowerCase() === target.name.toLowerCase()
+          ),
+        }
+      ).catch(console.error)
+    }
   }
 
   // Handle project archive toggle (enforcing 3 active projects on Free when restoring)
@@ -562,6 +1101,20 @@ export default function DashboardPage() {
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, isArchived: !p.isArchived } : p))
     )
+    if (user) {
+      const nextArchived = !target.isArchived
+      updateCloudProjectFields(
+        projectId,
+        { isArchived: nextArchived },
+        {
+          user,
+          fullProject: { ...target, isArchived: nextArchived },
+          projectTasks: tasks.filter(
+            (t) => t.project.toLowerCase() === target.name.toLowerCase()
+          ),
+        }
+      ).catch(console.error)
+    }
   }
 
   // Handle Client Portal Deliverable Approval / Revision Request
@@ -599,6 +1152,20 @@ export default function DashboardPage() {
       })
     )
 
+    if (user && targetProject && targetDeliverable) {
+      saveCloudDeliverable(
+        user,
+        projectId,
+        targetProject.ownerId || user.uid,
+        {
+          ...targetDeliverable,
+          status,
+          clientFeedback: feedback ?? targetDeliverable.clientFeedback,
+        },
+        false
+      ).catch(console.error)
+    }
+
     if (targetProject && targetDeliverable) {
       const portalNotif: NotificationItem = {
         id: `notif-portal-${Date.now()}`,
@@ -627,6 +1194,7 @@ export default function DashboardPage() {
     projectId: string,
     deliverable: Omit<ClientDeliverable, "id" | "updatedAt">
   ) => {
+    const targetProject = projects.find((p) => p.id === projectId)
     const newDeliverable: ClientDeliverable = {
       ...deliverable,
       id: `deliv-${Date.now()}`,
@@ -642,14 +1210,38 @@ export default function DashboardPage() {
           : p
       )
     )
+    if (user && targetProject) {
+      saveCloudDeliverable(
+        user,
+        projectId,
+        targetProject.ownerId || user.uid,
+        newDeliverable,
+        true
+      ).catch(console.error)
+    }
   }
 
   // Calendar event persistence handler
   const handleAddCalendarEvent = (eventData: Omit<CalendarEvent, "id">) => {
-    setCalendarEvents((prev) => [
-      ...prev,
-      { ...eventData, id: `ev-${Date.now()}` },
-    ])
+    const created: CalendarEvent = { ...eventData, id: `ev-${Date.now()}` }
+    setCalendarEvents((prev) => [...prev, created])
+    if (user) {
+      saveCloudCalendarEvent(user, created).catch(console.error)
+    }
+  }
+
+  // Project Markdown Note Firestore sync handler
+  const handleSaveProjectNote = (
+    projectId: string,
+    note: ProjectNote,
+    isNew: boolean
+  ) => {
+    const targetProject = projects.find((p) => p.id === projectId)
+    if (user && targetProject) {
+      saveCloudNote(user, projectId, targetProject.ownerId || user.uid, note, isNew).catch(
+        console.error
+      )
+    }
   }
 
   // Automations CRUD handlers
@@ -663,16 +1255,41 @@ export default function DashboardPage() {
       createdAt: "Agora",
     }
     setAutomationRules((prev) => [created, ...prev])
+    const anchorProject = projects[0]
+    if (user && anchorProject) {
+      saveCloudAutomationRule(
+        user,
+        anchorProject.id,
+        anchorProject.ownerId || user.uid,
+        created,
+        true
+      ).catch(console.error)
+    }
   }
 
   const handleToggleAutomationRule = (ruleId: string) => {
+    const target = automationRules.find((r) => r.id === ruleId)
     setAutomationRules((prev) =>
       prev.map((r) => (r.id === ruleId ? { ...r, enabled: !r.enabled } : r))
     )
+    const anchorProject = projects[0]
+    if (user && anchorProject && target) {
+      saveCloudAutomationRule(
+        user,
+        anchorProject.id,
+        anchorProject.ownerId || user.uid,
+        { ...target, enabled: !target.enabled },
+        false
+      ).catch(console.error)
+    }
   }
 
   const handleDeleteAutomationRule = (ruleId: string) => {
     setAutomationRules((prev) => prev.filter((r) => r.id !== ruleId))
+    const anchorProject = projects[0]
+    if (user && anchorProject) {
+      deleteCloudAutomationRule(anchorProject.id, ruleId).catch(console.error)
+    }
   }
 
   // Reset local-first demo data
@@ -685,20 +1302,22 @@ export default function DashboardPage() {
   const handleInviteCollaborator = (
     projectId: string,
     email: string,
-    role: string
+    role: string,
+    projectRole: ProjectRole = "colaborador"
   ) => {
     const project = projects.find((p) => p.id === projectId)
     if (!project) return
 
+    const inviterName = user?.displayName || user?.email?.split("@")[0] || "Você"
     const newInvite: ProjectInvitation = {
       id: `inv-${Date.now()}`,
       projectId,
       projectName: project.name,
       email,
-      role,
+      role: `${role} (${projectRole === "gestor" ? "Gestor" : "Colaborador"})`,
       sentAt: "Agora",
       status: "pending",
-      invitedBy: "Angelina Smith",
+      invitedBy: inviterName,
     }
 
     // Add to project pending invitations
@@ -717,7 +1336,7 @@ export default function DashboardPage() {
     const newNotification: NotificationItem = {
       id: `notif-inv-${Date.now()}`,
       title: "Convite para Colaborar no Projeto",
-      description: `Angelina Smith convidou ${email} para colaborar no projeto ${project.name} como ${role}.`,
+      description: `${inviterName} convidou ${email} para colaborar no projeto ${project.name} como ${role}.`,
       time: "Agora",
       read: false,
       type: "invitation",
@@ -726,8 +1345,8 @@ export default function DashboardPage() {
         projectName: project.name,
         projectLogo: project.logo,
         email,
-        role,
-        invitedBy: "Angelina Smith",
+        role: newInvite.role,
+        invitedBy: inviterName,
         status: "pending",
       },
     }
@@ -761,10 +1380,17 @@ export default function DashboardPage() {
       .replace(/[._]/g, " ")
       .replace(/\b\w/g, (l) => l.toUpperCase())
 
+    const inferredProjectRole: ProjectRole = invitationData.role
+      .toLowerCase()
+      .includes("gestor")
+      ? "gestor"
+      : "colaborador"
+
     const newMember: Member = {
       name: rawName || "Novo Colaborador",
       avatar: "/avatars/courtney.jpg",
       role: invitationData.role,
+      projectRole: inferredProjectRole,
       email: invitationData.email,
       status: "Online",
       statusNote: "Recém ingressou no projeto",
@@ -957,6 +1583,8 @@ export default function DashboardPage() {
             onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
             isFocusModeActive={isFocusMode}
             currentTier={userTier}
+            userStatus={userStatus}
+            userStatusNote={userStatusNote}
             isOffline={isOffline}
             lastSavedAt={lastSavedAt}
           />
@@ -987,6 +1615,25 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Auth / Workspace Error Notice */}
+          {authError && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-danger/30 bg-danger-subtle px-5 py-3 text-xs text-danger-foreground">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="size-4 shrink-0" />
+                <span>{authError}</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearAuthError}
+                className="h-7 rounded-lg bg-card text-xs"
+              >
+                Fechar
+              </Button>
+            </div>
+          )}
+
           {/* Active Search Notification Banner if searching on dashboard */}
           {query && activeNav === "dashboard" && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card px-5 py-3 border border-border shadow-xs text-xs text-muted-foreground">
@@ -1013,6 +1660,7 @@ export default function DashboardPage() {
                 )}
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setSearchQuery("")
                   setIncludeArchivedSearch(false)
@@ -1038,9 +1686,14 @@ export default function DashboardPage() {
                   projects={projects}
                   tasks={tasks}
                   currentTier={userTier}
+                  userStatus={userStatus}
+                  userStatusNote={userStatusNote}
+                  currentUserName={user?.displayName || user?.email?.split("@")[0] || "Angelina Smith"}
+                  currentUserAvatar={user?.photoURL || "/avatars/angelina.jpg"}
                   initialProjectTab={projectInitialTab}
                   initialNoteId={projectInitialNoteId}
                   onOpenPricingModal={() => setIsPricingModalOpen(true)}
+                  onOpenSettings={() => setActiveNav("settings")}
                   onToggleStar={handleToggleStar}
                   onUpdateStatus={handleUpdateStatus}
                   onAddProject={handleAddProject}
@@ -1048,6 +1701,7 @@ export default function DashboardPage() {
                   onSelectTask={(task) => setSelectedTaskId(task.id)}
                   onAddTask={handleAddTask}
                   onUpdateProject={handleUpdateProject}
+                  onSaveNote={handleSaveProjectNote}
                   onDeleteTask={handleDeleteTask}
                   onUpdateTaskAssignee={handleUpdateTaskAssignee}
                   onToggleArchive={handleToggleArchive}
@@ -1099,8 +1753,12 @@ export default function DashboardPage() {
                     onOpenFocusMode={() => setIsFocusMode(true)}
                   />
                   <CalendarWidget
-                    events={calendarEvents}
+                    events={mergedCalendarEvents}
                     onAddEvent={handleAddCalendarEvent}
+                    onSyncGoogleCalendar={() =>
+                      workspaceAccessToken && syncGoogleCalendar(workspaceAccessToken)
+                    }
+                    isSyncingGoogleCalendar={isSyncingGoogleCalendar}
                   />
                 </div>
               </motion.div>
@@ -1115,8 +1773,12 @@ export default function DashboardPage() {
               >
                 <div className="lg:col-span-7">
                   <CalendarWidget
-                    events={calendarEvents}
+                    events={mergedCalendarEvents}
                     onAddEvent={handleAddCalendarEvent}
+                    onSyncGoogleCalendar={() =>
+                      workspaceAccessToken && syncGoogleCalendar(workspaceAccessToken)
+                    }
+                    isSyncingGoogleCalendar={isSyncingGoogleCalendar}
                   />
                 </div>
                 <div className="lg:col-span-5">
@@ -1180,10 +1842,65 @@ export default function DashboardPage() {
                 className="rounded-[28px] bg-card p-8 border border-border space-y-6 max-w-3xl"
               >
                 <div>
-                  <h2 className="text-xl font-bold text-card-foreground">Workspace Settings</h2>
+                  <h2 className="text-xl font-bold text-card-foreground">Configurações do Workspace</h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Gerencie tema visual, persistência local-first offline, regras de automação e dados de demonstração.
+                    Defina seu status global de perfil, aparência, integrações na nuvem e persistência offline.
                   </p>
+                </div>
+
+                {/* Global User Profile Status Selector */}
+                <div className="rounded-2xl border border-border/80 bg-muted/25 p-5 space-y-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-card-foreground">
+                        Status do Perfil (Geral)
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Você decide aqui seu status global — ele é exibido automaticamente no cabeçalho, equipe, projetos e chat.
+                      </p>
+                    </div>
+                    <MemberStatusBadge status={userStatus} size="md" />
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {(["Online", "In Meeting", "Focused", "Offline"] as MemberStatus[]).map((st) => {
+                      const cfg = MEMBER_STATUS_CONFIG[st]
+                      const isSelected = userStatus === st
+                      return (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => handleUpdateUserPresence(st, userStatusNote)}
+                          className={cn(
+                            "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition-all cursor-pointer",
+                            isSelected
+                              ? "border-primary bg-primary/10 text-foreground shadow-2xs ring-1 ring-primary/30"
+                              : "border-border bg-card text-muted-foreground hover:border-border/80 hover:text-foreground"
+                          )}
+                        >
+                          <span className={cn("size-2.5 shrink-0 rounded-full", cfg.dot)} />
+                          <span className="truncate">{cfg.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="global-status-note"
+                      className="text-[11px] font-semibold text-muted-foreground"
+                    >
+                      Mensagem de status personalizada (opcional)
+                    </label>
+                    <Input
+                      id="global-status-note"
+                      value={userStatusNote}
+                      onChange={(e) => handleUpdateUserPresence(userStatus, e.target.value)}
+                      placeholder="Ex.: Em reunião com cliente até 16h · Focado na Sprint 3..."
+                      maxLength={120}
+                      className="h-9 rounded-xl bg-card text-xs"
+                    />
+                  </div>
                 </div>
 
                 <div className="divide-y divide-border/60">
@@ -1192,7 +1909,7 @@ export default function DashboardPage() {
                       <p className="text-sm font-semibold text-card-foreground">Aparência da Interface</p>
                       <p className="text-xs text-muted-foreground">Alternar entre Modo Claro e Modo Escuro Obsidian.</p>
                     </div>
-                    <Button onClick={toggleTheme} variant="outline" size="sm" className="gap-2 cursor-pointer rounded-xl">
+                    <Button type="button" onClick={toggleTheme} variant="outline" size="sm" className="gap-2 cursor-pointer rounded-xl">
                       <Sun className="hidden dark:block w-4 h-4 text-amber-400" />
                       <Moon className="block dark:hidden w-4 h-4 text-blue-500" />
                       <span className="capitalize">
@@ -1219,6 +1936,90 @@ export default function DashboardPage() {
                       <Zap className="w-3.5 h-3.5 text-primary" />
                       <span>Gerenciar regras</span>
                     </Button>
+                  </div>
+
+                  <div className="py-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-card-foreground">
+                        Firebase Auth & Cloud Firestore
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user
+                          ? `Conectado como ${user.email} · Sincronização multi-tenant com cargos (Owner, Gestor, Colaborador).`
+                          : "Entre com Google para sincronizar projetos, tarefas e permissões na nuvem."}
+                      </p>
+                    </div>
+                    {user ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success-foreground bg-success-subtle px-2.5 py-1 rounded-lg shrink-0">
+                        <Cloud className="w-3.5 h-3.5" />
+                        <span>Sincronizado</span>
+                      </span>
+                    ) : (
+                      <GoogleSignInButton
+                        onClick={signInGoogle}
+                        disabled={isSigningIn}
+                        size="sm"
+                      />
+                    )}
+                  </div>
+
+                  <div className="py-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-card-foreground">
+                        Cloudflare R2 (Arquivos Privados)
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Bucket privado protegido por URLs pré-assinadas e validação de cargo no Firestore.
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg shrink-0",
+                        r2Configured
+                          ? "text-success-foreground bg-success-subtle"
+                          : "text-warning-foreground bg-warning-subtle"
+                      )}
+                    >
+                      <FolderSync className="w-3.5 h-3.5" />
+                      <span>{r2Configured ? "Bucket Configurado" : "Configurar R2_* no Servidor"}</span>
+                    </span>
+                  </div>
+
+                  <div className="py-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-card-foreground">
+                        Google Calendar & Google Drive (OAuth)
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {hasWorkspaceConnected
+                          ? "Agenda e arquivos do Google Drive conectados na memória desta sessão."
+                          : "Leia e crie eventos no Calendar e vincule documentos do Drive aos seus projetos."}
+                      </p>
+                    </div>
+                    {hasWorkspaceConnected ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={disconnectWorkspace}
+                        className="gap-1.5 rounded-xl text-xs font-semibold shrink-0"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-success-foreground" />
+                        <span>Desconectar</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isConnectingWorkspace}
+                        onClick={() => connectWorkspace()}
+                        className="gap-1.5 rounded-xl text-xs font-semibold shrink-0"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-primary" />
+                        <span>{isConnectingWorkspace ? "Conectando..." : "Conectar OAuth"}</span>
+                      </Button>
+                    )}
                   </div>
 
                   <div className="py-4 flex items-center justify-between gap-4">
@@ -1271,7 +2072,7 @@ export default function DashboardPage() {
                 <MorningBriefingCard
                   tasks={tasks}
                   notifications={notifications}
-                  calendarEvents={calendarEvents}
+                  calendarEvents={mergedCalendarEvents}
                   collapsed={briefingCollapsed}
                   onToggleCollapse={() => setBriefingCollapsed((prev) => !prev)}
                   onToggleTask={handleToggleTask}
@@ -1330,8 +2131,12 @@ export default function DashboardPage() {
                   {/* COLUMN 3: Calendar & Messages — lg:col-span-4 */}
                   <div className="md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-5 items-start">
                     <CalendarWidget
-                      events={calendarEvents}
+                      events={mergedCalendarEvents}
                       onAddEvent={handleAddCalendarEvent}
+                      onSyncGoogleCalendar={() =>
+                        workspaceAccessToken && syncGoogleCalendar(workspaceAccessToken)
+                      }
+                      isSyncingGoogleCalendar={isSyncingGoogleCalendar}
                     />
 
                     <MessageWidget
@@ -1360,6 +2165,7 @@ export default function DashboardPage() {
           setProjectInitialNoteId(noteId)
           setActiveNav("projects")
         }}
+        onScheduleCalendarEvent={handleAddCalendarEvent}
       />
 
       <NewTaskModal
@@ -1373,6 +2179,10 @@ export default function DashboardPage() {
         message={selectedChatUser}
         open={isChatOpen}
         onOpenChange={setIsChatOpen}
+        currentUserName={user?.displayName || user?.email?.split("@")[0] || "Angelina Smith"}
+        currentUserAvatar={user?.photoURL || "/avatars/angelina.jpg"}
+        userStatus={userStatus}
+        projectFiles={projects.flatMap((p) => p.documents || [])}
       />
 
       <CommandPalette
@@ -1396,6 +2206,9 @@ export default function DashboardPage() {
         onUpgradeSuccess={(tier) => {
           setUserTier(tier)
           setFreeLimitNotice(null)
+          if (user) {
+            updateCloudUserTier(user, tier).catch(console.error)
+          }
         }}
       />
 

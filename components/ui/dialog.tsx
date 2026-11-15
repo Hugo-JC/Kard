@@ -47,6 +47,9 @@ export function Dialog({
 
           {/* Modal content */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -57,6 +60,8 @@ export function Dialog({
             )}
           >
             <button
+              type="button"
+              aria-label="Fechar janela"
               onClick={() => onOpenChange(false)}
               className="absolute right-5 top-5 rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
             >

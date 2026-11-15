@@ -1,1 +1,62 @@
-{}
+{
+  "app/page.tsx -> @/components/CommandPalette": {
+    "id": "app/page.tsx -> @/components/CommandPalette",
+    "files": [
+      "static/chunks/_app-pages-browser_components_CommandPalette_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/NewTaskModal": {
+    "id": "app/page.tsx -> @/components/NewTaskModal",
+    "files": [
+      "static/chunks/_app-pages-browser_components_NewTaskModal_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/QuickChatModal": {
+    "id": "app/page.tsx -> @/components/QuickChatModal",
+    "files": [
+      "static/chunks/_app-pages-browser_components_QuickChatModal_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/automations/AutomationsPanel": {
+    "id": "app/page.tsx -> @/components/automations/AutomationsPanel",
+    "files": [
+      "static/chunks/_app-pages-browser_components_automations_AutomationsPanel_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/billing/PricingPlansModal": {
+    "id": "app/page.tsx -> @/components/billing/PricingPlansModal",
+    "files": [
+      "static/chunks/_app-pages-browser_components_billing_PricingPlansModal_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/focus/FocusModeView": {
+    "id": "app/page.tsx -> @/components/focus/FocusModeView",
+    "files": [
+      "static/chunks/_app-pages-browser_components_focus_FocusModeView_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/projects/ProjectsView": {
+    "id": "app/page.tsx -> @/components/projects/ProjectsView",
+    "files": [
+      "static/chunks/_app-pages-browser_components_projects_ProjectsView_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/tasks/TaskInspectorDrawer": {
+    "id": "app/page.tsx -> @/components/tasks/TaskInspectorDrawer",
+    "files": [
+      "static/chunks/_app-pages-browser_components_tasks_TaskInspectorDrawer_tsx.js"
+    ]
+  },
+  "components/projects/ProjectsView.tsx -> ./NewProjectModal": {
+    "id": "components/projects/ProjectsView.tsx -> ./NewProjectModal",
+    "files": [
+      "static/chunks/_app-pages-browser_components_projects_NewProjectModal_tsx.js"
+    ]
+  },
+  "components/projects/ProjectsView.tsx -> ./ProjectManageView": {
+    "id": "components/projects/ProjectsView.tsx -> ./ProjectManageView",
+    "files": [
+      "static/chunks/_app-pages-browser_components_projects_ProjectManageView_tsx.js"
+    ]
+  }
+}

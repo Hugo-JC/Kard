@@ -44,7 +44,7 @@ export function ProjectCardGrid({
           />
 
           {/* Extra Meta Strip for Projects Page View */}
-          {(project.sprintStage || project.attachmentsCount || project.budget) && (
+          {(project.sprintStage || (project.attachmentsCount ?? 0) > 0 || project.budget) && (
             <div className="mt-2 px-3 flex items-center justify-between text-[11px] text-muted-foreground/80">
               <div className="flex items-center gap-3">
                 {project.sprintStage && (
@@ -53,7 +53,7 @@ export function ProjectCardGrid({
                     {project.sprintStage}
                   </span>
                 )}
-                {project.attachmentsCount && (
+                {(project.attachmentsCount ?? 0) > 0 && (
                   <span className="flex items-center gap-1">
                     <Paperclip className="w-3 h-3 text-muted-foreground" />
                     {project.attachmentsCount} files

@@ -33,10 +33,18 @@ export function CommandPalette({
     a.category.toLowerCase().includes(query.toLowerCase())
   )
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setQuery("")
+    }
+    onOpenChange(nextOpen)
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault()
+        if (open) setQuery("")
         onOpenChange(!open)
       }
     }
@@ -45,7 +53,7 @@ export function CommandPalette({
   }, [open, onOpenChange])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="max-w-xl p-0 overflow-hidden bg-card text-card-foreground border-border">
+    <Dialog open={open} onOpenChange={handleOpenChange} className="max-w-xl p-0 overflow-hidden bg-card text-card-foreground border-border">
       <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
         <Search className="w-5 h-5 text-muted-foreground shrink-0" />
         <input
@@ -72,9 +80,10 @@ export function CommandPalette({
             return (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => {
                   onSelectAction(item.id)
-                  onOpenChange(false)
+                  handleOpenChange(false)
                 }}
                 className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-left hover:bg-muted transition-colors group cursor-pointer"
               >

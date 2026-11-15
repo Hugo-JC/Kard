@@ -96,7 +96,7 @@ export function MemberAvatarWithStatus({
           config.dot,
           dotClasses
         )}
-        title={`${name} is ${status}`}
+        title={`${name} · ${config.label}`}
       />
     </div>
   )

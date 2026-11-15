@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { FirebaseProvider } from '@/components/auth/FirebaseProvider';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -49,7 +50,9 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           }}
         />
         <ThemeProvider defaultTheme="light">
-          {children}
+          <FirebaseProvider>
+            {children}
+          </FirebaseProvider>
         </ThemeProvider>
       </body>
     </html>

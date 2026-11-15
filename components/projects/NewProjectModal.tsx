@@ -29,6 +29,8 @@ interface NewProjectModalProps {
     project: Omit<Project, "id" | "completedTasks">,
     initialTasks?: Omit<TaskItem, "id" | "number">[]
   ) => void
+  currentUserName?: string
+  currentUserAvatar?: string
 }
 
 const PRESET_COLORS = [
@@ -46,6 +48,8 @@ export function NewProjectModal({
   open,
   onOpenChange,
   onAddProject,
+  currentUserName,
+  currentUserAvatar,
 }: NewProjectModalProps) {
   // Form states
   const [name, setName] = useState("")
@@ -86,10 +90,19 @@ export function NewProjectModal({
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
   // Handle uploading device image
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = ""
     if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError("Escolha uma imagem de até 2 MB para o rascunho local.")
+      return
+    }
+    setUploadError(null)
 
     const reader = new FileReader()
     reader.onload = (event) => {
@@ -138,7 +151,9 @@ export function NewProjectModal({
       .map((t) => t.trim().toUpperCase())
       .filter(Boolean)
 
-    const initialTaskCount = Math.max(starterTasks.length, 12)
+    const initialTaskCount = starterTasks.length
+    const creatorName = currentUserName || "Owner"
+    const creatorAvatar = currentUserAvatar || "/avatars/angelina.jpg"
 
     onAddProject(
       {
@@ -156,7 +171,7 @@ export function NewProjectModal({
         tags: parsedTags.length > 0 ? parsedTags : ["APP", "DEV"],
         isStarred: false,
         sprintStage,
-        attachmentsCount: 2,
+        attachmentsCount: 0,
         budget,
         description: description.trim() || `Official project workspace for ${company.trim()}.`,
         members: selectedContributors,
@@ -164,23 +179,15 @@ export function NewProjectModal({
         chatMessages: [
           {
             id: `msg-init-${Date.now()}`,
-            user: "Angelina Smith",
-            avatar: "/avatars/angelina.jpg",
-            role: "Project Manager (You)",
+            user: creatorName,
+            avatar: creatorAvatar,
+            role: "Owner do projeto",
             text: `Welcome team! Project workspace created for ${name.trim()}.`,
             time: "Just now",
             isMe: true,
           },
         ],
-        documents: [
-          {
-            id: `doc-init-${Date.now()}`,
-            name: `${name.replace(/\s+/g, "_")}_Project_Brief.pdf`,
-            size: "1.8 MB",
-            date: "Today",
-            type: "PDF",
-          },
-        ],
+        documents: [],
       },
       starterTasks.map((st) => ({
         title: st.title,
@@ -200,8 +207,28 @@ export function NewProjectModal({
     setName("")
     setCompany("")
     setDescription("")
+    setLogo("custom")
+    setAccentColor("#3B82F6")
     setCustomImage(null)
-    setStarterTasks([])
+    setUploadError(null)
+    setPriority("HIGH PRIORITY")
+    setStatus("IN PROGRESS")
+    setDueDate("30 AUGUST")
+    setBudget("$45,000")
+    setSprintStage("Sprint 1 / 4")
+    setTagsInput("MOBILE, UI/UX")
+    setSelectedContributors([
+      AVAILABLE_CONTRIBUTORS[0],
+      AVAILABLE_CONTRIBUTORS[1],
+      AVAILABLE_CONTRIBUTORS[2],
+    ])
+    setStarterTasks([
+      {
+        title: "Kickoff & Architecture Discovery",
+        priority: "High",
+        assignee: AVAILABLE_CONTRIBUTORS[1],
+      },
+    ])
     onOpenChange(false)
   }
 
@@ -229,10 +256,12 @@ export function NewProjectModal({
           <div className="flex flex-col sm:flex-row items-center gap-4">
             {/* Image Preview Box */}
             <div className="relative group shrink-0">
-              <div
+              <button
+                type="button"
                 className="w-20 h-20 rounded-2xl border-2 border-dashed border-border/80 bg-card flex flex-col items-center justify-center overflow-hidden shadow-xs transition-all group-hover:border-primary cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
                 style={{ borderColor: customImage ? accentColor : undefined }}
+                aria-label="Upload project brand image"
               >
                 {customImage ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -249,7 +278,7 @@ export function NewProjectModal({
                     </span>
                   </div>
                 )}
-              </div>
+              </button>
 
               {customImage && (
                 <button
@@ -295,6 +324,9 @@ export function NewProjectModal({
               <p className="text-[11px] text-muted-foreground">
                 Upload your company logo, PNG, SVG, or high-res icon from your computer.
               </p>
+              {uploadError && (
+                <p className="text-[11px] font-medium text-danger">{uploadError}</p>
+              )}
             </div>
           </div>
 
@@ -455,11 +487,12 @@ export function NewProjectModal({
                 (m) => m.name === contributor.name
               )
               return (
-                <div
+                <button
+                  type="button"
                   key={contributor.name}
                   onClick={() => toggleContributor(contributor)}
                   className={cn(
-                    "flex items-center justify-between p-2.5 rounded-2xl border transition-all cursor-pointer",
+                    "flex w-full items-center justify-between p-2.5 rounded-2xl border transition-all cursor-pointer text-left",
                     isSelected
                       ? "bg-card border-primary ring-1 ring-primary/40 shadow-xs"
                       : "bg-muted/30 border-border hover:bg-muted/70 opacity-70"
@@ -489,7 +522,7 @@ export function NewProjectModal({
                   >
                     {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>

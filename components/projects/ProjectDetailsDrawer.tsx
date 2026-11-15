@@ -104,6 +104,7 @@ export function ProjectDetailsDrawer({
                       {project.name}
                     </h2>
                     <button
+                      type="button"
                       onClick={() => onToggleStar(project.id)}
                       className="p-1 rounded-md text-muted-foreground hover:text-amber-400 transition-colors cursor-pointer"
                       title="Star project"
@@ -126,6 +127,7 @@ export function ProjectDetailsDrawer({
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={onClose}
                   className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                   aria-label="Close drawer"
