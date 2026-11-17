@@ -11,7 +11,8 @@ Atualizado em 17-11-2026.
 
 ## Aplicado no Supabase
 - Migração `kard_phase_01_core_schema_and_rls` — versão `20261117172303`.
-- Migração `kard_phase_01_foreign_key_indexes` — índices de suporte às chaves estrangeiras.
+- Migração `kard_phase_01_foreign_key_indexes` — versão `20261117172334`, índices de suporte às chaves estrangeiras.
+- Migração `kard_phase_01_lock_down_default_grants` — versão `20261117172522`, removeu privilégios herdados nas tabelas/funções públicas e repôs apenas os grants necessários.
 - 13 tabelas públicas: profiles, workspaces, workspace_subscriptions, workspace_members, workspace_invitations, teams, team_members, projects, project_members, tasks, task_assignees, storage_assets e audit_logs.
 - RLS ativo nas 13 tabelas.
 - Helpers internos de autorização no schema `private`, fora da Data API.
@@ -21,15 +22,17 @@ Atualizado em 17-11-2026.
 - A função antiga `public.rls_auto_enable()` mantém o event trigger ativo, mas já não pode ser executada por `anon` nem `authenticated`.
 
 ## Verificação executada
-- 13/13 tabelas com RLS.
-- 2/2 buckets criados e privados.
+- 13/13 tabelas com RLS e 40 políticas RLS no schema `public`.
+- 8 políticas Storage, todas limitadas a `authenticated`; os buckets permanecem privados.
+- `anon` não tem `SELECT` nas tabelas de negócio; `authenticated` não tem `UPDATE` em `workspace_subscriptions`.
+- Acesso aos objetos Storage é limitado pelas políticas RLS a utilizadores autenticados com acesso explícito ao projeto/Workspace correspondente.
 - Advisor de segurança sem avisos após as alterações.
 - Advisor de saúde sem avisos.
 - Índices de chaves estrangeiras adicionados após o primeiro relatório de performance.
 - A base de dados está vazia; não foram criados utilizadores, Workspaces ou dados de demonstração.
 
 ## Ainda por concluir antes de declarar a Fase 01 concluída
-1. Exportar/gerar e versionar no GitHub as migrações SQL completas a partir do schema aplicado no projeto remoto (não reconstruir manualmente a partir deste resumo).
+1. Exportar/gerar e versionar no GitHub a migração SQL base completa a partir do schema aplicado no projeto remoto (não reconstruir manualmente a partir deste resumo).
 2. Instalar e fixar `@supabase/supabase-js`, `@supabase/ssr` e Vitest no projeto, atualizando o lockfile com o gestor de pacotes do repositório.
 3. Implementar clientes browser/server, middleware SSR, Auth email/password + Google e onboarding.
 4. Integrar Workspace, equipas, projetos, tarefas e Storage na aplicação Next.js.
