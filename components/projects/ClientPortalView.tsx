@@ -254,11 +254,11 @@ export function ClientPortalView({
       <motion.div
         layout
         transition={{ duration: 0.18 }}
-        className="rounded-3xl border border-border bg-card p-6 sm:p-8 space-y-6"
+        className="rounded-3xl border border-border bg-card p-4 sm:p-8 space-y-6"
       >
         {/* Client Branded Header */}
         <div className="flex flex-col gap-4 border-b border-border/80 pb-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 min-w-0">
             <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/30">
               {project.customImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -281,22 +281,22 @@ export function ClientPortalView({
                 </span>
               )}
             </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Portal de Entregas · {project.company}
               </p>
-              <h2 className="text-xl font-extrabold tracking-tight text-foreground">
+              <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
                 {project.name}
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs">
+          <div className="grid grid-cols-2 gap-4 text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-6">
             <div>
               <span className="block text-[11px] text-muted-foreground">
                 Progresso geral
               </span>
-              <span className="font-mono text-base font-extrabold tabular-nums text-foreground">
+              <span className="font-mono text-sm sm:text-base font-extrabold tabular-nums text-foreground">
                 {percent}% ({project.completedTasks}/{project.totalTasks})
               </span>
             </div>
@@ -304,15 +304,15 @@ export function ClientPortalView({
               <span className="block text-[11px] text-muted-foreground">
                 Prazo previsto
               </span>
-              <span className="font-mono text-base font-extrabold tabular-nums text-foreground">
+              <span className="font-mono text-sm sm:text-base font-extrabold tabular-nums text-foreground">
                 {project.dueDate}
               </span>
             </div>
-            <div>
+            <div className="col-span-2 sm:col-span-1">
               <span className="block text-[11px] text-muted-foreground">
                 Entregas aprovadas
               </span>
-              <span className="font-mono text-base font-extrabold tabular-nums text-success-foreground">
+              <span className="font-mono text-sm sm:text-base font-extrabold tabular-nums text-success-foreground">
                 {approvedCount}/{deliverables.length}
               </span>
             </div>

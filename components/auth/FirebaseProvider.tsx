@@ -20,8 +20,13 @@ import {
   type PendingMigrationSummary,
 } from "@/lib/firestoreSync"
 import { checkR2ServerStatus } from "@/lib/r2Client"
+import dynamic from "next/dynamic"
 import { getWorkspaceSnapshot, updateWorkspaceStore } from "@/lib/storage"
-import { LocalMigrationModal } from "@/components/auth/LocalMigrationModal"
+
+const LocalMigrationModal = dynamic(
+  () => import("@/components/auth/LocalMigrationModal").then((m) => m.LocalMigrationModal),
+  { ssr: false }
+)
 
 interface FirebaseContextValue {
   user: User | null
@@ -197,14 +202,16 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
 
-      <LocalMigrationModal
-        open={Boolean(pendingMigration && user)}
-        summary={pendingMigration}
-        userEmail={user?.email || ""}
-        isMigrating={isMigrating}
-        onConfirm={handleConfirmMigration}
-        onSkip={handleSkipMigration}
-      />
+      {pendingMigration && user ? (
+        <LocalMigrationModal
+          open={true}
+          summary={pendingMigration}
+          userEmail={user.email || ""}
+          isMigrating={isMigrating}
+          onConfirm={handleConfirmMigration}
+          onSkip={handleSkipMigration}
+        />
+      ) : null}
     </FirebaseContext.Provider>
   )
 }

@@ -715,16 +715,17 @@ export function ProjectManageView({
   return (
     <div className="space-y-6">
       {/* 1. Top Navigation & Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onBack}
-          className="h-9 gap-2 rounded-xl bg-card px-3.5 text-xs font-semibold"
+          className="h-9 gap-2 rounded-xl bg-card px-3 sm:px-3.5 text-xs font-semibold"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Voltar aos Projetos</span>
+          <span className="hidden xs:inline sm:inline">Voltar aos Projetos</span>
+          <span className="xs:hidden sm:hidden">Voltar</span>
         </Button>
 
         <div className="flex items-center gap-2">
@@ -866,9 +867,9 @@ export function ProjectManageView({
       )}
 
       {/* 2. Hero Project Header */}
-      <div className="rounded-[32px] bg-card border border-border/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_32px_-4px_rgba(0,0,0,0.4)] overflow-hidden">
+      <div className="rounded-3xl sm:rounded-[32px] bg-card border border-border/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_32px_-4px_rgba(0,0,0,0.4)] overflow-hidden">
         <div
-          className="relative h-32 sm:h-36 w-full p-6 flex items-start justify-end transition-colors"
+          className="relative h-28 sm:h-36 w-full p-4 sm:p-6 flex items-start justify-end transition-colors"
           style={{
             background: `linear-gradient(135deg, ${accentColor} 0%, color-mix(in srgb, ${accentColor} 78%, #0f172a) 100%)`,
           }}
@@ -883,7 +884,8 @@ export function ProjectManageView({
               className="relative z-10 inline-flex items-center gap-1.5 rounded-xl bg-black/40 hover:bg-black/60 text-white backdrop-blur-md px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer shadow-xs"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>{r2Configured && user ? "Enviar Capa (R2)" : "Upload Device Logo / Image"}</span>
+              <span className="sm:hidden">{r2Configured && user ? "Capa (R2)" : "Alterar Capa"}</span>
+              <span className="hidden sm:inline">{r2Configured && user ? "Enviar Capa (R2)" : "Upload Device Logo / Image"}</span>
             </button>
           )}
 
@@ -897,14 +899,14 @@ export function ProjectManageView({
         </div>
 
         {/* Content beneath banner */}
-        <div className="px-6 pb-6 pt-0 relative">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-12 sm:-mt-14 mb-5">
+        <div className="px-4 pb-5 sm:px-6 sm:pb-6 pt-0 relative">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-10 sm:-mt-14 mb-5">
             {/* Project Brand Image */}
-            <div className="flex items-end gap-4">
+            <div className="flex min-w-0 items-end gap-3.5 sm:gap-4">
               <button
                 type="button"
                 disabled={!canUploadAssetScope(currentRole, "cover")}
-                className="relative group h-24 w-24 sm:h-28 sm:w-28 rounded-3xl bg-card border-4 border-card shadow-xl flex items-center justify-center overflow-hidden shrink-0 cursor-pointer disabled:cursor-default"
+                className="relative group h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl bg-card border-4 border-card shadow-xl flex items-center justify-center overflow-hidden shrink-0 cursor-pointer disabled:cursor-default"
                 onClick={() => {
                   if (canUploadAssetScope(currentRole, "cover")) {
                     fileInputRef.current?.click()
@@ -921,16 +923,16 @@ export function ProjectManageView({
                     className="h-full w-full object-cover"
                   />
                 ) : project.logo === "google" ? (
-                  <GoogleLogo className="w-14 h-14" />
+                  <GoogleLogo className="w-11 h-11 sm:w-14 sm:h-14" />
                 ) : project.logo === "slack" ? (
-                  <SlackLogo className="w-14 h-14" />
+                  <SlackLogo className="w-11 h-11 sm:w-14 sm:h-14" />
                 ) : project.logo === "spotify" ? (
-                  <SpotifyLogo className="w-14 h-14" />
+                  <SpotifyLogo className="w-11 h-11 sm:w-14 sm:h-14" />
                 ) : project.logo === "linear" ? (
-                  <LinearLogo className="w-14 h-14" />
+                  <LinearLogo className="w-11 h-11 sm:w-14 sm:h-14" />
                 ) : (
                   <span
-                    className="text-3xl font-extrabold"
+                    className="text-2xl sm:text-3xl font-extrabold"
                     style={{ color: accentColor }}
                   >
                     {project.name.charAt(0)}
@@ -945,13 +947,13 @@ export function ProjectManageView({
                 )}
               </button>
 
-              <div className="pt-2">
+              <div className="min-w-0 flex-1 pt-2">
                 <div className="flex items-center gap-2.5">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-card-foreground">
+                  <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-card-foreground break-words">
                     {project.name}
                   </h1>
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">
                   {project.company} · Seu cargo: <strong className="text-foreground">{PROJECT_ROLE_LABELS[currentRole]}</strong>
                 </p>
               </div>
@@ -1056,7 +1058,7 @@ export function ProjectManageView({
         }
         className="gap-5"
       >
-        <TabsList className="w-full justify-start overflow-x-auto sm:w-fit">
+        <TabsList className="w-full justify-start overflow-x-auto sm:w-fit [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="tasks" className="gap-2 px-3.5 py-2">
             <CheckCircle2 className="w-4 h-4" />
             <span>Tarefas ({projectTasks.length})</span>
@@ -1119,7 +1121,7 @@ export function ProjectManageView({
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {canInviteRole(currentRole, "colaborador") ? (
                 <>
                   <Button
@@ -1155,7 +1157,7 @@ export function ProjectManageView({
 
           {/* Pending Invitations Section */}
           {project.pendingInvitations && project.pendingInvitations.length > 0 && (
-            <div className="rounded-2xl bg-muted/40 p-5 space-y-3">
+            <div className="rounded-2xl bg-muted/40 p-4 sm:p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-primary" />
@@ -1171,7 +1173,7 @@ export function ProjectManageView({
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {project.pendingInvitations.map((inv) => (
                   <Card key={inv.id} className="rounded-2xl shadow-none">
-                    <CardContent className="flex items-center justify-between gap-3 p-3.5">
+                    <CardContent className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <p className="truncate text-xs font-semibold text-card-foreground">
                           {inv.email}
@@ -1385,9 +1387,9 @@ export function ProjectManageView({
 
           {/* Authoritative RBAC Matrix (Firestore & Cloudflare R2) */}
           <div className="rounded-2xl border border-border/80 bg-card overflow-hidden">
-            <div className="flex items-center justify-between gap-2 border-b border-border/70 px-5 py-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 px-4 py-3 sm:px-5 sm:py-3.5">
               <div className="flex items-center gap-2">
-                <Shield className="size-4 text-primary" />
+                <Shield className="size-4 shrink-0 text-primary" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
                   Matriz de Permissões · Firestore & Cloudflare R2
                 </h4>
@@ -1398,7 +1400,7 @@ export function ProjectManageView({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full min-w-[540px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-semibold text-muted-foreground">
                     <th className="px-4 py-2.5">Recurso / Ação</th>
@@ -1550,7 +1552,7 @@ export function ProjectManageView({
                     )}
                   </div>
 
-                  <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-8">
+                  <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 lg:col-span-8">
                     {activeNote ? (
                       isEditingNote ? (
                         <div className="space-y-3">
@@ -1587,9 +1589,9 @@ export function ProjectManageView({
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          <div className="flex items-start justify-between gap-3 border-b border-border/70 pb-3">
-                            <div>
-                              <h4 className="text-base font-bold text-foreground">
+                          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/70 pb-3">
+                            <div className="min-w-0">
+                              <h4 className="text-base font-bold text-foreground break-words">
                                 {activeNote.title}
                               </h4>
                               <p className="text-xs text-muted-foreground">
@@ -1601,7 +1603,7 @@ export function ProjectManageView({
                               variant="outline"
                               size="sm"
                               onClick={() => startEditingNote(activeNote)}
-                              className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+                              className="h-8 gap-1.5 rounded-xl text-xs font-semibold shrink-0"
                             >
                               <Pencil className="size-3.5" />
                               <span>Editar</span>
@@ -1655,7 +1657,8 @@ export function ProjectManageView({
                       : []),
                   ]}
                   onValueChange={(val) => setUploadScope(val as ProjectAssetScope)}
-                  triggerClassName="h-9 min-h-9 w-40 rounded-xl text-xs"
+                  className="w-full sm:w-auto"
+                  triggerClassName="h-9 min-h-9 w-full sm:w-40 rounded-xl text-xs"
                 />
 
                 <Button

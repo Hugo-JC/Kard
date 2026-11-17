@@ -97,6 +97,7 @@ export function FocusModeView({
   const noiseNodeRef = useRef<AudioNode | null>(null)
   const gainNodeRef = useRef<GainNode | null>(null)
   const switcherRef = useRef<HTMLDivElement>(null)
+  const mobileSwitcherRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -109,7 +110,10 @@ export function FocusModeView({
       }
     }
     const handleClickOutside = (e: MouseEvent) => {
-      if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      const clickedDesktop = switcherRef.current?.contains(target)
+      const clickedMobile = mobileSwitcherRef.current?.contains(target)
+      if (!clickedDesktop && !clickedMobile) {
         setIsTaskSwitcherOpen(false)
       }
     }
@@ -317,7 +321,7 @@ export function FocusModeView({
       className="fixed inset-0 z-50 flex flex-col bg-background text-foreground overflow-y-auto"
     >
       {/* Top Bar: Calm, Minimal, Dual-Theme */}
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-5">
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3.5 sm:gap-4 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <Image
             src="/kard_logo_light.svg"
@@ -475,8 +479,80 @@ export function FocusModeView({
       </header>
 
       {/* Main Focal Workspace: Single Active Task & Timer */}
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-8">
-        <div className="mb-8 flex flex-col items-center text-center space-y-3">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-6 sm:px-6 sm:py-8">
+        {/* Mobile Task Switcher (< md) */}
+        <div className="relative mb-5 md:hidden" ref={mobileSwitcherRef}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsTaskSwitcherOpen(!isTaskSwitcherOpen)}
+            className="h-9 max-w-[calc(100vw-2rem)] gap-2 rounded-xl bg-card px-3 text-xs font-medium"
+          >
+            <ProjectLogoIcon
+              project={activeTimer?.project || "Google"}
+              className="size-3.5 shrink-0"
+            />
+            <span className="shrink-0 font-semibold text-foreground">
+              {activeTimer?.project}
+            </span>
+            <span className="text-muted-foreground">·</span>
+            <span className="truncate text-muted-foreground">
+              {activeTimer?.taskTitle}
+            </span>
+            <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
+          </Button>
+
+          <AnimatePresence>
+            {isTaskSwitcherOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute left-1/2 top-full z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border border-border bg-card p-2 shadow-xl"
+              >
+                <p className="px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground">
+                  Trocar tarefa em foco
+                </p>
+                <div className="space-y-1 max-h-60 overflow-y-auto">
+                  {timers.map((timer) => {
+                    const isSelected = timer.id === activeTimer?.id
+                    return (
+                      <button
+                        key={timer.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTimerId(timer.id)
+                          setIsTaskSwitcherOpen(false)
+                        }}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-colors cursor-pointer",
+                          isSelected
+                            ? "bg-primary-subtle text-primary font-semibold"
+                            : "text-foreground hover:bg-muted"
+                        )}
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          <ProjectLogoIcon
+                            project={timer.project}
+                            className="size-3.5 shrink-0"
+                          />
+                          <span className="truncate">{timer.taskTitle}</span>
+                        </div>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {timer.project}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="mb-6 sm:mb-8 flex flex-col items-center text-center space-y-3">
           {/* Clean project identification: Logo + Name only */}
           <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
             <ProjectLogoIcon
@@ -501,9 +577,9 @@ export function FocusModeView({
         <Tabs
           value={mode}
           onValueChange={handleModeChange}
-          className="mb-6 items-center"
+          className="mb-6 w-full max-w-full items-center"
         >
-          <TabsList>
+          <TabsList className="max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <TabsTrigger value="stopwatch" className="gap-1.5">
               <Clock className="size-3.5" />
               <span>Cronômetro</span>
@@ -520,10 +596,10 @@ export function FocusModeView({
         </Tabs>
 
         {/* Focal Timer Card */}
-        <Card className="w-full max-w-xl p-8 sm:p-10 text-center">
+        <Card className="w-full max-w-xl p-5 sm:p-10 text-center">
           <div
             className={cn(
-              "font-mono text-6xl font-black tabular-nums tracking-tight transition-colors duration-200 sm:text-8xl",
+              "font-mono text-5xl font-black tabular-nums tracking-tight transition-colors duration-200 sm:text-8xl",
               isRunning ? "text-foreground" : "text-muted-foreground"
             )}
           >
@@ -541,7 +617,7 @@ export function FocusModeView({
           </p>
 
           {/* Timer Controls */}
-          <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="mt-7 sm:mt-8 flex items-center justify-center gap-2.5 sm:gap-3">
             <Button
               type="button"
               variant="outline"
@@ -552,7 +628,7 @@ export function FocusModeView({
                   setPomodoroSecondsLeft(mode === "pomodoro25" ? 25 * 60 : 50 * 60)
                 }
               }}
-              className="size-12 rounded-2xl"
+              className="size-11 sm:size-12 rounded-2xl shrink-0"
               title="Reiniciar tempo"
             >
               <RotateCcw className="size-4" />
@@ -564,7 +640,7 @@ export function FocusModeView({
               onClick={() => {
                 if (activeTimer) onToggleTimer(activeTimer.id)
               }}
-              className="h-12 min-w-40 gap-2 rounded-2xl px-6 text-sm font-bold shadow-xs"
+              className="h-11 sm:h-12 min-w-32 sm:min-w-40 gap-2 rounded-2xl px-5 sm:px-6 text-sm font-bold shadow-xs"
             >
               {isRunning ? (
                 <>
@@ -693,7 +769,7 @@ export function FocusModeView({
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteSubtask(sub.id)}
-                            className="size-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                            className="size-7 opacity-75 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-muted-foreground hover:text-destructive"
                             aria-label="Remover micro-passo"
                           >
                             <X className="size-3" />

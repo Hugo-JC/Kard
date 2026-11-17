@@ -86,9 +86,9 @@ export function ProjectCard({
       )}
     >
       {/* Top Header Row */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60 dark:bg-slate-900/80 border border-border/60 shadow-2xs overflow-hidden">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-3.5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted/60 dark:bg-slate-900/80 border border-border/60 shadow-2xs overflow-hidden">
             {project.customImage ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img src={project.customImage} alt={project.name} className="h-full w-full object-cover" />
@@ -106,16 +106,16 @@ export function ProjectCard({
               </span>
             )}
           </div>
-          <div>
-            <h3 className="text-base font-bold text-card-foreground tracking-tight">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-base font-bold text-card-foreground tracking-tight">
               {project.name}
             </h3>
-            <p className="text-xs text-muted-foreground font-medium">{project.company}</p>
+            <p className="truncate text-xs text-muted-foreground font-medium">{project.company}</p>
           </div>
         </div>
 
         {/* Action icons: Star & Three dots */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           <button
             onClick={(event) => {
               event.stopPropagation()

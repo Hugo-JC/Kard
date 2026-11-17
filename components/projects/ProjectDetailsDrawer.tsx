@@ -85,9 +85,9 @@ export function ProjectDetailsDrawer({
             className="fixed inset-y-0 right-0 z-50 w-full sm:max-w-xl md:max-w-2xl bg-card border-l border-border shadow-2xl flex flex-col overflow-hidden text-card-foreground"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border/80">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60 dark:bg-slate-900 border border-border/70">
+            <div className="flex items-center justify-between gap-2 p-4 sm:p-6 border-b border-border/80">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted/60 dark:bg-slate-900 border border-border/70">
                   {project.logo === "google" && <GoogleLogo className="w-7 h-7" />}
                   {project.logo === "slack" && <SlackLogo className="w-7 h-7" />}
                   {project.logo === "spotify" && <SpotifyLogo className="w-7 h-7" />}
@@ -98,15 +98,15 @@ export function ProjectDetailsDrawer({
                     </span>
                   )}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-card-foreground">
+                    <h2 className="truncate text-lg sm:text-xl font-bold text-card-foreground">
                       {project.name}
                     </h2>
                     <button
                       type="button"
                       onClick={() => onToggleStar(project.id)}
-                      className="p-1 rounded-md text-muted-foreground hover:text-amber-400 transition-colors cursor-pointer"
+                      className="p-1 shrink-0 rounded-md text-muted-foreground hover:text-amber-400 transition-colors cursor-pointer"
                       title="Star project"
                     >
                       <Star
@@ -119,13 +119,13 @@ export function ProjectDetailsDrawer({
                       />
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="truncate text-xs text-muted-foreground">
                     {project.company}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
                   onClick={onClose}
@@ -138,7 +138,7 @@ export function ProjectDetailsDrawer({
             </div>
 
             {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
               {/* Tags and Status row */}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -325,9 +325,9 @@ export function ProjectDetailsDrawer({
                     value={newTaskInput}
                     onChange={(e) => setNewTaskInput(e.target.value)}
                     placeholder={`Add new task to ${project.name}...`}
-                    className="flex-1 h-10 rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="flex-1 min-w-0 h-10 rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
-                  <Button type="submit" size="sm" className="gap-1.5 h-10 px-3.5">
+                  <Button type="submit" size="sm" className="gap-1.5 h-10 px-3.5 shrink-0">
                     <Plus className="w-4 h-4" />
                     <span>Add</span>
                   </Button>

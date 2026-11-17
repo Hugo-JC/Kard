@@ -79,7 +79,7 @@ function StageColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[420px] flex-col rounded-2xl p-3 transition-colors",
+        "flex min-h-[160px] md:min-h-[340px] lg:min-h-[420px] flex-col rounded-2xl p-3 transition-colors",
         isOver
           ? "bg-primary-subtle/50 ring-1 ring-primary/30"
           : "bg-muted/35"
@@ -101,7 +101,7 @@ function StageColumn({
           variant="ghost"
           size="icon"
           onClick={() => onQuickAddTask(stage.id)}
-          className="size-7"
+          className="size-9 sm:size-7"
           title={`Adicionar tarefa em ${stage.label}`}
         >
           <Plus className="size-3.5" />
@@ -332,7 +332,8 @@ export function ProjectTaskBoard({
             value={assigneeFilter}
             options={assigneeFilterOptions}
             onValueChange={setAssigneeFilter}
-            triggerClassName="h-9 min-h-9 w-44 rounded-xl text-xs"
+            className="flex-1 min-w-[135px] sm:flex-none sm:w-auto"
+            triggerClassName="h-9 min-h-9 w-full sm:w-44 rounded-xl text-xs"
           />
 
           <ProjectSelectField
@@ -340,7 +341,8 @@ export function ProjectTaskBoard({
             value={priorityFilter}
             options={PRIORITY_FILTER_OPTIONS}
             onValueChange={setPriorityFilter}
-            triggerClassName="h-9 min-h-9 w-40 rounded-xl text-xs"
+            className="flex-1 min-w-[135px] sm:flex-none sm:w-auto"
+            triggerClassName="h-9 min-h-9 w-full sm:w-40 rounded-xl text-xs"
           />
         </div>
 

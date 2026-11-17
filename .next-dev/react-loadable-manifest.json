@@ -47,6 +47,12 @@
       "static/chunks/_app-pages-browser_components_tasks_TaskInspectorDrawer_tsx.js"
     ]
   },
+  "components/auth/FirebaseProvider.tsx -> @/components/auth/LocalMigrationModal": {
+    "id": "components/auth/FirebaseProvider.tsx -> @/components/auth/LocalMigrationModal",
+    "files": [
+      "static/chunks/_app-pages-browser_components_auth_LocalMigrationModal_tsx.js"
+    ]
+  },
   "components/projects/ProjectsView.tsx -> ./NewProjectModal": {
     "id": "components/projects/ProjectsView.tsx -> ./NewProjectModal",
     "files": [

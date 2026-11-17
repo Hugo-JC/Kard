@@ -77,7 +77,7 @@ export function NewTaskModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-bold text-card-foreground block mb-1.5">
               Project
@@ -111,7 +111,7 @@ export function NewTaskModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-bold text-card-foreground block mb-1.5">
               Category Tag

@@ -138,7 +138,7 @@ export function Header({
             onChange={(e) => onSearchChange(e.target.value)}
             aria-label="Search projects, tasks, or team members"
             placeholder="Search projects, tasks, or team members..."
-            className="h-11 w-full rounded-2xl border border-transparent bg-slate-100/70 pl-11 pr-20 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border/60 dark:bg-slate-900/60"
+            className="h-11 w-full rounded-2xl border border-transparent bg-slate-100/70 pl-11 pr-4 sm:pr-20 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border/60 dark:bg-slate-900/60"
           />
           <div className="absolute right-3 hidden sm:flex items-center gap-1 rounded-md bg-card px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-2xs border border-border">
             <span>⌘</span>
@@ -148,7 +148,7 @@ export function Header({
       </div>
 
       {/* Right: Sync status, Focus Mode, Plans, Theme Toggle, Notifications & Google Account */}
-      <div className="order-1 ml-auto flex shrink-0 items-center gap-1.5 sm:order-2 sm:ml-0 sm:gap-2">
+      <div className="order-1 ml-auto flex max-w-full flex-wrap items-center justify-end gap-1.5 sm:order-2 sm:ml-0 sm:shrink-0 sm:flex-nowrap sm:gap-2">
         {isOffline ? (
           <span
             title="Sem conexão com a internet — alterações continuam salvas localmente"
@@ -239,7 +239,7 @@ export function Header({
 
           {/* Notification Dropdown with GitHub-style Colaborar / Negar cards */}
           {isNotifOpen && (
-            <div className="absolute right-0 mt-3 w-[min(26rem,calc(100vw-1.5rem))] rounded-3xl border border-border bg-card p-4 text-card-foreground shadow-2xl animate-in fade-in zoom-in-95 duration-150 z-50">
+            <div className="fixed left-3 right-3 top-[4.5rem] z-50 flex max-h-[calc(100dvh-6rem)] flex-col rounded-3xl border border-border bg-card p-4 text-card-foreground shadow-2xl animate-in fade-in zoom-in-95 duration-150 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[min(26rem,calc(100vw-2rem))] sm:max-h-none">
               <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-bold text-card-foreground">Caixa de Notificações</h4>
@@ -423,7 +423,7 @@ export function Header({
 
             {/* Profile Dropdown */}
             {isProfileOpen && (
-              <div className="absolute right-0 mt-3 w-72 rounded-3xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground z-50">
+              <div className="fixed left-3 right-3 top-[4.5rem] z-50 max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-3xl bg-card p-3 shadow-xl border border-border animate-in fade-in zoom-in-95 duration-150 text-card-foreground sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-3 sm:w-72 sm:max-h-none">
                 <div className="flex items-center gap-3 p-2 border-b border-border pb-3">
                   <div className="relative">
                     <Avatar src={avatarSrc} fallback={avatarFallback} size="md" />

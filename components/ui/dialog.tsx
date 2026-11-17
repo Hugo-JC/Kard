@@ -35,7 +35,7 @@ export function Dialog({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:items-center sm:p-6 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -55,7 +55,7 @@ export function Dialog({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", duration: 0.3, bounce: 0 }}
             className={cn(
-              "relative z-10 w-full max-w-lg overflow-hidden rounded-3xl bg-card p-6 shadow-2xl border border-border text-card-foreground",
+              "relative z-10 my-auto w-full max-w-lg max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-3xl bg-card p-4 sm:p-6 shadow-2xl border border-border text-card-foreground",
               className
             )}
           >
@@ -63,16 +63,16 @@ export function Dialog({
               type="button"
               aria-label="Fechar janela"
               onClick={() => onOpenChange(false)}
-              className="absolute right-5 top-5 rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              className="absolute right-4 top-4 sm:right-5 sm:top-5 rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             {title && (
               <div className="mb-4 pr-8">
-                <h3 className="text-xl font-bold text-card-foreground">{title}</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-card-foreground">{title}</h3>
                 {description && (
-                  <p className="text-sm text-muted-foreground mt-1">{description}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">{description}</p>
                 )}
               </div>
             )}

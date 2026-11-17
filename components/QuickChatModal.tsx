@@ -132,7 +132,7 @@ export function QuickChatModal({
       className="max-w-lg p-0 overflow-hidden bg-card text-card-foreground border-border"
     >
       {/* Chat Header */}
-      <div className="flex items-center justify-between gap-3 bg-muted/40 px-5 py-4 border-b border-border">
+      <div className="flex items-center justify-between gap-2 bg-muted/40 pl-4 pr-12 py-3.5 sm:pl-5 sm:pr-14 sm:py-4 border-b border-border">
         <div className="flex items-center gap-3 min-w-0">
           <MemberAvatarWithStatus
             avatar={message.avatar}
@@ -147,22 +147,22 @@ export function QuickChatModal({
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
               <span
                 className={cn(
-                  "h-2 w-2 rounded-full",
+                  "h-2 w-2 shrink-0 rounded-full",
                   MEMBER_STATUS_CONFIG[themStatus].dot
                 )}
               />
-              <span>
+              <span className="truncate">
                 {MEMBER_STATUS_CONFIG[themStatus].label} · {message.role}
               </span>
             </div>
           </div>
         </div>
 
-        <MemberStatusBadge status={userStatus} size="sm" />
+        <MemberStatusBadge status={userStatus} size="sm" className="shrink-0" />
       </div>
 
       {/* Borderless Stream Area */}
-      <div className="py-3 max-h-80 overflow-y-auto bg-card min-h-[220px]">
+      <div className="py-3 max-h-[55dvh] sm:max-h-80 overflow-y-auto bg-card min-h-[200px] sm:min-h-[220px]">
         {chatLog.map((chat, idx) => {
           const prev = idx > 0 ? chatLog[idx - 1] : null
           const isGrouped = Boolean(prev && prev.authorName === chat.authorName)
@@ -267,8 +267,8 @@ export function QuickChatModal({
         <Input
           value={replyText}
           onChange={(e) => setReplyText(e.target.value)}
-          placeholder={`Responder para ${message.user}... (@nome, #arquivo, Markdown)`}
-          className="bg-card text-xs h-9 border-border flex-1"
+          placeholder={`Responder para ${message.user}...`}
+          className="bg-card text-xs h-9 border-border flex-1 min-w-0"
           autoFocus
         />
         <button

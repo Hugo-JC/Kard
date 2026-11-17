@@ -251,31 +251,31 @@ function TaskInspectorContent({
         className="relative z-10 flex h-full w-full max-w-2xl flex-col border-l border-border bg-card text-card-foreground shadow-2xl"
       >
         {/* Top Bar */}
-        <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
-          <div className="flex items-center gap-2.5 min-w-0 text-xs text-muted-foreground">
-            <span className="font-mono font-bold tabular-nums text-foreground">
+        <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 text-xs text-muted-foreground">
+            <span className="font-mono font-bold tabular-nums text-foreground shrink-0">
               #{task.number}
             </span>
             <span>·</span>
-            <span className="inline-flex items-center gap-1.5 font-semibold text-foreground truncate">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-foreground min-w-0 truncate">
               <ProjectLogoIcon project={task.project} className="size-3.5 shrink-0" />
               <span className="truncate">{task.project}</span>
             </span>
             {task.dueDate && (
               <>
-                <span>·</span>
-                <span className="font-mono tabular-nums">{task.dueDate}</span>
+                <span className="hidden sm:inline">·</span>
+                <span className="hidden font-mono tabular-nums sm:inline">{task.dueDate}</span>
               </>
             )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsScheduleModalOpen(true)}
-              className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+              className="h-8 gap-1.5 rounded-xl px-2.5 sm:px-3 text-xs font-semibold"
               title="Agendar prazo no Google Calendar"
             >
               <CalendarPlus className="size-3.5 text-primary" />
@@ -287,7 +287,7 @@ function TaskInspectorContent({
               variant={task.completed ? "secondary" : "outline"}
               size="sm"
               onClick={() => onToggleTask(task.id)}
-              className="h-8 gap-1.5 rounded-xl text-xs font-semibold"
+              className="h-8 gap-1.5 rounded-xl px-2.5 sm:px-3 text-xs font-semibold"
             >
               <Check
                 className={cn(
@@ -312,7 +312,7 @@ function TaskInspectorContent({
         </div>
 
         {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-6">
           {/* Title */}
           <div className="space-y-2">
             <input
@@ -650,9 +650,9 @@ function TaskInspectorContent({
                 value={newChecklistText}
                 onChange={(e) => setNewChecklistText(e.target.value)}
                 placeholder="Adicionar item ao checklist..."
-                className="h-9 flex-1 rounded-xl text-xs"
+                className="h-9 min-w-0 flex-1 rounded-xl text-xs"
               />
-              <Button type="submit" variant="outline" size="sm" className="h-9 gap-1 rounded-xl text-xs font-semibold">
+              <Button type="submit" variant="outline" size="sm" className="h-9 shrink-0 gap-1 rounded-xl px-3 text-xs font-semibold">
                 <Plus className="size-3.5" />
                 <span>Adicionar</span>
               </Button>
@@ -700,9 +700,9 @@ function TaskInspectorContent({
                 value={newCommentText}
                 onChange={(e) => setNewCommentText(e.target.value)}
                 placeholder="Escreva um comentário ou atualização..."
-                className="h-9 flex-1 rounded-xl text-xs"
+                className="h-9 min-w-0 flex-1 rounded-xl text-xs"
               />
-              <Button type="submit" size="sm" className="h-9 gap-1.5 rounded-xl text-xs font-semibold">
+              <Button type="submit" size="sm" className="h-9 shrink-0 gap-1.5 rounded-xl px-3 text-xs font-semibold">
                 <Send className="size-3.5" />
                 <span>Enviar</span>
               </Button>

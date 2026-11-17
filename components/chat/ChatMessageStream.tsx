@@ -14,6 +14,7 @@ import {
   Rows3,
   AlignJustify,
   Settings2,
+  MoreHorizontal,
 } from "lucide-react"
 import {
   Member,
@@ -85,6 +86,7 @@ export function ChatMessageStream({
   const [inputText, setInputText] = useState("")
   const [replyTarget, setReplyTarget] = useState<ProjectChatMessage | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [activeTouchMsgId, setActiveTouchMsgId] = useState<string | null>(null)
   const [activeAutocompleteIndex, setActiveAutocompleteIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -200,7 +202,9 @@ export function ChatMessageStream({
     <div
       className={cn(
         "rounded-2xl bg-card border border-border overflow-hidden flex flex-col",
-        compactHeight ? "h-[480px]" : "h-[600px]"
+        compactHeight
+          ? "h-[min(65dvh,480px)] sm:h-[480px]"
+          : "h-[min(72dvh,560px)] sm:h-[600px]"
       )}
     >
       {/* Channel Header */}
@@ -338,13 +342,35 @@ export function ChatMessageStream({
                 rowHighlightClass
               )}
             >
-              {/* Floating Hover Quick Action Bar */}
-              <div className="pointer-events-none absolute -top-3 right-4 z-10 hidden items-center gap-0.5 rounded-xl border border-border bg-card/95 p-0.5 shadow-md backdrop-blur-xs group-hover:pointer-events-auto group-hover:flex">
+              {/* Mobile Touch Quick Action Trigger */}
+              <button
+                type="button"
+                onClick={() =>
+                  setActiveTouchMsgId((prev) => (prev === msg.id ? null : msg.id))
+                }
+                aria-label="Ações da mensagem"
+                className="absolute right-2.5 top-1 z-10 flex size-7 items-center justify-center rounded-lg text-muted-foreground/70 hover:bg-muted hover:text-foreground sm:hidden cursor-pointer"
+              >
+                <MoreHorizontal className="size-3.5" />
+              </button>
+
+              {/* Floating Hover / Touch Quick Action Bar */}
+              <div
+                className={cn(
+                  "absolute -top-3 right-10 sm:right-4 z-10 items-center gap-0.5 rounded-xl border border-border bg-card/95 p-0.5 shadow-md backdrop-blur-xs",
+                  activeTouchMsgId === msg.id
+                    ? "flex pointer-events-auto"
+                    : "pointer-events-none hidden sm:group-hover:pointer-events-auto sm:group-hover:flex"
+                )}
+              >
                 {QUICK_REACTIONS.map((emoji) => (
                   <button
                     key={emoji}
                     type="button"
-                    onClick={() => onToggleReaction(msg.id, emoji)}
+                    onClick={() => {
+                      onToggleReaction(msg.id, emoji)
+                      setActiveTouchMsgId(null)
+                    }}
                     className="flex size-7 items-center justify-center rounded-lg text-xs hover:bg-muted transition-colors cursor-pointer"
                     title={`Reagir com ${emoji}`}
                   >
@@ -356,6 +382,7 @@ export function ChatMessageStream({
                   type="button"
                   onClick={() => {
                     setReplyTarget(msg)
+                    setActiveTouchMsgId(null)
                     inputRef.current?.focus()
                   }}
                   className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
@@ -365,7 +392,10 @@ export function ChatMessageStream({
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleCopyMessage(msg.id, msg.text)}
+                  onClick={() => {
+                    handleCopyMessage(msg.id, msg.text)
+                    setActiveTouchMsgId(null)
+                  }}
                   className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                   title="Copiar texto"
                 >
@@ -396,8 +426,8 @@ export function ChatMessageStream({
 
               {viewMode === "compact" ? (
                 /* COMPACT MODE: No avatars, inline timestamp + author + message */
-                <div className="flex items-baseline gap-2 pl-1 text-[13px] leading-relaxed">
-                  <span className="w-16 shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/75">
+                <div className="flex items-baseline gap-1.5 sm:gap-2 pl-1 pr-7 sm:pr-0 text-[13px] leading-relaxed">
+                  <span className="w-12 sm:w-16 shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/75">
                     {msg.time.replace("Hoje às ", "")}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -430,7 +460,7 @@ export function ChatMessageStream({
                 </div>
               ) : (
                 /* COZY MODE: 40x40 Avatar on left, name + role color + timestamp, borderless content below */
-                <div className="flex items-start gap-3.5">
+                <div className="flex items-start gap-2.5 sm:gap-3.5 pr-7 sm:pr-0">
                   {isGrouped ? (
                     <div className="w-10 shrink-0 pt-0.5 text-right opacity-0 transition-opacity group-hover:opacity-100">
                       <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
@@ -721,22 +751,23 @@ export function ChatMessageStream({
                   if (selected) applyAutocomplete(selected.insertValue)
                 }
               }}
-              placeholder={`Conversar em #${channelName} · use @membro, #arquivo ou Markdown...`}
-              className="flex-1 h-10 rounded-xl border border-input bg-background px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder={`Conversar em #${channelName}...`}
+              className="flex-1 min-w-0 h-10 rounded-xl border border-input bg-background px-3 sm:px-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
 
             <Button
               type="submit"
               size="sm"
               disabled={!inputText.trim()}
-              className="h-10 px-4 gap-1.5 rounded-xl shrink-0"
+              aria-label="Enviar mensagem"
+              className="h-10 px-3 sm:px-4 gap-1.5 rounded-xl shrink-0"
             >
-              <span>Enviar</span>
+              <span className="hidden sm:inline">Enviar</span>
               <Send className="w-3.5 h-3.5" />
             </Button>
           </div>
 
-          <p className="px-1 text-[10.5px] text-muted-foreground/85">
+          <p className="hidden sm:block px-1 text-[10.5px] text-muted-foreground/85">
             Suporta <code className="font-mono">**negrito**</code>,{" "}
             <code className="font-mono">*itálico*</code>,{" "}
             <code className="font-mono">__sublinhado__</code>,{" "}

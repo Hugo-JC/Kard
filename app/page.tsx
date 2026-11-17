@@ -1547,7 +1547,7 @@ export default function DashboardPage() {
     : null
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-200 p-3 sm:p-4 lg:p-6">
+    <div className="min-h-screen overflow-x-clip bg-background text-foreground transition-colors duration-200 p-3 sm:p-4 lg:p-6">
       <div className="mx-auto flex max-w-[1560px] items-start gap-4 lg:gap-5">
         {/* 1. Sidebar Navigation */}
         <Sidebar
@@ -1567,7 +1567,7 @@ export default function DashboardPage() {
         />
 
         {/* 2. Main Content Area */}
-        <main className="flex-1 min-w-0 space-y-5">
+        <main className="flex-1 min-w-0 space-y-4 sm:space-y-5">
           {/* Header Bar */}
           <Header
             searchQuery={searchQuery}
@@ -1733,9 +1733,9 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start"
               >
-                <div className="lg:col-span-7">
+                <div className="col-span-1 min-w-0 lg:col-span-7">
                   <MyTasksCard
                     tasks={tasks}
                     onToggleTask={handleToggleTask}
@@ -1745,7 +1745,7 @@ export default function DashboardPage() {
                     onReorderTasks={handleReorderTasks}
                   />
                 </div>
-                <div className="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-5 items-start">
+                <div className="col-span-1 min-w-0 lg:col-span-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 items-start">
                   <TimeTrackerCard
                     timers={timers}
                     onToggleTimer={handleToggleTimer}
@@ -1769,9 +1769,9 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start"
               >
-                <div className="lg:col-span-7">
+                <div className="col-span-1 min-w-0 lg:col-span-7">
                   <CalendarWidget
                     events={mergedCalendarEvents}
                     onAddEvent={handleAddCalendarEvent}
@@ -1781,7 +1781,7 @@ export default function DashboardPage() {
                     isSyncingGoogleCalendar={isSyncingGoogleCalendar}
                   />
                 </div>
-                <div className="lg:col-span-5">
+                <div className="col-span-1 min-w-0 lg:col-span-5">
                   <MyTasksCard
                     tasks={tasks}
                     onToggleTask={handleToggleTask}
@@ -1799,9 +1799,9 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-5"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start"
               >
-                <div className="lg:col-span-8">
+                <div className="col-span-1 min-w-0 lg:col-span-8">
                   <TimeTrackerCard
                     timers={timers}
                     onToggleTimer={handleToggleTimer}
@@ -1809,7 +1809,7 @@ export default function DashboardPage() {
                     onOpenFocusMode={() => setIsFocusMode(true)}
                   />
                 </div>
-                <div className="lg:col-span-4">
+                <div className="col-span-1 min-w-0 lg:col-span-4">
                   <MessageWidget
                     messages={messages}
                     onSelectMessage={handleOpenChat}
@@ -1839,7 +1839,7 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="rounded-[28px] bg-card p-8 border border-border space-y-6 max-w-3xl"
+                className="rounded-3xl sm:rounded-[28px] bg-card p-4 sm:p-8 border border-border space-y-5 sm:space-y-6 max-w-3xl"
               >
                 <div>
                   <h2 className="text-xl font-bold text-card-foreground">Configurações do Workspace</h2>
@@ -1849,7 +1849,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Global User Profile Status Selector */}
-                <div className="rounded-2xl border border-border/80 bg-muted/25 p-5 space-y-4">
+                <div className="rounded-2xl border border-border/80 bg-muted/25 p-4 sm:p-5 space-y-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-bold text-card-foreground">
@@ -1904,12 +1904,12 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="divide-y divide-border/60">
-                  <div className="py-4 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">Aparência da Interface</p>
                       <p className="text-xs text-muted-foreground">Alternar entre Modo Claro e Modo Escuro Obsidian.</p>
                     </div>
-                    <Button type="button" onClick={toggleTheme} variant="outline" size="sm" className="gap-2 cursor-pointer rounded-xl">
+                    <Button type="button" onClick={toggleTheme} variant="outline" size="sm" className="gap-2 cursor-pointer rounded-xl shrink-0">
                       <Sun className="hidden dark:block w-4 h-4 text-amber-400" />
                       <Moon className="block dark:hidden w-4 h-4 text-blue-500" />
                       <span className="capitalize">
@@ -1919,8 +1919,8 @@ export default function DashboardPage() {
                     </Button>
                   </div>
 
-                  <div className="py-4 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">Automações em Texto Natural</p>
                       <p className="text-xs text-muted-foreground">
                         {automationRules.filter((r) => r.enabled).length} regras ativas executando automaticamente no navegador.
@@ -1931,15 +1931,15 @@ export default function DashboardPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setActiveNav("automations")}
-                      className="gap-1.5 rounded-xl text-xs font-semibold"
+                      className="gap-1.5 rounded-xl text-xs font-semibold shrink-0"
                     >
                       <Zap className="w-3.5 h-3.5 text-primary" />
                       <span>Gerenciar regras</span>
                     </Button>
                   </div>
 
-                  <div className="py-4 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">
                         Firebase Auth & Cloud Firestore
                       </p>
@@ -1963,8 +1963,8 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  <div className="py-4 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">
                         Cloudflare R2 (Arquivos Privados)
                       </p>
@@ -1985,8 +1985,8 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className="py-4 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">
                         Google Calendar & Google Drive (OAuth)
                       </p>
@@ -2022,8 +2022,8 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  <div className="py-4 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">Persistência Local-First Offline</p>
                       <p className="text-xs text-muted-foreground">
                         {isOffline
@@ -2039,8 +2039,8 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className="py-4 flex items-center justify-between gap-4">
-                    <div>
+                  <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">Restaurar Ambiente de Demonstração</p>
                       <p className="text-xs text-muted-foreground">
                         Limpa alterações salvas localmente no navegador e restaura os dados iniciais do Kard.
@@ -2051,7 +2051,7 @@ export default function DashboardPage() {
                       variant="outline"
                       size="sm"
                       onClick={handleResetDemoWorkspace}
-                      className="gap-1.5 rounded-xl text-xs font-semibold text-danger hover:text-danger"
+                      className="gap-1.5 rounded-xl text-xs font-semibold text-danger hover:text-danger shrink-0"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       <span>Restaurar padrão</span>
@@ -2067,7 +2067,7 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-5"
+                className="space-y-4 sm:space-y-5"
               >
                 <MorningBriefingCard
                   tasks={tasks}
@@ -2083,9 +2083,9 @@ export default function DashboardPage() {
                   onMarkNotificationRead={handleMarkNotificationRead}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-start">
-                  {/* COLUMN 1: Active Projects — lg:col-span-4 */}
-                  <div className="space-y-5 lg:col-span-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
+                  {/* COLUMN 1: Active Projects — Mobile: col-span-1 (order-1), Desktop: lg:col-span-4 */}
+                  <div className="col-span-1 min-w-0 space-y-4 sm:space-y-5 md:col-span-1 lg:col-span-4">
                     {displayProjects.map((project) => (
                       <ProjectCard
                         key={project.id}
@@ -2109,8 +2109,8 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* COLUMN 2: My Tasks & Time Manage (Chronometer) — lg:col-span-4 */}
-                  <div className="space-y-5 lg:col-span-4">
+                  {/* COLUMN 2: My Tasks & Time Manage (Chronometer) — Mobile: col-span-1 (order-2), Desktop: lg:col-span-4 */}
+                  <div className="col-span-1 min-w-0 space-y-4 sm:space-y-5 md:col-span-1 lg:col-span-4">
                     <MyTasksCard
                       tasks={displayTasks}
                       onToggleTask={handleToggleTask}
@@ -2128,21 +2128,25 @@ export default function DashboardPage() {
                     />
                   </div>
 
-                  {/* COLUMN 3: Calendar & Messages — lg:col-span-4 */}
-                  <div className="md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-5 items-start">
-                    <CalendarWidget
-                      events={mergedCalendarEvents}
-                      onAddEvent={handleAddCalendarEvent}
-                      onSyncGoogleCalendar={() =>
-                        workspaceAccessToken && syncGoogleCalendar(workspaceAccessToken)
-                      }
-                      isSyncingGoogleCalendar={isSyncingGoogleCalendar}
-                    />
+                  {/* COLUMN 3: Calendar & Messages — Mobile: col-span-1 (order-3), Tablet: md:col-span-2 (2 cols), Desktop: lg:col-span-4 */}
+                  <div className="col-span-1 min-w-0 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 items-start">
+                    <div className="col-span-1 min-w-0">
+                      <CalendarWidget
+                        events={mergedCalendarEvents}
+                        onAddEvent={handleAddCalendarEvent}
+                        onSyncGoogleCalendar={() =>
+                          workspaceAccessToken && syncGoogleCalendar(workspaceAccessToken)
+                        }
+                        isSyncingGoogleCalendar={isSyncingGoogleCalendar}
+                      />
+                    </div>
 
-                    <MessageWidget
-                      messages={messages}
-                      onSelectMessage={handleOpenChat}
-                    />
+                    <div className="col-span-1 min-w-0">
+                      <MessageWidget
+                        messages={messages}
+                        onSelectMessage={handleOpenChat}
+                      />
+                    </div>
                   </div>
                 </div>
               </motion.div>

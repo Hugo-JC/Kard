@@ -78,7 +78,7 @@ export function PricingPlansModal({
     <Dialog
       open={open}
       onOpenChange={handleClose}
-      className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 sm:p-8"
+      className="max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-8"
     >
       {checkoutSuccess ? (
         <div className="py-8 text-center space-y-6">
@@ -488,11 +488,11 @@ export function PricingPlansModal({
                 transition={{ duration: 0.16 }}
               >
                 <Card>
-                  <CardContent className="p-5 overflow-x-auto space-y-3">
+                  <CardContent className="p-4 sm:p-5 overflow-x-auto space-y-3">
                     <h4 className="text-sm font-bold text-foreground">
                       Comparativo de capacidades
                     </h4>
-                    <table className="w-full text-left text-xs border-collapse">
+                    <table className="w-full min-w-[460px] text-left text-xs border-collapse">
                       <thead>
                         <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                           <th className="py-2 pr-4">Recurso</th>
@@ -628,7 +628,7 @@ export function PricingPlansModal({
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Input
                   value={couponCode}
                   onChange={(e) => {
@@ -637,7 +637,7 @@ export function PricingPlansModal({
                     setCouponApplied(next === "FIRSTKARD50")
                   }}
                   aria-label="Cupom de desconto"
-                  className="h-9 w-40 rounded-xl bg-card font-mono text-xs font-semibold uppercase"
+                  className="h-9 w-36 sm:w-40 rounded-xl bg-card font-mono text-xs font-semibold uppercase"
                 />
                 {couponApplied ? (
                   <Badge variant="success">Cupom -50% aplicado</Badge>
@@ -648,7 +648,7 @@ export function PricingPlansModal({
                 )}
               </div>
 
-              <div className="flex items-center justify-between gap-4 sm:justify-end">
+              <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end sm:gap-4">
                 <div className="text-left sm:text-right">
                   <span className="block text-[11px] text-muted-foreground">
                     Total estimado
