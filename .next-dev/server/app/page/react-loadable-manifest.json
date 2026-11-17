@@ -3,7 +3,7 @@
     "id": "[project]/components/NewTaskModal.tsx [app-client] (ecmascript, next/dynamic entry)",
     "files": [
       "static/chunks/components_NewTaskModal_tsx_573c4fb0._.js",
-      "static/chunks/components_NewTaskModal_tsx_7f07b871._.js"
+      "static/chunks/components_NewTaskModal_tsx_d105b485._.js"
     ]
   },
   "[project]/components/focus/FocusModeView.tsx [app-client] (ecmascript, next/dynamic entry)": {
@@ -11,7 +11,7 @@
     "files": [
       "static/chunks/components_f7754150._.js",
       "static/chunks/node_modules_90263e60._.js",
-      "static/chunks/components_focus_FocusModeView_tsx_7f07b871._.js"
+      "static/chunks/components_focus_FocusModeView_tsx_d105b485._.js"
     ]
   },
   "[project]/components/billing/PricingPlansModal.tsx [app-client] (ecmascript, next/dynamic entry)": {
@@ -19,30 +19,37 @@
     "files": [
       "static/chunks/components_7b4502f3._.js",
       "static/chunks/node_modules_lucide-react_dist_esm_icons_0ced6fcf._.js",
-      "static/chunks/components_billing_PricingPlansModal_tsx_7f07b871._.js"
+      "static/chunks/components_billing_PricingPlansModal_tsx_d105b485._.js"
     ]
   },
   "[project]/components/QuickChatModal.tsx [app-client] (ecmascript, next/dynamic entry)": {
     "id": "[project]/components/QuickChatModal.tsx [app-client] (ecmascript, next/dynamic entry)",
     "files": [
       "static/chunks/_bd34b5a6._.js",
-      "static/chunks/components_QuickChatModal_tsx_7f07b871._.js"
+      "static/chunks/components_QuickChatModal_tsx_d105b485._.js"
     ]
   },
   "[project]/components/automations/AutomationsPanel.tsx [app-client] (ecmascript, next/dynamic entry)": {
     "id": "[project]/components/automations/AutomationsPanel.tsx [app-client] (ecmascript, next/dynamic entry)",
     "files": [
       "static/chunks/_cf2b5a57._.js",
-      "static/chunks/components_automations_AutomationsPanel_tsx_7f07b871._.js"
+      "static/chunks/components_automations_AutomationsPanel_tsx_d105b485._.js"
+    ]
+  },
+  "[project]/components/CommandPalette.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/CommandPalette.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_CommandPalette_tsx_7f0bc8d2._.js",
+      "static/chunks/components_CommandPalette_tsx_d105b485._.js"
     ]
   },
   "[project]/components/projects/ProjectsView.tsx [app-client] (ecmascript, next/dynamic entry)": {
     "id": "[project]/components/projects/ProjectsView.tsx [app-client] (ecmascript, next/dynamic entry)",
     "files": [
-      "static/chunks/components_projects_76ff0fc5._.js",
+      "static/chunks/components_projects_143f6f2f._.js",
       "static/chunks/components_projects_92f9f502._.js",
       "static/chunks/node_modules_lucide-react_dist_esm_icons_594048dc._.js",
-      "static/chunks/components_projects_ProjectsView_tsx_7f07b871._.js"
+      "static/chunks/components_projects_ProjectsView_tsx_d105b485._.js"
     ]
   },
   "[project]/components/tasks/TaskInspectorDrawer.tsx [app-client] (ecmascript, next/dynamic entry)": {
@@ -53,14 +60,15 @@
       "static/chunks/node_modules_@base-ui_react_40f82973._.js",
       "static/chunks/node_modules_@floating-ui_61350371._.js",
       "static/chunks/node_modules_62143c09._.js",
-      "static/chunks/components_tasks_TaskInspectorDrawer_tsx_7f07b871._.js"
+      "static/chunks/components_tasks_TaskInspectorDrawer_tsx_d105b485._.js"
     ]
   },
-  "[project]/components/CommandPalette.tsx [app-client] (ecmascript, next/dynamic entry)": {
-    "id": "[project]/components/CommandPalette.tsx [app-client] (ecmascript, next/dynamic entry)",
+  "[project]/components/auth/LocalMigrationModal.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/auth/LocalMigrationModal.tsx [app-client] (ecmascript, next/dynamic entry)",
     "files": [
-      "static/chunks/components_CommandPalette_tsx_7f0bc8d2._.js",
-      "static/chunks/components_CommandPalette_tsx_7f07b871._.js"
+      "static/chunks/node_modules_5fb909f3._.js",
+      "static/chunks/_81296121._.js",
+      "static/chunks/components_auth_LocalMigrationModal_tsx_08594987._.js"
     ]
   }
 }
