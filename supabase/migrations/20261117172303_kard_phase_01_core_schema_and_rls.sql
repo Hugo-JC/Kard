@@ -1,0 +1,7 @@
+-- IMPORTANT: The matching migration has already been applied to the remote Kard project.
+-- Do not apply this placeholder to any database.
+-- Before merging this branch, generate the authoritative SQL from the linked project:
+--   supabase link --project-ref cdkcgdyvpohknybkxhqq
+--   supabase db pull kard_phase_01_core_schema_and_rls --local --yes
+-- Replace this placeholder with the generated SQL and verify it on a clean local database.
+-- The live migration version is 20261117172303.
