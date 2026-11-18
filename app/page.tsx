@@ -1634,7 +1634,7 @@ export default function DashboardPage() {
           )}
 
           {/* Active Search Notification Banner if searching on dashboard */}
-          {query && activeNav === "dashboard" && (
+          {query && (activeNav === "dashboard" || activeNav === "projects" || activeNav === "my-tasks") && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card px-5 py-3 border border-border shadow-xs text-xs text-muted-foreground">
               <div className="flex flex-wrap items-center gap-2.5">
                 <span>
@@ -1682,7 +1682,7 @@ export default function DashboardPage() {
                 transition={{ duration: 0.2 }}
               >
                 <ProjectsView
-                  projects={projects}
+                  projects={displayProjects}
                   tasks={tasks}
                   currentTier={userTier}
                   userStatus={userStatus}
@@ -1736,7 +1736,7 @@ export default function DashboardPage() {
               >
                 <div className="col-span-1 min-w-0 lg:col-span-7">
                   <MyTasksCard
-                    tasks={tasks}
+                    tasks={displayTasks}
                     onToggleTask={handleToggleTask}
                     onSelectTask={(task) => setSelectedTaskId(task.id)}
                     onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
