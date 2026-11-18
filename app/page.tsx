@@ -1682,7 +1682,7 @@ export default function DashboardPage() {
                 transition={{ duration: 0.2 }}
               >
                 <ProjectsView
-                  projects={displayProjects}
+                  projects={query ? projects.filter((project) => project.name.toLowerCase().includes(query) || project.company.toLowerCase().includes(query)) : projects}
                   tasks={tasks}
                   currentTier={userTier}
                   userStatus={userStatus}
