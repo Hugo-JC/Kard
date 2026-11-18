@@ -57,6 +57,7 @@ Requisitos: Node.js 22 e npm.
 
 Consultar:
 - [Estado da Fase 01](./FASE_01_STATUS.md)
+- [Estado e critérios da Fase 02 — Frontend](./FASE_02_FRONTEND_STATUS.md)
 - [Plano técnico da Fase 01](./FASE_01_PREPARACAO_E_PLANO.md)
 - [Migrações Supabase](./supabase/README.md)
 
