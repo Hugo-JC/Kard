@@ -35,8 +35,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kard — Task & Productivity SaaS Dashboard',
-    description: 'Modern, minimalist task management dashboard featuring interactive bento grid, time tracking, calendar, and team workflows.',
+    title: 'Kard — Gestão de tarefas e produtividade',
+    description: 'Plataforma de gestão de tarefas, projetos, tempo e produtividade para equipas.',
   },
 };
 
