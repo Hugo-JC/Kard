@@ -1,4 +1,3 @@
-// Generated from the Kard Supabase project. Do not edit manually.
 export type Json =
   | string
   | number
