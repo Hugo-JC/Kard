@@ -1,0 +1,57 @@
+# Kard — Fase 02: Frontend e experiência de utilização
+
+Estado: **em execução**  
+Branch: `feat/phase-02-frontend-experience`  
+Base: `main` (Fase 01 integrada)
+
+## Fontes de design e produto
+
+Os documentos existentes em `public/assets/aistudio/` são a fonte de verdade para esta fase:
+
+- `00-CONTEXT-AND-RULES.md`: preservar o produto existente, não criar botões sem ação, não apresentar mocks como reais, suportar acessibilidade e estados completos.
+- `01-DECISION-REGISTER.md`: tema dark minimalista, acento azul, densidade profissional; pesquisa/Command Palette híbridas; prioridades e navegação.
+- `02-PRODUCT-SPEC.md`: tarefas, projetos, calendário, colaboração, relatórios e integrações com contratos funcionais.
+- `03-UX-AND-DESIGN.md`: padrões de interação inspirados no Linear, sidebar consistente, detalhe contextual, responsividade, acessibilidade WCAG 2.2 AA e movimento reduzido.
+- `06-QUALITY-AND-ACCEPTANCE.md`: loading, empty, error, success, disabled e no-permission; validar desktop 1440×900 e mobile 390×844.
+- `07-GOOGLE-AI-STUDIO-MASTER-PROMPT.md`: manter stack e funcionalidades atuais, implementar só o âmbito aprovado.
+- `estrategia_rival_trello_notion.md`: combinar Kanban simples, conteúdo/documentação organizado e foco/tempo integrados sem aumentar a curva de aprendizagem.
+
+As referências Linear, Notion e Trello são padrões de produto e interação; não copiar marcas, assets, texto ou ecrãs literalmente.
+
+## Direção de experiência
+
+- Linear: velocidade, hierarquia, atalhos e navegação previsível.
+- Notion: organização de conteúdo e estrutura flexível.
+- Trello: Kanban claro, cartões informativos e drag-and-drop intuitivo.
+- Identidade Kard: superfícies neutras, azul como acento, tema escuro por omissão, densidade equilibrada, animações discretas e acessibilidade.
+- Manter o tema claro disponível.
+- Respeitar `prefers-reduced-motion`; evitar blur e sombras decorativas excessivas.
+
+## Primeira entrega implementada nesta branch
+
+- Sidebar redesenhada com grupos de navegação em português, estado ativo animado, melhor hierarquia e drawer móvel animado.
+- Command Palette redesenhada com pesquisa de comandos, categorias, descrições, navegação por setas e Enter, e estados vazios.
+- Header refinado, pesquisa localizada, acessibilidade e remoção de promoções de preço não aprovadas.
+- Tema escuro definido como padrão, mantendo a escolha local do utilizador e o tema claro.
+- Tokens globais de motion, seleção, foco, scrollbars e respeito por redução de movimento.
+- Página de definições atualizada para deixar claro que Supabase Storage é o destino e que a integração de uploads/downloads ainda está pendente; removida a dependência visual de configuração R2.
+- Textos principais da pesquisa e estados vazios do dashboard localizados.
+
+## Limites desta primeira entrega
+
+A aplicação ainda usa Firebase Auth/Firestore em fluxos existentes. Esta fase visual não deve fingir que a migração do backend está concluída. O estado de armazenamento na UI indica explicitamente integração pendente.
+
+A pesquisa global avançada, novas vistas, documentos ricos, filtros persistentes e estados de backend só podem ser apresentados como funcionais depois de ligados aos contratos e dados reais. Não criar dados de demonstração no ambiente de produção.
+
+## Próximos incrementos da Fase 02
+
+1. Harmonizar cabeçalhos, breadcrumbs, espaçamento e superfícies das vistas Dashboard, Projetos, Tarefas, Calendário, Tempo e Automações.
+2. Refinar cartões, listas, tabela e Kanban com estados hover/focus/drag e feedback de ações.
+3. Melhorar o painel de detalhe de tarefa, formulários, modais e estados vazios/erro/carregamento.
+4. Melhorar pesquisa e filtros sem prometer pesquisa de conteúdo que ainda não esteja indexado.
+5. Verificar responsividade em 1440×900 e 390×844, navegação por teclado e contraste.
+6. Executar lint, typecheck disponível, testes e build; corrigir regressões antes de pedir aprovação.
+
+## Critério de conclusão
+
+A Fase 02 só termina depois de todas as vistas principais terem consistência visual, interações verificadas, estados completos, acessibilidade/responsividade verificadas e lint/build/testes aprovados. A integração de dados que dependa da migração backend mantém-se separada e não pode ser simulada.
