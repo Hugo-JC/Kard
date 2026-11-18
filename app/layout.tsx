@@ -12,7 +12,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Kard — Task & Productivity SaaS Dashboard',
+  title: 'Kard — Gestão de tarefas e produtividade',
   icons: {
     icon: [
       {
@@ -27,10 +27,10 @@ export const metadata: Metadata = {
       },
     ],
   },
-  description: 'Modern, minimalist task management dashboard featuring interactive bento grid, time tracking, calendar, and team workflows.',
+  description: 'Plataforma de gestão de tarefas, projetos, tempo e produtividade para equipas.',
   openGraph: {
-    title: 'Kard — Task & Productivity SaaS Dashboard',
-    description: 'Modern, minimalist task management dashboard featuring interactive bento grid, time tracking, calendar, and team workflows.',
+    title: 'Kard — Gestão de tarefas e produtividade',
+    description: 'Plataforma de gestão de tarefas, projetos, tempo e produtividade para equipas.',
     type: 'website',
   },
   twitter: {
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en" className={plusJakarta.variable} suppressHydrationWarning>
+    <html lang="pt" className={plusJakarta.variable} suppressHydrationWarning>
       <body className="font-sans antialiased bg-background text-foreground selection:bg-blue-500/20 selection:text-blue-500 min-h-screen" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
