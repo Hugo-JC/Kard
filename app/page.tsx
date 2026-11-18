@@ -118,7 +118,6 @@ export default function DashboardPage() {
     workspaceAccessToken,
     hasWorkspaceConnected,
     isConnectingWorkspace,
-    r2Configured,
     isSigningIn,
     authError,
     signInGoogle,
@@ -1923,7 +1922,7 @@ export default function DashboardPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">Automações</p>
                       <p className="text-xs text-muted-foreground">
-                        {automationRules.filter((r) => r.enabled).length} regras ativas ativas.
+                        {automationRules.filter((r) => r.enabled).length} regras ativas.
                       </p>
                     </div>
                     <Button
