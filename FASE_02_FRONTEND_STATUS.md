@@ -53,6 +53,11 @@ As referências Linear, Notion e Trello são padrões de produto e interação; 
 - Calendário: o atalho de regresso à data atual apresenta sempre “Hoje”; o estado da ligação Google deixou de afirmar que o calendário já está sincronizado apenas por existir uma conta ligada.
 - Detalhes do projeto: opções de estado e métricas remanescentes foram localizadas para português europeu.
 
+- Quadro Kanban: colunas mantêm largura utilizável em ecrãs pequenos com deslocamento horizontal; filtros podem ser limpos num só passo; estados vazios explicam como avançar; botões de adicionar têm nomes acessíveis.
+- Cartões de tarefa: prioridades passam a português europeu, atribuição rápida está localizada e ações essenciais ficam visíveis em dispositivos táteis, com foco de teclado.
+- Painel de tarefa: campos e progresso do checklist têm rótulos acessíveis, o estado vazio orienta a decomposição do trabalho e os textos de entrada são mais claros.
+- Calendário: feedback de sincronização e ligação Google foi refinado, com estados de carregamento explícitos e sem sugerir que a sincronização terminou antes de acontecer.
+
 ## Limites desta primeira entrega
 
 A aplicação ainda usa Firebase Auth/Firestore em fluxos existentes. Esta fase visual não deve fingir que a migração do backend está concluída. O estado de armazenamento na UI indica explicitamente integração pendente.
