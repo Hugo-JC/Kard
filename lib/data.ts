@@ -168,10 +168,10 @@ export interface Project {
 export type TaskStage = 'TODO' | 'IN PROGRESS' | 'REVIEW' | 'DONE';
 
 export const TASK_STAGES: { id: TaskStage; label: string; accent: string; dot: string }[] = [
-  { id: 'TODO', label: 'To Do', accent: 'border-zinc-300 dark:border-zinc-700', dot: 'bg-zinc-400' },
-  { id: 'IN PROGRESS', label: 'In Progress', accent: 'border-blue-400/40 dark:border-blue-500/30', dot: 'bg-blue-500' },
-  { id: 'REVIEW', label: 'In Review', accent: 'border-amber-400/40 dark:border-amber-500/30', dot: 'bg-amber-500' },
-  { id: 'DONE', label: 'Done', accent: 'border-emerald-400/40 dark:border-emerald-500/30', dot: 'bg-emerald-500' },
+  { id: 'TODO', label: 'Por fazer', accent: 'border-zinc-300 dark:border-zinc-700', dot: 'bg-zinc-400' },
+  { id: 'IN PROGRESS', label: 'Em curso', accent: 'border-blue-400/40 dark:border-blue-500/30', dot: 'bg-blue-500' },
+  { id: 'REVIEW', label: 'Em revisão', accent: 'border-amber-400/40 dark:border-amber-500/30', dot: 'bg-amber-500' },
+  { id: 'DONE', label: 'Concluída', accent: 'border-emerald-400/40 dark:border-emerald-500/30', dot: 'bg-emerald-500' },
 ];
 
 export interface TaskChecklistItem {

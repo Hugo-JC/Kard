@@ -149,7 +149,7 @@ export function SortableTaskRow({
             onChange={(e) => onUpdateStage(task.id, e.target.value as TaskStage)}
             className="hidden sm:inline-block text-[11px] font-semibold bg-muted/50 border border-border rounded-lg px-2 py-1 text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
             onClick={(e) => e.stopPropagation()}
-            aria-label="Change task workflow stage"
+            aria-label={`Alterar estado da tarefa ${task.title}`}
           >
             {TASK_STAGES.map((s) => (
               <option key={s.id} value={s.id}>
@@ -163,7 +163,7 @@ export function SortableTaskRow({
         {task.assignee ? (
           <div
             className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-muted/40 border border-border/60"
-            title={`Assigned to ${task.assignee.name} (${task.assignee.status || "Offline"})`}
+            title={`Atribuída a ${task.assignee.name} (${task.assignee.status || "Offline"})`}
           >
             <MemberAvatarWithStatus
               avatar={task.assignee.avatar}
@@ -184,10 +184,10 @@ export function SortableTaskRow({
               if (selected) onUpdateAssignee(task.id, selected)
             }}
             onClick={(e) => e.stopPropagation()}
-            aria-label="Assign contributor"
+            aria-label={`Atribuir colaborador à tarefa ${task.title}`}
             className="text-[11px] font-semibold bg-muted/50 border border-border rounded-lg px-2 py-1 text-muted-foreground cursor-pointer"
           >
-            <option value="">Assign...</option>
+            <option value="">Atribuir...</option>
             {availableAssignees.map((m) => (
               <option key={m.name} value={m.name}>
                 {m.name}

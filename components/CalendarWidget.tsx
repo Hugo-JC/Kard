@@ -31,7 +31,7 @@ const MONTH_NAMES = [
   "Dez",
 ]
 
-const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+const WEEKDAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
 export function CalendarWidget({
   events: externalEvents,
@@ -46,9 +46,9 @@ export function CalendarWidget({
     connectWorkspace,
   } = useFirebase()
 
-  const [currentMonth, setCurrentMonth] = useState(0)
-  const [currentYear, setCurrentYear] = useState(2021)
-  const [selectedDay, setSelectedDay] = useState<number>(5)
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth())
+  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear())
+  const [selectedDay, setSelectedDay] = useState<number>(() => new Date().getDate())
 
   const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(
     INITIAL_CALENDAR_EVENTS
@@ -78,24 +78,18 @@ export function CalendarWidget({
     }
   }
 
-  const jumpToInitialSprint = () => {
+  const goToToday = () => {
     const today = new Date()
-    if (hasWorkspaceConnected) {
-      setCurrentMonth(today.getMonth())
-      setCurrentYear(today.getFullYear())
-      setSelectedDay(today.getDate())
-    } else {
-      setCurrentMonth(0)
-      setCurrentYear(2021)
-      setSelectedDay(5)
-    }
+    setCurrentMonth(today.getMonth())
+    setCurrentYear(today.getFullYear())
+    setSelectedDay(today.getDate())
     setIsAddingEvent(false)
   }
 
   // Deterministic UTC calendar calculations
-  const firstDayOfWeek = new Date(
+  const firstDayOfWeek = (new Date(
     Date.UTC(currentYear, currentMonth, 1)
-  ).getUTCDay()
+  ).getUTCDay() + 6) % 7
   const daysInCurrentMonth = new Date(
     Date.UTC(currentYear, currentMonth + 1, 0)
   ).getUTCDate()
@@ -180,10 +174,10 @@ export function CalendarWidget({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={jumpToInitialSprint}
+              onClick={goToToday}
               className="h-6 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-primary"
             >
-              {hasWorkspaceConnected ? "Hoje" : "Sprint atual"}
+              Hoje
             </Button>
           </div>
 
@@ -216,7 +210,7 @@ export function CalendarWidget({
           {hasWorkspaceConnected ? (
             <>
               <span className="font-semibold text-success-foreground truncate">
-                Google Calendar sincronizado
+                Conta Google ligada
               </span>
               <button
                 type="button"
@@ -228,7 +222,9 @@ export function CalendarWidget({
                   onSyncGoogleCalendar?.()
                 }}
                 disabled={isSyncingGoogleCalendar}
-                className="inline-flex shrink-0 items-center gap-1 font-semibold text-primary hover:underline cursor-pointer"
+                aria-label={isSyncingGoogleCalendar ? "A atualizar calendário" : "Atualizar calendário Google"}
+                aria-busy={isSyncingGoogleCalendar}
+                className="inline-flex shrink-0 items-center gap-1 font-semibold text-primary hover:underline cursor-pointer disabled:cursor-wait disabled:opacity-60"
               >
                 <RefreshCw
                   className={cn(
@@ -236,7 +232,7 @@ export function CalendarWidget({
                     isSyncingGoogleCalendar && "animate-spin"
                   )}
                 />
-                <span>Atualizar</span>
+                <span>{isSyncingGoogleCalendar ? "A atualizar…" : "Atualizar"}</span>
               </button>
             </>
           ) : (
@@ -259,7 +255,7 @@ export function CalendarWidget({
                 }}
                 className="shrink-0 font-semibold text-primary hover:underline cursor-pointer"
               >
-                {isConnectingWorkspace ? "Conectando..." : "Conectar Google"}
+                {isConnectingWorkspace ? "A ligar…" : "Ligar Google"}
               </button>
             </>
           )}
@@ -307,6 +303,7 @@ export function CalendarWidget({
                       : undefined
                   }
                   aria-pressed={isSelected}
+                  aria-current={isSelected && cell.day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear() ? "date" : undefined}
                   className={cn(
                     "relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-xl text-[13px] transition-[background-color,color,transform,box-shadow] duration-150 @md:max-w-12",
                     isSelected

@@ -107,7 +107,7 @@ export function ProjectDetailsDrawer({
                       type="button"
                       onClick={() => onToggleStar(project.id)}
                       className="p-1 shrink-0 rounded-md text-muted-foreground hover:text-amber-400 transition-colors cursor-pointer"
-                      title="Star project"
+                      title={project.isStarred ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                     >
                       <Star
                         className={cn(
@@ -130,7 +130,7 @@ export function ProjectDetailsDrawer({
                   type="button"
                   onClick={onClose}
                   className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                  aria-label="Close drawer"
+                  aria-label="Fechar detalhes do projeto"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -188,10 +188,10 @@ export function ProjectDetailsDrawer({
                   }
                   className="rounded-xl border border-border bg-muted/50 px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                 >
-                  <option value="IN PROGRESS" className="bg-card">Set In Progress</option>
-                  <option value="COMPLETED" className="bg-card">Set Completed</option>
-                  <option value="ON HOLD" className="bg-card">Set On Hold</option>
-                  <option value="SELECT PROGRESS" className="bg-card">Select Progress</option>
+                  <option value="IN PROGRESS" className="bg-card">Definir como em curso</option>
+                  <option value="COMPLETED" className="bg-card">Definir como concluído</option>
+                  <option value="ON HOLD" className="bg-card">Colocar em pausa</option>
+                  <option value="SELECT PROGRESS" className="bg-card">Selecionar estado</option>
                 </select>
               </div>
 
@@ -207,26 +207,26 @@ export function ProjectDetailsDrawer({
                 <div className="rounded-2xl bg-card border border-border/80 p-3.5 space-y-1">
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                    <span>Tasks</span>
+                    <span>Tarefas</span>
                   </div>
                   <p className="text-base font-bold text-card-foreground">
                     {project.completedTasks} / {project.totalTasks}
                   </p>
                   <p className="text-[10px] text-muted-foreground font-medium">
-                    {percent}% Completed
+                    {percent}% concluído
                   </p>
                 </div>
 
                 <div className="rounded-2xl bg-card border border-border/80 p-3.5 space-y-1">
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <Layers className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Sprint Stage</span>
+                    <span>Etapa do ciclo</span>
                   </div>
                   <p className="text-sm font-bold text-card-foreground truncate">
                     {project.sprintStage || "Sprint 1 / 4"}
                   </p>
                   <p className="text-[10px] text-muted-foreground font-medium">
-                    Active cycle
+                    Ciclo ativo
                   </p>
                 </div>
 

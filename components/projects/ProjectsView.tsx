@@ -282,7 +282,7 @@ export function ProjectsView({
             className="min-h-11 gap-2 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-blue-700 sm:min-h-9"
           >
             <Plus className="w-4 h-4" />
-            <span>New Project</span>
+            <span>Novo projeto</span>
           </Button>
         </div>
       </div>
@@ -341,7 +341,7 @@ export function ProjectsView({
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             )}
           >
-            All <span className="opacity-70 ml-1">({counts.all})</span>
+            Todos <span className="opacity-70 ml-1">({counts.all})</span>
           </button>
 
           <button
@@ -354,7 +354,7 @@ export function ProjectsView({
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             )}
           >
-            In Progress <span className="opacity-70 ml-1">({counts.inProgress})</span>
+            Em curso <span className="opacity-70 ml-1">({counts.inProgress})</span>
           </button>
 
           <button
@@ -367,7 +367,7 @@ export function ProjectsView({
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             )}
           >
-            Completed <span className="opacity-70 ml-1">({counts.completed})</span>
+            Concluídos <span className="opacity-70 ml-1">({counts.completed})</span>
           </button>
 
           <button
@@ -380,7 +380,7 @@ export function ProjectsView({
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             )}
           >
-            On Hold <span className="opacity-70 ml-1">({counts.onHold})</span>
+            Em espera <span className="opacity-70 ml-1">({counts.onHold})</span>
           </button>
 
           <button
@@ -392,10 +392,10 @@ export function ProjectsView({
                 ? "bg-amber-500 text-white shadow-xs font-bold"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             )}
-            title="View archived projects"
+            title="Ver projetos arquivados"
           >
             <Archive className="w-3.5 h-3.5" />
-            <span>Archived</span>
+            <span>Arquivados</span>
             <span className="opacity-80 ml-0.5">({counts.archived})</span>
           </button>
         </div>
@@ -409,14 +409,14 @@ export function ProjectsView({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search projects or tags..."
-              aria-label="Search projects or tags"
+              placeholder="Pesquisar projetos ou etiquetas..."
+              aria-label="Pesquisar projetos ou etiquetas"
               className="h-11 w-full rounded-xl border border-border bg-muted/40 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
             {searchQuery && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label="Limpar pesquisa"
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               >
@@ -430,13 +430,13 @@ export function ProjectsView({
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
-              aria-label="Filter by priority"
+              aria-label="Filtrar por prioridade"
               className="h-11 max-w-full rounded-xl border border-border bg-muted/40 px-2.5 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
-              <option value="ALL" className="bg-card">All Priorities</option>
-              <option value="HIGH" className="bg-card">High Priority</option>
-              <option value="MEDIUM" className="bg-card">Medium Priority</option>
-              <option value="LOW" className="bg-card">Low Priority</option>
+              <option value="ALL" className="bg-card">Todas as prioridades</option>
+              <option value="HIGH" className="bg-card">Prioridade alta</option>
+              <option value="MEDIUM" className="bg-card">Prioridade média</option>
+              <option value="LOW" className="bg-card">Prioridade baixa</option>
             </select>
           </div>
 
@@ -451,10 +451,10 @@ export function ProjectsView({
                   ? "bg-card text-foreground shadow-xs font-bold"
                   : "text-muted-foreground hover:text-foreground"
               )}
-              title="Bento Grid View"
+              title="Vista em cartões"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Grid</span>
+              <span className="hidden sm:inline">Cartões</span>
             </button>
 
             <button
@@ -466,10 +466,10 @@ export function ProjectsView({
                   ? "bg-card text-foreground shadow-xs font-bold"
                   : "text-muted-foreground hover:text-foreground"
               )}
-              title="High-Density Table View"
+              title="Vista de tabela"
             >
               <TableIcon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Table</span>
+              <span className="hidden sm:inline">Tabela</span>
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { MotionConfig } from 'motion/react';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { FirebaseProvider } from '@/components/auth/FirebaseProvider';
@@ -46,13 +47,15 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       <body className="font-sans antialiased bg-background text-foreground selection:bg-blue-500/20 selection:text-blue-500 min-h-screen" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('kard-theme');if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(_){}`,
+            __html: `try{var t=localStorage.getItem('kard-theme');if(!t||t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(_){}`,
           }}
         />
-        <ThemeProvider defaultTheme="light">
-          <FirebaseProvider>
-            {children}
-          </FirebaseProvider>
+        <ThemeProvider defaultTheme="dark">
+          <MotionConfig reducedMotion="user">
+            <FirebaseProvider>
+              {children}
+            </FirebaseProvider>
+          </MotionConfig>
         </ThemeProvider>
       </body>
     </html>

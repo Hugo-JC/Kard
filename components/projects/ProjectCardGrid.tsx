@@ -23,9 +23,9 @@ export function ProjectCardGrid({
   if (projects.length === 0) {
     return (
       <div className="rounded-[28px] bg-card p-12 text-center text-muted-foreground border border-border">
-        <p className="text-sm font-semibold">No projects match your current filters.</p>
+        <p className="text-sm font-semibold">Não existem projetos com estes filtros.</p>
         <p className="text-xs text-muted-foreground/80 mt-1">
-          Try adjusting your search query, status tab, or priority filter.
+          Experimenta alterar a pesquisa, o estado ou a prioridade.
         </p>
       </div>
     )
@@ -56,7 +56,7 @@ export function ProjectCardGrid({
                 {(project.attachmentsCount ?? 0) > 0 && (
                   <span className="flex items-center gap-1">
                     <Paperclip className="w-3 h-3 text-muted-foreground" />
-                    {project.attachmentsCount} files
+                    {project.attachmentsCount} ficheiros
                   </span>
                 )}
               </div>

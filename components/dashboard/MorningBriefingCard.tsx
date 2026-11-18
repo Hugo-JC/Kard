@@ -59,7 +59,7 @@ export function MorningBriefingCard({
 
   const todayFormatted = useMemo(() => {
     if (!isMounted) return "Resumo do dia"
-    return new Date().toLocaleDateString("pt-BR", {
+    return new Date().toLocaleDateString("pt-PT", {
       weekday: "long",
       day: "2-digit",
       month: "short",

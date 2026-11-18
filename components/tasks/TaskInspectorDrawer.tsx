@@ -411,8 +411,9 @@ function TaskInspectorContent({
                 value={dueDraft}
                 onChange={(e) => setDueDraft(e.target.value)}
                 onBlur={commitDue}
-                placeholder="Ex.: Hoje, 25 Jun"
-                className="h-9 rounded-xl bg-card text-xs font-mono"
+                aria-label="Prazo da tarefa"
+                placeholder="Ex.: Hoje ou 25 Jun"
+                className="h-10 rounded-xl bg-card text-sm font-mono"
               />
             </div>
           </div>
@@ -513,8 +514,9 @@ function TaskInspectorContent({
                   value={markdownDraft}
                   onChange={(e) => setMarkdownDraft(e.target.value)}
                   rows={6}
-                  placeholder="Escreva especificações, links, blocos de código ou critérios em Markdown..."
-                  className="w-full resize-y bg-transparent text-xs font-mono leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  aria-label="Descrição da tarefa em Markdown"
+                  placeholder="Descreva o objetivo, contexto e critérios de conclusão..."
+                  className="w-full resize-y bg-transparent text-sm font-mono leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
                 />
               </div>
             ) : (
@@ -595,12 +597,25 @@ function TaskInspectorContent({
             </div>
 
             {checklist.length > 0 && (
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                role="progressbar"
+                aria-label="Progresso do checklist"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={checklistPercent}
+              >
                 <div
                   className="h-full rounded-full bg-primary transition-all duration-200"
                   style={{ width: `${checklistPercent}%` }}
                 />
               </div>
+            )}
+
+            {checklist.length === 0 && (
+              <p className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-3 py-3 text-xs text-muted-foreground">
+                Divide esta tarefa em passos pequenos para acompanhares o progresso.
+              </p>
             )}
 
             <div className="space-y-1.5">
@@ -649,7 +664,8 @@ function TaskInspectorContent({
               <Input
                 value={newChecklistText}
                 onChange={(e) => setNewChecklistText(e.target.value)}
-                placeholder="Adicionar item ao checklist..."
+                aria-label="Novo item do checklist"
+                placeholder="Adicionar um passo..."
                 className="h-9 min-w-0 flex-1 rounded-xl text-xs"
               />
               <Button type="submit" variant="outline" size="sm" className="h-9 shrink-0 gap-1 rounded-xl px-3 text-xs font-semibold">
@@ -699,7 +715,8 @@ function TaskInspectorContent({
               <Input
                 value={newCommentText}
                 onChange={(e) => setNewCommentText(e.target.value)}
-                placeholder="Escreva um comentário ou atualização..."
+                aria-label="Escrever comentário"
+                placeholder="Partilhe uma atualização..."
                 className="h-9 min-w-0 flex-1 rounded-xl text-xs"
               />
               <Button type="submit" size="sm" className="h-9 shrink-0 gap-1.5 rounded-xl px-3 text-xs font-semibold">

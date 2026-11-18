@@ -85,7 +85,6 @@ export function Header({
     isSigningIn,
     hasWorkspaceConnected,
     isConnectingWorkspace,
-    r2Configured,
     signInGoogle,
     connectWorkspace,
     disconnectWorkspace,
@@ -118,14 +117,14 @@ export function Header({
   }, [])
 
   return (
-    <header className="relative z-30 flex flex-wrap items-center justify-between gap-x-2 gap-y-3 rounded-3xl border border-border/80 bg-card p-3 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] sm:flex-nowrap sm:gap-4 sm:px-5 sm:py-3.5">
-      {/* Left: Mobile hamburger & Search bar */}
+    <header className="relative z-30 flex flex-wrap items-center justify-between gap-x-2 gap-y-3 rounded-2xl border border-border/80 bg-card p-2.5 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] sm:flex-nowrap sm:gap-4 sm:px-5 sm:py-3.5">
+      {/* Pesquisa e navegação móvel */}
       <div className="order-2 flex w-full min-w-0 items-center gap-2 sm:order-1 sm:flex-1 sm:gap-3">
         <button
           type="button"
           onClick={onOpenMobileMenu}
           className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted lg:hidden"
-          aria-label="Open navigation menu"
+          aria-label="Abrir menu de navegação"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -136,18 +135,18 @@ export function Header({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            aria-label="Search projects, tasks, or team members"
-            placeholder="Search projects, tasks, or team members..."
-            className="h-11 w-full rounded-2xl border border-transparent bg-slate-100/70 pl-11 pr-4 sm:pr-20 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border/60 dark:bg-slate-900/60"
+            aria-label="Pesquisar tarefas e projetos"
+            placeholder="Pesquisar tarefas e projetos..."
+            className="h-11 w-full rounded-2xl border border-transparent bg-muted/55 pl-11 pr-4 sm:pr-20 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 border-border/70 dark:bg-muted/35"
           />
           <div className="absolute right-3 hidden sm:flex items-center gap-1 rounded-md bg-card px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-2xs border border-border">
-            <span>⌘</span>
+            <span>⌘ / Ctrl</span>
             <span>K</span>
           </div>
         </div>
       </div>
 
-      {/* Right: Sync status, Focus Mode, Plans, Theme Toggle, Notifications & Google Account */}
+      {/* Estado da ligação, foco, tema, notificações e conta */}
       <div className="order-1 ml-auto flex max-w-full flex-wrap items-center justify-end gap-1.5 sm:order-2 sm:ml-0 sm:shrink-0 sm:flex-nowrap sm:gap-2">
         {isOffline ? (
           <span
@@ -159,7 +158,7 @@ export function Header({
           </span>
         ) : user ? (
           <span
-            title="Sincronizado em tempo real com Firebase Firestore"
+            title="Ligação à nuvem ativa"
             className="hidden xl:inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold text-success-foreground"
           >
             <Cloud className="size-3.5" />
@@ -175,7 +174,7 @@ export function Header({
           </span>
         ) : null}
 
-        {/* Focus Mode Trigger */}
+        {/* Atalho para o modo de foco */}
         {onToggleFocusMode && (
           <Button
             type="button"
@@ -195,7 +194,7 @@ export function Header({
           </Button>
         )}
 
-        {/* Quick Plan / Upgrade Trigger */}
+        {/* Acesso aos planos */}
         {onOpenPricingModal && (
           <Button
             type="button"
@@ -205,29 +204,29 @@ export function Header({
             className="hidden md:inline-flex h-9 gap-1.5 rounded-xl px-3.5 text-xs font-semibold"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{currentTier === "free" ? "Planos · 50% OFF" : `Kard ${currentTier.toUpperCase()}`}</span>
+            <span>{currentTier === "free" ? "Ver planos" : `Kard ${currentTier.toUpperCase()}`}</span>
           </Button>
         )}
 
-        {/* Dark/Light Theme Toggle */}
+        {/* Alternar tema */}
         <button
           type="button"
           onClick={toggleTheme}
           className="relative flex size-10 items-center justify-center rounded-2xl border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted hover:text-foreground cursor-pointer"
-          aria-label="Toggle theme appearance"
-          title="Toggle theme appearance"
+          aria-label="Alternar tema claro ou escuro"
+          title="Alternar tema claro ou escuro"
         >
           <Sun className="hidden dark:block w-4 h-4 text-amber-400 hover:rotate-45 transition-transform" />
           <Moon className="block dark:hidden w-4 h-4 text-slate-600 hover:-rotate-12 transition-transform" />
         </button>
 
-        {/* Notification Bell */}
+        {/* Notificações */}
         <div className="relative" ref={notifRef}>
           <button
             type="button"
             onClick={() => setIsNotifOpen(!isNotifOpen)}
             className="relative flex size-10 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
-            aria-label="View notifications"
+            aria-label="Ver notificações"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
@@ -301,12 +300,12 @@ export function Header({
                           </div>
 
                           <p className="text-xs text-muted-foreground leading-relaxed">
-                            <strong className="text-foreground">{inv.invitedBy}</strong> convidou você para colaborar no projeto{" "}
+                            <strong className="text-foreground">{inv.invitedBy}</strong> convidou-te para colaborar no projeto{" "}
                             <strong className="text-foreground">{inv.projectName}</strong> como{" "}
                             <strong className="text-foreground">{inv.role}</strong>.
                           </p>
 
-                          {/* GitHub-style action buttons: Colaborar / Negar */}
+                          {/* Ações do convite */}
                           {inv.status === "pending" ? (
                             <div className="flex items-center gap-2 pt-1">
                               <Button
@@ -333,7 +332,7 @@ export function Header({
                           ) : inv.status === "accepted" ? (
                             <div className="flex items-center gap-1.5 text-xs font-semibold text-success-foreground">
                               <Check className="w-3.5 h-3.5" />
-                              <span>Convite aceito · Você agora é colaborador</span>
+                              <span>Convite aceite · Já fazes parte do projeto</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -476,7 +475,7 @@ export function Header({
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <Cloud className="size-3.5 text-success-foreground" />
-                      <span>Firestore Nuvem</span>
+                      <span>Dados da aplicação</span>
                     </span>
                     <span className="font-semibold text-success-foreground">
                       {user ? "Conectado" : "Local"}
@@ -486,22 +485,22 @@ export function Header({
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <FolderSync className="size-3.5 text-primary" />
-                      <span>Cloudflare R2</span>
+                      <span>Armazenamento</span>
                     </span>
                     <span
                       className={cn(
                         "font-semibold",
-                        r2Configured ? "text-success-foreground" : "text-warning-foreground"
+                        "text-warning-foreground"
                       )}
                     >
-                      {r2Configured ? "Pronto" : "Configurar env"}
+                      Migração pendente
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2 pt-0.5">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <Calendar className="size-3.5 text-amber-500" />
-                      <span>Calendar & Drive</span>
+                      <span>Google Workspace</span>
                     </span>
                     {hasWorkspaceConnected ? (
                       <button
@@ -538,9 +537,9 @@ export function Header({
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                       <div>
                         <p className="text-xs font-bold text-foreground">
-                          {currentTier === "free" ? "Upgrade Kard Pro" : "Gerenciar Plano"}
+                          {currentTier === "free" ? "Ver planos" : "Gerir plano"}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">50% OFF 1ª compra</p>
+                        <p className="text-[10px] text-muted-foreground">Consultar opções do plano</p>
                       </div>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-primary" />
@@ -557,7 +556,7 @@ export function Header({
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-muted hover:text-foreground cursor-pointer"
                   >
                     <User className="w-4 h-4 text-muted-foreground" />
-                    <span>Configurações & Integrações</span>
+                    <span>Definições e integrações</span>
                   </button>
 
                   {user ? (
@@ -575,7 +574,7 @@ export function Header({
                   ) : (
                     <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
                       <Shield className="w-4 h-4 text-muted-foreground" />
-                      <span>Modo Local-First</span>
+                      <span>Modo local</span>
                     </div>
                   )}
                 </div>

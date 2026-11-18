@@ -79,7 +79,7 @@ export function TaskBucketCard({
             type="button"
             {...attributes}
             {...listeners}
-            aria-label="Drag task"
+            aria-label={`Arrastar tarefa ${task.title}`}
             className="p-1 -ml-1 text-muted-foreground/40 hover:text-foreground cursor-grab active:cursor-grabbing rounded-md hover:bg-muted/60 transition-colors touch-none"
           >
             <GripVertical className="w-3.5 h-3.5" />
@@ -101,7 +101,7 @@ export function TaskBucketCard({
             }
             className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wider rounded-md"
           >
-            {task.priority}
+            {task.priority === "High" ? "Alta" : task.priority === "Medium" ? "Média" : "Baixa"}
           </Badge>
 
           {onDeleteTask && (
@@ -111,8 +111,8 @@ export function TaskBucketCard({
                 e.stopPropagation()
                 onDeleteTask(task.id)
               }}
-              aria-label="Delete task"
-              className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-danger rounded-md transition-opacity"
+              aria-label={`Eliminar tarefa ${task.title}`}
+              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
             >
               <Trash2 className="w-3 h-3" />
             </button>
@@ -128,8 +128,8 @@ export function TaskBucketCard({
             e.stopPropagation()
             onToggleTask(task.id)
           }}
-          className="relative mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90"
-          aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
+          className="relative mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          aria-label={task.completed ? `Reabrir tarefa ${task.title}` : `Concluir tarefa ${task.title}`}
         >
           {task.completed ? (
             <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xs">
@@ -209,7 +209,7 @@ export function TaskBucketCard({
         {/* Assignee Avatar with Live Status */}
         {task.assignee ? (
           <div
-            title={`Assigned to ${task.assignee.name} (${task.assignee.status || "Offline"})`}
+            title={`Atribuída a ${task.assignee.name} (${task.assignee.status || "Offline"})`}
             className="flex items-center"
           >
             <MemberAvatarWithStatus
@@ -228,10 +228,10 @@ export function TaskBucketCard({
               if (selected) onUpdateAssignee(task.id, selected)
             }}
             onClick={(e) => e.stopPropagation()}
-            aria-label="Assign contributor"
+            aria-label={`Atribuir colaborador à tarefa ${task.title}`}
             className="text-[10px] bg-muted/60 border border-border rounded px-1.5 py-0.5 text-muted-foreground"
           >
-            <option value="">+ Assign</option>
+            <option value="">+ Atribuir</option>
             {availableAssignees.map((m) => (
               <option key={m.name} value={m.name}>
                 {m.name}

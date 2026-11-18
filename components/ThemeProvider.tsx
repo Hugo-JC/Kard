@@ -26,14 +26,14 @@ function subscribe(callback: () => void) {
 
 function getSnapshot(): Theme {
   try {
-    return (localStorage.getItem(STORAGE_KEY) as Theme) || "light"
+    return (localStorage.getItem(STORAGE_KEY) as Theme) || "dark"
   } catch {
-    return "light"
+    return "dark"
   }
 }
 
 function getServerSnapshot(): Theme {
-  return "light"
+  return "dark"
 }
 
 function subscribeSystemDark(callback: () => void) {
@@ -52,7 +52,7 @@ function getSystemDarkServerSnapshot(): boolean {
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
+  defaultTheme = "dark",
 }: {
   children: React.ReactNode
   defaultTheme?: Theme

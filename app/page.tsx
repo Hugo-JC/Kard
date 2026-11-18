@@ -118,7 +118,6 @@ export default function DashboardPage() {
     workspaceAccessToken,
     hasWorkspaceConnected,
     isConnectingWorkspace,
-    r2Configured,
     isSigningIn,
     authError,
     signInGoogle,
@@ -1635,14 +1634,14 @@ export default function DashboardPage() {
           )}
 
           {/* Active Search Notification Banner if searching on dashboard */}
-          {query && activeNav === "dashboard" && (
+          {query && (activeNav === "dashboard" || activeNav === "projects" || activeNav === "my-tasks") && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card px-5 py-3 border border-border shadow-xs text-xs text-muted-foreground">
               <div className="flex flex-wrap items-center gap-2.5">
                 <span>
-                  Filtering results for: <strong>&quot;{searchQuery}&quot;</strong> (
-                  {displayTasks.length} tasks, {displayProjects.length} projects)
+                  A filtrar por: <strong>&quot;{searchQuery}&quot;</strong> (
+                  {displayTasks.length} tarefas, {displayProjects.length} projetos)
                 </span>
-                {matchingArchivedProjectsCount > 0 && (
+                {activeNav === "dashboard" && matchingArchivedProjectsCount > 0 && (
                   <button
                     type="button"
                     onClick={() => setIncludeArchivedSearch(!includeArchivedSearch)}
@@ -1654,8 +1653,8 @@ export default function DashboardPage() {
                     )}
                   >
                     {includeArchivedSearch
-                      ? `Hide archived (${matchingArchivedProjectsCount})`
-                      : `Include archived (${matchingArchivedProjectsCount})`}
+                      ? `Ocultar arquivados (${matchingArchivedProjectsCount})`
+                      : `Incluir arquivados (${matchingArchivedProjectsCount})`}
                   </button>
                 )}
               </div>
@@ -1667,7 +1666,7 @@ export default function DashboardPage() {
                 }}
                 className="font-bold text-primary hover:underline cursor-pointer"
               >
-                Clear filter
+                Limpar filtro
               </button>
             </div>
           )}
@@ -1683,7 +1682,7 @@ export default function DashboardPage() {
                 transition={{ duration: 0.2 }}
               >
                 <ProjectsView
-                  projects={projects}
+                  projects={query ? projects.filter((project) => project.name.toLowerCase().includes(query) || project.company.toLowerCase().includes(query)) : projects}
                   tasks={tasks}
                   currentTier={userTier}
                   userStatus={userStatus}
@@ -1737,7 +1736,7 @@ export default function DashboardPage() {
               >
                 <div className="col-span-1 min-w-0 lg:col-span-7">
                   <MyTasksCard
-                    tasks={tasks}
+                    tasks={displayTasks}
                     onToggleTask={handleToggleTask}
                     onSelectTask={(task) => setSelectedTaskId(task.id)}
                     onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
@@ -1844,7 +1843,7 @@ export default function DashboardPage() {
                 <div>
                   <h2 className="text-xl font-bold text-card-foreground">Configurações do Workspace</h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Defina seu status global de perfil, aparência, integrações na nuvem e persistência offline.
+                    Define o teu estado, aparência, integrações e preferências de armazenamento.
                   </p>
                 </div>
 
@@ -1856,7 +1855,7 @@ export default function DashboardPage() {
                         Status do Perfil (Geral)
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Você decide aqui seu status global — ele é exibido automaticamente no cabeçalho, equipe, projetos e chat.
+                        O teu estado é apresentado no cabeçalho, equipa e projetos.
                       </p>
                     </div>
                     <MemberStatusBadge status={userStatus} size="md" />
@@ -1921,9 +1920,9 @@ export default function DashboardPage() {
 
                   <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-card-foreground">Automações em Texto Natural</p>
+                      <p className="text-sm font-semibold text-card-foreground">Automações</p>
                       <p className="text-xs text-muted-foreground">
-                        {automationRules.filter((r) => r.enabled).length} regras ativas executando automaticamente no navegador.
+                        {automationRules.filter((r) => r.enabled).length} regras ativas.
                       </p>
                     </div>
                     <Button
@@ -1941,12 +1940,12 @@ export default function DashboardPage() {
                   <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">
-                        Firebase Auth & Cloud Firestore
+                        Autenticação e dados (sistema legado)
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {user
                           ? `Conectado como ${user.email} · Sincronização multi-tenant com cargos (Owner, Gestor, Colaborador).`
-                          : "Entre com Google para sincronizar projetos, tarefas e permissões na nuvem."}
+                          : "A autenticação e sincronização atuais continuam temporariamente no sistema legado durante a migração."}
                       </p>
                     </div>
                     {user ? (
@@ -1966,34 +1965,32 @@ export default function DashboardPage() {
                   <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">
-                        Cloudflare R2 (Arquivos Privados)
+                        Supabase Storage (destino)
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Bucket privado protegido por URLs pré-assinadas e validação de cargo no Firestore.
+                        Os buckets privados já estão preparados no projeto Supabase. A integração dos uploads e downloads na aplicação ainda está pendente.
                       </p>
                     </div>
                     <span
                       className={cn(
                         "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg shrink-0",
-                        r2Configured
-                          ? "text-success-foreground bg-success-subtle"
-                          : "text-warning-foreground bg-warning-subtle"
+                        "text-warning-foreground bg-warning-subtle"
                       )}
                     >
                       <FolderSync className="w-3.5 h-3.5" />
-                      <span>{r2Configured ? "Bucket Configurado" : "Configurar R2_* no Servidor"}</span>
+                      <span>Integração pendente</span>
                     </span>
                   </div>
 
                   <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-card-foreground">
-                        Google Calendar & Google Drive (OAuth)
+                        Google Calendar e Google Drive
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {hasWorkspaceConnected
-                          ? "Agenda e arquivos do Google Drive conectados na memória desta sessão."
-                          : "Leia e crie eventos no Calendar e vincule documentos do Drive aos seus projetos."}
+                          ? "Google Calendar e Drive ligados nesta sessão."
+                          : "Liga o Google Workspace para consultar eventos e associar ficheiros aos projetos."}
                       </p>
                     </div>
                     {hasWorkspaceConnected ? (
@@ -2024,13 +2021,13 @@ export default function DashboardPage() {
 
                   <div className="py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-card-foreground">Persistência Local-First Offline</p>
+                      <p className="text-sm font-semibold text-card-foreground">Armazenamento local e modo offline</p>
                       <p className="text-xs text-muted-foreground">
                         {isOffline
                           ? "Sem conexão — alterações seguem salvas localmente no navegador."
                           : lastSavedAt
                           ? `Último salvamento automático no navegador às ${lastSavedAt}.`
-                          : "Salvamento automático ativo no armazenamento local do navegador."}
+                          : "As alterações locais são guardadas automaticamente neste navegador."}
                       </p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success-foreground bg-success-subtle px-2.5 py-1 rounded-lg shrink-0">
@@ -2104,7 +2101,7 @@ export default function DashboardPage() {
 
                     {displayProjects.length === 0 && (
                       <div className="rounded-[28px] bg-card p-8 text-center text-xs text-muted-foreground border border-border">
-                        No projects matching your search.
+                        Não foram encontrados projetos para esta pesquisa.
                       </div>
                     )}
                   </div>
