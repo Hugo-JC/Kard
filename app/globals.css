@@ -163,3 +163,117 @@ p {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+
+/* Kard interaction and motion foundation */
+:root {
+  color-scheme: light;
+  --motion-fast: 140ms;
+  --motion-base: 190ms;
+  --motion-slow: 260ms;
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+body {
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--primary) 4%, transparent), transparent 34rem),
+    radial-gradient(ellipse at 92% 100%, color-mix(in srgb, var(--primary) 2.5%, transparent), transparent 30rem);
+}
+
+::selection {
+  color: var(--primary-foreground);
+  background: color-mix(in srgb, var(--primary) 78%, transparent);
+}
+
+:where(button, a, input, textarea, select, [role="button"]):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 88%, white);
+  outline-offset: 2px;
+}
+
+:where(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(input, textarea, select) {
+  accent-color: var(--primary);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 28%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted-foreground) 28%, transparent);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted-foreground) 48%, transparent);
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .kard-interactive {
+    transition:
+      transform var(--motion-base) var(--ease-out-quint),
+      background-color var(--motion-base) ease,
+      border-color var(--motion-base) ease,
+      box-shadow var(--motion-base) ease;
+  }
+
+  .kard-interactive:hover {
+    transform: translateY(-1px);
+  }
+
+  .kard-enter {
+    animation: kard-enter 360ms var(--ease-out-quint) both;
+  }
+}
+
+@keyframes kard-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
