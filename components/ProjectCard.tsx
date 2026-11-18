@@ -123,7 +123,7 @@ export function ProjectCard({
             }}
             type="button"
             className="flex size-11 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:bg-muted hover:text-amber-400 sm:size-9"
-            aria-label="Star project"
+            aria-label="Adicionar ou remover dos favoritos"
           >
             <Star
               className={cn(
@@ -143,7 +143,7 @@ export function ProjectCard({
               }}
               type="button"
               className="flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-card-foreground sm:size-9"
-              aria-label="Project actions"
+              aria-label="Ações do projeto"
             >
               <MoreVertical className="w-5 h-5" />
             </button>
@@ -188,12 +188,12 @@ export function ProjectCard({
                     {project.isArchived ? (
                       <>
                         <ArchiveRestore className="w-3.5 h-3.5" />
-                        <span>Restore Project</span>
+                        <span>Restaurar projeto</span>
                       </>
                     ) : (
                       <>
                         <Archive className="w-3.5 h-3.5" />
-                        <span>Archive Project</span>
+                        <span>Arquivar projeto</span>
                       </>
                     )}
                   </button>
