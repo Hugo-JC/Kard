@@ -177,7 +177,7 @@ export function CalendarWidget({
               onClick={goToToday}
               className="h-6 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-primary"
             >
-              {hasWorkspaceConnected ? "Hoje" : "Sprint atual"}
+              Hoje
             </Button>
           </div>
 
@@ -210,7 +210,7 @@ export function CalendarWidget({
           {hasWorkspaceConnected ? (
             <>
               <span className="font-semibold text-success-foreground truncate">
-                Google Calendar sincronizado
+                Conta Google ligada
               </span>
               <button
                 type="button"
