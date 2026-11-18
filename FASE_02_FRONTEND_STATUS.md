@@ -35,6 +35,11 @@ As referências Linear, Notion e Trello são padrões de produto e interação; 
 - Tema escuro definido como padrão, mantendo a escolha local do utilizador e o tema claro.
 - Tokens globais de motion, seleção, foco, scrollbars e respeito por redução de movimento.
 - Página de definições atualizada para deixar claro que Supabase Storage é o destino e que a integração de uploads/downloads ainda está pendente; removida a dependência visual de configuração R2.
+- Checkout simulado removido do modal de planos; preços, descontos e condições comerciais não aprovados deixaram de ser apresentados como oferta real. A ativação paga fica indisponível até existir checkout server-side real.
+- Formulário de nova tarefa deixou de inventar projetos de fallback e datas pré-preenchidas; exige um projeto ativo e apresenta estado vazio orientador.
+- Pesquisa do cabeçalho aplicada às listas de tarefas e à vista de projetos, sem ocultar silenciosamente projetos arquivados na gestão.
+- Calendário inicializado com a data atual em vez de janeiro de 2021; briefing usa locale `pt-PT`.
+- Estados vazios, filtros, cabeçalhos e ações das vistas de projetos localizados para português europeu.
 - Textos principais da pesquisa e estados vazios do dashboard localizados.
 
 ## Limites desta primeira entrega
