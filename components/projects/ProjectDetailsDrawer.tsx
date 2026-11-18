@@ -213,7 +213,7 @@ export function ProjectDetailsDrawer({
                     {project.completedTasks} / {project.totalTasks}
                   </p>
                   <p className="text-[10px] text-muted-foreground font-medium">
-                    {percent}% Concluídas
+                    {percent}% concluído
                   </p>
                 </div>
 
