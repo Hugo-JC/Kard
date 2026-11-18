@@ -11,7 +11,7 @@ Plataforma de gestão de tarefas, projetos e produtividade para equipas.
 
 ## Desenvolvimento local
 
-Requisitos: Node.js 22 e npm.
+Requisitos: Node.js 24.12 ou superior e npm 10.9 ou superior.
 
 1. Instalar dependências:
 
