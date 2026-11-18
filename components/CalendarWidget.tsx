@@ -31,7 +31,7 @@ const MONTH_NAMES = [
   "Dez",
 ]
 
-const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+const WEEKDAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
 export function CalendarWidget({
   events: externalEvents,
@@ -78,7 +78,7 @@ export function CalendarWidget({
     }
   }
 
-  const jumpToInitialSprint = () => {
+  const goToToday = () => {
     const today = new Date()
     setCurrentMonth(today.getMonth())
     setCurrentYear(today.getFullYear())
@@ -87,9 +87,9 @@ export function CalendarWidget({
   }
 
   // Deterministic UTC calendar calculations
-  const firstDayOfWeek = new Date(
+  const firstDayOfWeek = (new Date(
     Date.UTC(currentYear, currentMonth, 1)
-  ).getUTCDay()
+  ).getUTCDay() + 6) % 7
   const daysInCurrentMonth = new Date(
     Date.UTC(currentYear, currentMonth + 1, 0)
   ).getUTCDate()
@@ -174,7 +174,7 @@ export function CalendarWidget({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={jumpToInitialSprint}
+              onClick={goToToday}
               className="h-6 rounded-lg px-2 text-[11px] font-medium text-muted-foreground hover:text-primary"
             >
               {hasWorkspaceConnected ? "Hoje" : "Sprint atual"}
