@@ -68,7 +68,7 @@ export function CommandPalette({ open, onOpenChange, onSelectAction }: CommandPa
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault()
-        handleOpenChange(!open)
+        onOpenChange(!open)
       }
     }
     window.addEventListener("keydown", handleKeyDown)
