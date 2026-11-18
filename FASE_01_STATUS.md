@@ -22,7 +22,7 @@ Atualizado em 18-11-2026.
   - `20261117172334_kard_phase_01_foreign_key_indexes`
   - `20261117172522_kard_phase_01_lock_down_default_grants`
   - `20261118134101_kard_enforce_explicit_project_membership`
-- As três migrações originais já aplicadas estão agora versionadas em `supabase/migrations/`; a migração base foi recuperada diretamente do histórico oficial do projeto remoto.
+- As três migrações originais e a correção recente estão versionadas em `supabase/migrations/`; as quatro migrações foram comparadas byte a byte com o histórico remoto `supabase_migrations.schema_migrations` e correspondem exatamente.
 - Dois buckets privados já existentes: `project-assets` (25 MiB) e `avatars` (5 MiB), com políticas Storage restritas a utilizadores autenticados.
 - Limite Free de 3 projetos ativos aplicado por trigger transacional.
 - A base de dados não contém utilizadores, Workspaces ou dados de negócio.
