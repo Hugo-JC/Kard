@@ -85,7 +85,6 @@ export function Header({
     isSigningIn,
     hasWorkspaceConnected,
     isConnectingWorkspace,
-    r2Configured,
     signInGoogle,
     connectWorkspace,
     disconnectWorkspace,
