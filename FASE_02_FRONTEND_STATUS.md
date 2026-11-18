@@ -15,6 +15,7 @@ Os documentos existentes em `public/assets/aistudio/` são a fonte de verdade pa
 - `06-QUALITY-AND-ACCEPTANCE.md`: loading, empty, error, success, disabled e no-permission; validar desktop 1440×900 e mobile 390×844.
 - `07-GOOGLE-AI-STUDIO-MASTER-PROMPT.md`: manter stack e funcionalidades atuais, implementar só o âmbito aprovado.
 - `estrategia_rival_trello_notion.md`: combinar Kanban simples, conteúdo/documentação organizado e foco/tempo integrados sem aumentar a curva de aprendizagem.
+- `12-PHASE-02-FRONTEND-PROMPT.md`: prompt de colaboração para o Google AI Studio, limitado a frontend e UX.
 
 As referências Linear, Notion e Trello são padrões de produto e interação; não copiar marcas, assets, texto ou ecrãs literalmente.
 
@@ -25,7 +26,8 @@ As referências Linear, Notion e Trello são padrões de produto e interação; 
 - Trello: Kanban claro, cartões informativos e drag-and-drop intuitivo.
 - Identidade Kard: superfícies neutras, azul como acento, tema escuro por omissão, densidade equilibrada, animações discretas e acessibilidade.
 - Manter o tema claro disponível.
-- Respeitar `prefers-reduced-motion`; evitar blur e sombras decorativas excessivas.
+- Respeitar `prefers-reduced-motion` através de CSS e `MotionConfig`; evitar blur e sombras decorativas excessivas.
+- Node.js 24.12+ e npm 10.9+ declarados como requisitos do projeto, alinhados com as engines das dependências atuais.
 
 ## Primeira entrega implementada nesta branch
 
