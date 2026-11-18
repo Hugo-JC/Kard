@@ -140,7 +140,7 @@ export function Header({
             className="h-11 w-full rounded-2xl border border-transparent bg-muted/55 pl-11 pr-4 sm:pr-20 text-sm text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 border-border/70 dark:bg-muted/35"
           />
           <div className="absolute right-3 hidden sm:flex items-center gap-1 rounded-md bg-card px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-2xs border border-border">
-            <span>⌘</span>
+            <span>⌘ / Ctrl</span>
             <span>K</span>
           </div>
         </div>
