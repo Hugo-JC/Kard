@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: kard-ci-${{ github.workflow }}-${{ github.ref }}
+  group: kard-ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
