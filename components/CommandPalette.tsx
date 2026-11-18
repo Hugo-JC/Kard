@@ -176,7 +176,7 @@ export function CommandPalette({ open, onOpenChange, onSelectAction }: CommandPa
         </div>
 
         <div className="flex items-center justify-between border-t border-border bg-muted/25 px-4 py-2.5 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1.5"><Command className="size-3" /> K para abrir</span>
+          <span className="flex items-center gap-1.5"><Command className="size-3" /> Ctrl / ⌘ + K para abrir</span>
           <span>↑ ↓ navegar · Enter selecionar · Esc fechar</span>
         </div>
       </div>
