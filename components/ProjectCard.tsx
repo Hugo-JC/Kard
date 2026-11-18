@@ -1,0 +1,311 @@
+"use client"
+
+import React, { useEffect, useRef, useState } from "react"
+import { Star, MoreVertical, Calendar, CheckCircle2, Clock, Archive, ArchiveRestore } from "lucide-react"
+import { GoogleLogo, SlackLogo, SpotifyLogo, LinearLogo } from "./Logos"
+import { Avatar } from "@/components/ui/avatar"
+import { Project } from "@/lib/data"
+import { cn } from "@/lib/utils"
+
+interface ProjectCardProps {
+  project: Project
+  onToggleStar: (id: string) => void
+  onUpdateStatus?: (id: string, newStatus: Project["status"]) => void
+  onToggleArchive?: (id: string) => void
+  onClick?: () => void
+}
+
+export function ProjectCard({
+  project,
+  onToggleStar,
+  onUpdateStatus,
+  onToggleArchive,
+  onClick,
+}: ProjectCardProps) {
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showMenu) return
+    const handleOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowMenu(false)
+    }
+    document.addEventListener("mousedown", handleOutside)
+    window.addEventListener("keydown", handleEsc)
+    return () => {
+      document.removeEventListener("mousedown", handleOutside)
+      window.removeEventListener("keydown", handleEsc)
+    }
+  }, [showMenu])
+  const percent =
+    project.totalTasks > 0
+      ? Math.round((project.completedTasks / project.totalTasks) * 100)
+      : 0
+
+  // Tag color mapping matching the screenshot's soft pastel badges
+  const getTagStyle = (tag: string) => {
+    switch (tag.toUpperCase()) {
+      case "IOS APP":
+        return "bg-success-subtle text-success-foreground dark:bg-emerald-950/40 dark:text-emerald-300"
+      case "UI/UX":
+        return "bg-primary-subtle text-primary dark:bg-blue-950/40 dark:text-blue-300"
+      case "ANDROID":
+        return "bg-warning-subtle text-warning-foreground dark:bg-amber-950/40 dark:text-amber-300"
+      case "AUDIO API":
+        return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+      case "GRAPHQL":
+        return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
+      default:
+        return "bg-muted text-muted-foreground"
+    }
+  }
+
+  return (
+    <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault()
+                onClick()
+              }
+            }
+          : undefined
+      }
+      className={cn(
+        "relative rounded-3xl border border-border/80 bg-card p-4 text-card-foreground shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] transition-all duration-200 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] sm:p-6",
+        onClick && "cursor-pointer"
+      )}
+    >
+      {/* Top Header Row */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-3.5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted/60 dark:bg-slate-900/80 border border-border/60 shadow-2xs overflow-hidden">
+            {project.customImage ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={project.customImage} alt={project.name} className="h-full w-full object-cover" />
+            ) : project.logo === "google" ? (
+              <GoogleLogo className="w-7 h-7" />
+            ) : project.logo === "slack" ? (
+              <SlackLogo className="w-7 h-7" />
+            ) : project.logo === "spotify" ? (
+              <SpotifyLogo className="w-7 h-7" />
+            ) : project.logo === "linear" ? (
+              <LinearLogo className="w-7 h-7" />
+            ) : (
+              <span className="text-base font-extrabold text-primary">
+                {project.name.charAt(0)}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-base font-bold text-card-foreground tracking-tight">
+              {project.name}
+            </h3>
+            <p className="truncate text-xs text-muted-foreground font-medium">{project.company}</p>
+          </div>
+        </div>
+
+        {/* Action icons: Star & Three dots */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={(event) => {
+              event.stopPropagation()
+              onToggleStar(project.id)
+            }}
+            type="button"
+            className="flex size-11 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:bg-muted hover:text-amber-400 sm:size-9"
+            aria-label="Star project"
+          >
+            <Star
+              className={cn(
+                "w-5 h-5 transition-transform duration-150 active:scale-125",
+                project.isStarred
+                  ? "fill-[#F59E0B] text-[#F59E0B]"
+                  : "text-muted-foreground/60 hover:text-muted-foreground"
+              )}
+            />
+          </button>
+
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(event) => {
+                event.stopPropagation()
+                setShowMenu(!showMenu)
+              }}
+              type="button"
+              className="flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-card-foreground sm:size-9"
+              aria-label="Project actions"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {showMenu && (
+              <div
+                onClick={(event) => event.stopPropagation()}
+                className="absolute right-0 top-9 z-20 w-48 rounded-2xl bg-card p-2 shadow-lg border border-border text-xs animate-in fade-in zoom-in-95 text-card-foreground"
+              >
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onUpdateStatus?.(project.id, "IN PROGRESS")
+                    setShowMenu(false)
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-card-foreground hover:bg-muted font-medium cursor-pointer"
+                >
+                  Set as In Progress
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onUpdateStatus?.(project.id, "COMPLETED")
+                    setShowMenu(false)
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-card-foreground hover:bg-muted font-medium cursor-pointer"
+                >
+                  Mark Completed
+                </button>
+                {onToggleArchive && (
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onToggleArchive(project.id)
+                      setShowMenu(false)
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-amber-500 hover:bg-amber-500/10 font-semibold cursor-pointer border-t border-border/60 mt-1 pt-1.5 flex items-center gap-1.5"
+                  >
+                    {project.isArchived ? (
+                      <>
+                        <ArchiveRestore className="w-3.5 h-3.5" />
+                        <span>Restore Project</span>
+                      </>
+                    ) : (
+                      <>
+                        <Archive className="w-3.5 h-3.5" />
+                        <span>Archive Project</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Badges: Status, Archived, and Priority */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+        {/* Status Badge & Archived Tag */}
+        <div className="flex items-center gap-1.5">
+          <span
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors",
+              project.status === "COMPLETED"
+                ? "bg-success-subtle text-success-foreground dark:bg-emerald-950/40 dark:text-emerald-300"
+                : "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300"
+            )}
+          >
+            {project.status}
+          </span>
+          {project.isArchived && (
+            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">
+              <Archive className="w-2.5 h-2.5" />
+              Archived
+            </span>
+          )}
+        </div>
+
+        {/* Priority Badge */}
+        <span
+          className={cn(
+            "rounded-lg border px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase",
+            project.priority === "HIGH PRIORITY"
+              ? "border-red-400/40 text-red-500 bg-red-50/20 dark:bg-red-950/30 dark:text-red-400 dark:border-red-500/40"
+              : "border-emerald-500/40 text-emerald-600 bg-emerald-50/20 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-500/40"
+          )}
+        >
+          {project.priority}
+        </span>
+      </div>
+
+      {/* Task Progress Section */}
+      <div className="mt-5">
+        <div className="flex items-center text-xs text-muted-foreground font-semibold mb-2.5">
+          <span>Task Done :&nbsp;</span>
+          <span className="font-bold text-card-foreground tabular-nums">
+            {project.completedTasks}
+          </span>
+          <span className="text-muted-foreground">/{project.totalTasks}</span>
+          <span className="ml-auto text-[11px] text-muted-foreground font-medium tabular-nums">
+            {percent}%
+          </span>
+        </div>
+
+        {/* Custom Progress Bar matching screenshot */}
+        <div
+          className="relative h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500 ease-out"
+            style={{
+              width: `${percent}%`,
+              backgroundColor: project.accentColor || project.progressColor,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Tag pills */}
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        {project.tags.map((tag) => (
+          <span
+            key={tag}
+            className={cn(
+              "rounded-lg px-3 py-1 text-[11px] font-bold tracking-wider",
+              getTagStyle(tag)
+            )}
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Footer: Member avatars & Due date */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 pt-1">
+        {/* Overlapping member avatars */}
+        <div className="flex items-center -space-x-2 overflow-hidden py-1">
+          {project.members.map((member, idx) => (
+            <Avatar
+              key={idx}
+              src={member.avatar}
+              fallback={member.name[0]}
+              size="sm"
+              className="ring-2 ring-card border border-border/60 hover:z-10 hover:scale-105 transition-transform"
+            />
+          ))}
+          {project.extraMembersCount > 0 && (
+            <div className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground ring-2 ring-card border border-border">
+              +{project.extraMembersCount}
+            </div>
+          )}
+        </div>
+
+        {/* Due Date pill matching screenshot */}
+        <div className="rounded-xl bg-danger-subtle px-3 py-1.5 text-[11px] font-bold text-danger-foreground dark:bg-red-950/40 dark:text-red-400 tracking-wider uppercase shadow-2xs">
+          DUE DATE: {project.dueDate}
+        </div>
+      </div>
+    </div>
+  )
+}

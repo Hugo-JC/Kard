@@ -1,0 +1,260 @@
+{
+  "entities": {
+    "UserPublicProfile": {
+      "title": "UserPublicProfile",
+      "description": "Public display identity and presence status shared with project collaborators (no PII).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "photoUrl": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["Online", "In Meeting", "Focused", "Offline"] },
+        "statusNote": { "type": "string", "maxLength": 200 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "status", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Private user account data and plan tier isolated from other users.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "minLength": 3, "maxLength": 254 },
+        "userTier": { "type": "string", "enum": ["free", "pro", "business"] },
+        "activeProjectsCount": { "type": "integer" },
+        "briefingCollapsed": { "type": "boolean" },
+        "migratedLocalAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "userTier", "updatedAt"]
+    },
+    "UserMembershipIndex": {
+      "title": "UserMembershipIndex",
+      "description": "Per-user index pointing to projects where the user holds an RBAC role.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "projectRole": { "type": "string", "enum": ["owner", "gestor", "colaborador"] },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "projectId", "projectName", "projectRole", "joinedAt"]
+    },
+    "ProjectDoc": {
+      "title": "ProjectDoc",
+      "description": "Core project document owned by an Owner and shared via members subcollection.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "company": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "logo": { "type": "string", "enum": ["google", "slack", "spotify", "linear", "custom"] },
+        "status": { "type": "string", "enum": ["SELECT PROGRESS", "IN PROGRESS", "COMPLETED", "ON HOLD"] },
+        "priority": { "type": "string", "enum": ["HIGH PRIORITY", "MEDIUM PRIORITY", "LOW PRIORITY"] },
+        "completedTasks": { "type": "integer" },
+        "totalTasks": { "type": "integer" },
+        "progressColor": { "type": "string", "maxLength": 32 },
+        "progressTrack": { "type": "string", "maxLength": 32 },
+        "accentColor": { "type": "string", "maxLength": 32 },
+        "tags": { "type": "array" },
+        "isStarred": { "type": "boolean" },
+        "isArchived": { "type": "boolean" },
+        "dueDate": { "type": "string", "maxLength": 64 },
+        "sprintStage": { "type": "string", "maxLength": 64 },
+        "attachmentsCount": { "type": "integer" },
+        "budget": { "type": "string", "maxLength": 64 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "coverAssetKey": { "type": "string", "maxLength": 512 },
+        "portalEnabled": { "type": "boolean" },
+        "portalShareCode": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "name", "company", "logo", "status", "priority", "completedTasks", "totalTasks", "isArchived", "createdAt", "updatedAt"]
+    },
+    "ProjectMember": {
+      "title": "ProjectMember",
+      "description": "Authoritative RBAC role record shared between Firestore rules and Cloudflare R2 presign checks.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "maxLength": 254 },
+        "avatar": { "type": "string", "maxLength": 512 },
+        "projectRole": { "type": "string", "enum": ["owner", "gestor", "colaborador"] },
+        "jobTitle": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["Online", "In Meeting", "Focused", "Offline"] },
+        "statusNote": { "type": "string", "maxLength": 200 },
+        "addedBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "joinedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "projectId", "name", "projectRole", "addedBy", "joinedAt", "updatedAt"]
+    },
+    "ProjectTask": {
+      "title": "ProjectTask",
+      "description": "Task item with Markdown specification, stage, checklist, and comments under a project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "number": { "type": "string", "minLength": 1, "maxLength": 16 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "project": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "completed": { "type": "boolean" },
+        "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "stage": { "type": "string", "enum": ["TODO", "IN PROGRESS", "REVIEW", "DONE"] },
+        "tags": { "type": "array" },
+        "dueDate": { "type": "string", "maxLength": 64 },
+        "dueKind": { "type": "string", "enum": ["today", "overdue", "upcoming"] },
+        "descriptionMarkdown": { "type": "string", "maxLength": 20000 },
+        "linkedNoteId": { "type": "string", "maxLength": 128 },
+        "createdBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "title", "project", "completed", "priority", "createdBy", "createdAt", "updatedAt"]
+    },
+    "ProjectNote": {
+      "title": "ProjectNote",
+      "description": "Markdown documentation note coupled to a project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "contentMarkdown": { "type": "string", "maxLength": 50000 },
+        "author": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "title", "contentMarkdown", "author", "authorUid", "createdAt", "updatedAt"]
+    },
+    "ProjectDeliverable": {
+      "title": "ProjectDeliverable",
+      "description": "Client Portal deliverable milestone for approval or revision feedback.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "milestone": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "status": { "type": "string", "enum": ["pending_review", "approved", "changes_requested"] },
+        "clientFeedback": { "type": "string", "maxLength": 2000 },
+        "publishedBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "title", "milestone", "status", "publishedBy", "createdAt", "updatedAt"]
+    },
+    "ProjectAsset": {
+      "title": "ProjectAsset",
+      "description": "Metadata index for private Cloudflare R2 objects and linked Google Drive files.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "source": { "type": "string", "enum": ["r2", "google_drive"] },
+        "scope": { "type": "string", "enum": ["internal", "deliverable", "cover"] },
+        "r2Key": { "type": "string", "maxLength": 512 },
+        "driveFileId": { "type": "string", "maxLength": 256 },
+        "driveExternalUrl": { "type": "string", "maxLength": 1000 },
+        "fileName": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "mimeType": { "type": "string", "minLength": 1, "maxLength": 150 },
+        "sizeBytes": { "type": "integer" },
+        "linkedTaskId": { "type": "string", "maxLength": 128 },
+        "uploadedBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "uploadedByName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "source", "scope", "fileName", "mimeType", "sizeBytes", "uploadedBy", "uploadedByName", "createdAt"]
+    },
+    "ProjectAutomation": {
+      "title": "ProjectAutomation",
+      "description": "Natural-language deterministic automation rule attached to a project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "naturalText": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "triggerType": { "type": "string", "enum": ["stage_change", "priority_high", "task_completed", "portal_approved", "portal_changes_requested"] },
+        "actionType": { "type": "string", "enum": ["mark_completed", "move_stage", "notify_team", "set_priority"] },
+        "enabled": { "type": "boolean" },
+        "runsCount": { "type": "integer" },
+        "createdBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "naturalText", "triggerType", "actionType", "enabled", "runsCount", "createdBy", "createdAt", "updatedAt"]
+    },
+    "UserCalendarEvent": {
+      "title": "UserCalendarEvent",
+      "description": "User calendar event persisted in Firestore and optionally linked to Google Calendar.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "day": { "type": "integer" },
+        "month": { "type": "integer" },
+        "year": { "type": "integer" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "source": { "type": "string", "enum": ["local", "google_calendar"] },
+        "googleEventId": { "type": "string", "maxLength": 256 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "day", "month", "year", "title", "source", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/public/{docId}": {
+      "schema": { "$ref": "#/entities/UserPublicProfile" },
+      "description": "Public display profile without PII."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Private user account info, subscription tier, and local migration status."
+    },
+    "/users/{userId}/memberships/{projectId}": {
+      "schema": { "$ref": "#/entities/UserMembershipIndex" },
+      "description": "Indexed list of projects the user belongs to."
+    },
+    "/users/{userId}/calendarEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/UserCalendarEvent" },
+      "description": "User-scoped calendar events."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/ProjectDoc" },
+      "description": "Root project documents."
+    },
+    "/projects/{projectId}/members/{memberUid}": {
+      "schema": { "$ref": "#/entities/ProjectMember" },
+      "description": "Authoritative RBAC roles (owner, gestor, colaborador) per project."
+    },
+    "/projects/{projectId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/ProjectTask" },
+      "description": "Tasks belonging to a project."
+    },
+    "/projects/{projectId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/ProjectNote" },
+      "description": "Coupled Markdown project notes."
+    },
+    "/projects/{projectId}/deliverables/{deliverableId}": {
+      "schema": { "$ref": "#/entities/ProjectDeliverable" },
+      "description": "Client Portal deliverables and review outcomes."
+    },
+    "/projects/{projectId}/assets/{assetId}": {
+      "schema": { "$ref": "#/entities/ProjectAsset" },
+      "description": "Cloudflare R2 private object metadata and Google Drive references."
+    },
+    "/projects/{projectId}/automations/{ruleId}": {
+      "schema": { "$ref": "#/entities/ProjectAutomation" },
+      "description": "Project automation rules."
+    }
+  }
+}

@@ -1,0 +1,165 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-subtle: var(--card-subtle);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-subtle: var(--info-subtle);
+}
+
+:root {
+  /* Canvas & Base Tokens */
+  --background: #EEF0F5;
+  --foreground: #0F172A;
+
+  /* Card Surfaces & Bento Grid */
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --card-subtle: #F8FAFC;
+
+  /* Muted & Fillers */
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+
+  /* Hairline Borders */
+  --border: #E2E8F0;
+  --border-subtle: #F1F5F9;
+
+  /* Brand / Active State */
+  --primary: #0D6EFD;
+  --primary-foreground: #FFFFFF;
+  --primary-subtle: #EBF3FF;
+
+  /* Secondary & Accents */
+  --secondary: #F1F5F9;
+  --secondary-foreground: #1E293B;
+  --accent: #F8FAFC;
+  --accent-foreground: #0F172A;
+
+  /* Semantic feedback palette */
+  --success: #059669;
+  --success-subtle: #ECFDF5;
+  --success-foreground: #047857;
+  --warning: #D97706;
+  --warning-subtle: #FFF7ED;
+  --warning-foreground: #B45309;
+  --danger: #E11D48;
+  --danger-subtle: #FFF1F2;
+  --danger-foreground: #BE123C;
+  --info: #0284C7;
+  --info-subtle: #E0F2FE;
+  --info-foreground: #0369A1;
+}
+
+.dark {
+  /* Canvas & Base Tokens (Linear Deep Pitch Obsidian) */
+  --background: #08090A;
+  --foreground: #F7F8F8;
+
+  /* Card Surfaces & Bento Grid */
+  --card: #0D0E11;
+  --card-foreground: #F7F8F8;
+  --card-subtle: #121418;
+
+  /* Muted & Fillers */
+  --muted: #15181E;
+  --muted-foreground: #8A8F98;
+
+  /* Hairline Borders (Crisp subtle Linear borders) */
+  --border: #1F2228;
+  --border-subtle: #181A1F;
+
+  /* Brand / Active State (Crisp Electric Blue - zero purple slop) */
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --primary-subtle: rgba(59, 130, 246, 0.14);
+
+  /* Secondary & Accents */
+  --secondary: #16181F;
+  --secondary-foreground: #F7F8F8;
+
+  --accent: #191C24;
+  --accent-foreground: #F7F8F8;
+
+  /* Semantic Feedback Tokens */
+  --success: #10B981;
+  --success-subtle: rgba(16, 185, 129, 0.14);
+  --success-foreground: #34D399;
+
+  --warning: #F59E0B;
+  --warning-subtle: rgba(245, 158, 11, 0.14);
+  --warning-foreground: #FBBF24;
+
+  --danger: #F43F5E;
+  --danger-subtle: rgba(244, 63, 94, 0.14);
+  --danger-foreground: #FDA4AF;
+
+  --info: #38BDF8;
+  --info-subtle: rgba(56, 189, 248, 0.14);
+  --info-foreground: #7DD3FC;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-width: 320px;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: 1rem;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
