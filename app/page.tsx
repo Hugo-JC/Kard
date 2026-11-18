@@ -1641,7 +1641,7 @@ export default function DashboardPage() {
                   A filtrar por: <strong>&quot;{searchQuery}&quot;</strong> (
                   {displayTasks.length} tarefas, {displayProjects.length} projetos)
                 </span>
-                {matchingArchivedProjectsCount > 0 && (
+                {activeNav === "dashboard" && matchingArchivedProjectsCount > 0 && (
                   <button
                     type="button"
                     onClick={() => setIncludeArchivedSearch(!includeArchivedSearch)}
