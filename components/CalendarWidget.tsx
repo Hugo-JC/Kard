@@ -222,7 +222,9 @@ export function CalendarWidget({
                   onSyncGoogleCalendar?.()
                 }}
                 disabled={isSyncingGoogleCalendar}
-                className="inline-flex shrink-0 items-center gap-1 font-semibold text-primary hover:underline cursor-pointer"
+                aria-label={isSyncingGoogleCalendar ? "A atualizar calendário" : "Atualizar calendário Google"}
+                aria-busy={isSyncingGoogleCalendar}
+                className="inline-flex shrink-0 items-center gap-1 font-semibold text-primary hover:underline cursor-pointer disabled:cursor-wait disabled:opacity-60"
               >
                 <RefreshCw
                   className={cn(
@@ -230,7 +232,7 @@ export function CalendarWidget({
                     isSyncingGoogleCalendar && "animate-spin"
                   )}
                 />
-                <span>Atualizar</span>
+                <span>{isSyncingGoogleCalendar ? "A atualizar…" : "Atualizar"}</span>
               </button>
             </>
           ) : (
@@ -253,7 +255,7 @@ export function CalendarWidget({
                 }}
                 className="shrink-0 font-semibold text-primary hover:underline cursor-pointer"
               >
-                {isConnectingWorkspace ? "Conectando..." : "Conectar Google"}
+                {isConnectingWorkspace ? "A ligar…" : "Ligar Google"}
               </button>
             </>
           )}
@@ -301,6 +303,7 @@ export function CalendarWidget({
                       : undefined
                   }
                   aria-pressed={isSelected}
+                  aria-current={isSelected && cell.day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear() ? "date" : undefined}
                   className={cn(
                     "relative flex aspect-square w-full max-w-10 flex-col items-center justify-center rounded-xl text-[13px] transition-[background-color,color,transform,box-shadow] duration-150 @md:max-w-12",
                     isSelected
