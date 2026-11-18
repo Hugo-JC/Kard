@@ -359,7 +359,7 @@ export function ProjectTaskBoard({
             <TabsList>
               <TabsTrigger value="board" className="gap-1.5">
                 <Kanban className="size-3.5" />
-                <span>Buckets</span>
+                <span>Quadro</span>
               </TabsTrigger>
               <TabsTrigger value="list" className="gap-1.5">
                 <List className="size-3.5" />
