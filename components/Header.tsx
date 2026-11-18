@@ -300,7 +300,7 @@ export function Header({
                           </div>
 
                           <p className="text-xs text-muted-foreground leading-relaxed">
-                            <strong className="text-foreground">{inv.invitedBy}</strong> convidou você para colaborar no projeto{" "}
+                            <strong className="text-foreground">{inv.invitedBy}</strong> convidou-te para colaborar no projeto{" "}
                             <strong className="text-foreground">{inv.projectName}</strong> como{" "}
                             <strong className="text-foreground">{inv.role}</strong>.
                           </p>
@@ -332,7 +332,7 @@ export function Header({
                           ) : inv.status === "accepted" ? (
                             <div className="flex items-center gap-1.5 text-xs font-semibold text-success-foreground">
                               <Check className="w-3.5 h-3.5" />
-                              <span>Convite aceito · Você agora é colaborador</span>
+                              <span>Convite aceite · Já fazes parte do projeto</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -537,7 +537,7 @@ export function Header({
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                       <div>
                         <p className="text-xs font-bold text-foreground">
-                          {currentTier === "free" ? "Upgrade Kard Pro" : "Gerenciar Plano"}
+                          {currentTier === "free" ? "Ver planos" : "Gerir plano"}
                         </p>
                         <p className="text-[10px] text-muted-foreground">Consultar opções do plano</p>
                       </div>
@@ -556,7 +556,7 @@ export function Header({
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-muted hover:text-foreground cursor-pointer"
                   >
                     <User className="w-4 h-4 text-muted-foreground" />
-                    <span>Configurações & Integrações</span>
+                    <span>Definições e integrações</span>
                   </button>
 
                   {user ? (
@@ -574,7 +574,7 @@ export function Header({
                   ) : (
                     <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
                       <Shield className="w-4 h-4 text-muted-foreground" />
-                      <span>Modo Local-First</span>
+                      <span>Modo local</span>
                     </div>
                   )}
                 </div>
