@@ -31,6 +31,8 @@ export function Dialog({
       ? document.activeElement
       : null
     const frame = window.requestAnimationFrame(() => {
+      if (dialogRef.current?.contains(document.activeElement)) return
+
       const preferred = dialogRef.current?.querySelector<HTMLElement>("[autofocus]")
       const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
