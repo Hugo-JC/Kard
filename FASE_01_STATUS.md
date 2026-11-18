@@ -42,6 +42,9 @@ Verificações após a migração:
 - Advisor de saúde: sem avisos.
 - Advisor de performance: 31 índices ainda reportados como não utilizados. Como a base de dados é nova e está vazia, não foram removidos.
 - As definições das três funções e as políticas de UPDATE/DELETE de projetos foram relidas no banco remoto e correspondem à migração.
+- Testes transacionais RLS executados com utilizadores temporários e rollback: Workspace Admin sem associação ao projeto obteve zero acesso/leitura/escrita e zero linhas em UPDATE/DELETE; membro explícito com papel guest conseguiu ler, mas não gerir nem escrever; Owner explícito conseguiu gerir e eliminar o projeto.
+- Todos os dados de teste foram revertidos; a base continua sem utilizadores, Workspaces ou projetos.
+- `src/types/database.ts` foi regenerado a partir do projeto remoto e comparado com o schema atual.
 
 ## Diferenças importantes entre a aplicação e a arquitetura aprovada
 
