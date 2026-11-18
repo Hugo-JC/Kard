@@ -1,4 +1,4 @@
--- Kard Phase 01: indexes for foreign-key lookups.
+
 begin;
 create index audit_logs_actor_id_idx on public.audit_logs(actor_id);
 create index project_members_added_by_idx on public.project_members(added_by);
