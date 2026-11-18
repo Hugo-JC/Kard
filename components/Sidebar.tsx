@@ -2,16 +2,20 @@
 
 import React from "react"
 import Image from "next/image"
+import { motion } from "motion/react"
 import {
   LayoutDashboard,
   FolderKanban,
   CheckSquare2,
   CalendarDays,
-  Clock,
+  Clock3,
   Zap,
-  Settings,
+  Settings2,
   X,
-  Sparkles
+  Sparkles,
+  Command,
+  ChevronRight,
+  type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -34,6 +38,27 @@ interface SidebarProps {
   currentTier?: "free" | "pro" | "business"
 }
 
+type NavItem = { key: NavItemKey; label: string; icon: LucideIcon; shortcut?: string }
+
+const navigationGroups: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Workspace",
+    items: [
+      { key: "dashboard", label: "Visão geral", icon: LayoutDashboard, shortcut: "G H" },
+      { key: "projects", label: "Projetos", icon: FolderKanban, shortcut: "G P" },
+      { key: "my-tasks", label: "Minhas tarefas", icon: CheckSquare2, shortcut: "G T" },
+    ],
+  },
+  {
+    label: "Planeamento",
+    items: [
+      { key: "calendar", label: "Calendário", icon: CalendarDays },
+      { key: "time-manage", label: "Controlo de tempo", icon: Clock3 },
+      { key: "automations", label: "Automações", icon: Zap },
+    ],
+  },
+]
+
 export function Sidebar({
   activeNav,
   onSelectNav,
@@ -42,148 +67,176 @@ export function Sidebar({
   onOpenPricingModal,
   currentTier = "free",
 }: SidebarProps) {
-  const navItems: { key: NavItemKey; label: string; icon: React.ElementType }[] = [
-    { key: "dashboard", label: "DASHBOARD", icon: LayoutDashboard },
-    { key: "projects", label: "PROJECTS", icon: FolderKanban },
-    { key: "my-tasks", label: "MY TASKS", icon: CheckSquare2 },
-    { key: "calendar", label: "CALENDAR", icon: CalendarDays },
-    { key: "time-manage", label: "TIME MANAGE", icon: Clock },
-    { key: "automations", label: "AUTOMATIONS", icon: Zap },
-    { key: "settings", label: "SETTINGS", icon: Settings },
-  ]
+  const select = (key: NavItemKey) => {
+    onSelectNav(key)
+    onCloseMobile?.()
+  }
 
-  const sidebarContent = (
-    <div className="flex h-full flex-col justify-between py-6 px-4">
-      {/* Top Brand Logo */}
-      <div className="flex flex-col items-center">
-        <div className="flex items-center justify-between w-full px-2 lg:justify-center">
-          <div className="flex flex-col items-start gap-1.5 lg:items-center">
-            <Image
-              src="/kard_logo_light.svg"
-              alt="Kard"
-              width={148}
-              height={56}
-              priority
-              className="h-11 w-auto dark:hidden"
-            />
-            <Image
-              src="/kard_logo_dark.svg"
-              alt="Kard"
-              width={148}
-              height={56}
-              priority
-              className="hidden h-11 w-auto dark:block"
-            />
-            <span className="text-[11px] font-medium text-muted-foreground lg:hidden">Workspace v2.4</span>
-          </div>
-
-          {/* Mobile close button */}
-          {onCloseMobile && (
-            <button
-              onClick={onCloseMobile}
-              type="button"
-              aria-label="Close navigation menu"
-              className="flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted lg:hidden"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
+  const content = (
+    <div className="flex h-full min-h-0 flex-col px-3 pb-3 pt-5 sm:px-4 sm:pb-4">
+      <div className="flex items-center justify-between px-2">
+        <div className="flex min-w-0 items-center">
+          <Image
+            src="/kard_logo_light.svg"
+            alt="Kard"
+            width={132}
+            height={50}
+            priority
+            className="h-9 w-auto dark:hidden"
+          />
+          <Image
+            src="/kard_logo_dark.svg"
+            alt="Kard"
+            width={132}
+            height={50}
+            priority
+            className="hidden h-9 w-auto dark:block"
+          />
         </div>
-
-        {/* Navigation list */}
-        <nav aria-label="Main navigation" className="mt-8 flex w-full flex-col gap-2 sm:mt-10">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = activeNav === item.key
-
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => {
-                  onSelectNav(item.key)
-                  if (onCloseMobile) onCloseMobile()
-                }}
-                className={cn(
-                  "group relative flex min-h-11 w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer sm:gap-3.5 sm:px-4 sm:tracking-wider",
-                  isActive
-                    ? "bg-primary-subtle text-primary shadow-xs font-extrabold"
-                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-105",
-                    isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-                  )}
-                />
-                <span className="truncate">{item.label}</span>
-
-                {isActive && (
-                  <span className="absolute right-3.5 h-1.5 w-1.5 rounded-full bg-primary" />
-                )}
-              </button>
-            )
-          })}
-        </nav>
+        {onCloseMobile && (
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            aria-label="Fechar navegação"
+            className="flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
-      {/* Bottom Plan Card */}
-      <div className="mt-6 rounded-2xl bg-muted/45 p-4 text-left space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-xl bg-primary-subtle text-primary">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <p className="text-xs font-bold text-foreground">
-              {currentTier === "free" ? "Kard Pro" : `Kard ${currentTier.toUpperCase()}`}
+      <div className="mx-1 mt-6 flex items-center gap-2.5 rounded-xl border border-border/70 bg-muted/35 px-3 py-2.5">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-[11px] font-bold text-primary">K</span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-foreground">O teu espaço de trabalho</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Workspace</p>
+        </div>
+        <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" aria-label="Espaço ativo" />
+      </div>
+
+      <nav aria-label="Navegação principal" className="mt-7 flex-1 space-y-7 overflow-y-auto px-1">
+        {navigationGroups.map((group) => (
+          <div key={group.label}>
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">
+              {group.label}
             </p>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const Icon = item.icon
+                const active = activeNav === item.key
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => select(item.key)}
+                    className={cn(
+                      "group relative flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[13px] font-medium transition-[background,color,transform] duration-150 ease-out",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                      active
+                        ? "bg-primary/10 text-primary dark:bg-primary/12"
+                        : "text-muted-foreground hover:bg-muted/75 hover:text-foreground active:scale-[0.99]"
+                    )}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="kard-sidebar-active"
+                        className="absolute inset-y-2 left-0 w-[2px] rounded-full bg-primary"
+                        transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                      />
+                    )}
+                    <Icon className={cn("size-[17px] shrink-0 transition-transform duration-150 group-hover:scale-105", active ? "text-primary" : "text-muted-foreground")} strokeWidth={active ? 2.1 : 1.8} />
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    {item.shortcut && (
+                      <span className="hidden text-[9px] font-medium tracking-wide text-muted-foreground/55 transition-colors group-hover:text-muted-foreground xl:inline">
+                        {item.shortcut}
+                      </span>
+                    )}
+                    {active && <ChevronRight className="size-3.5 text-primary/70" />}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-          {currentTier === "free" && (
-            <span className="text-[11px] font-semibold text-success-foreground">
-              50% OFF
-            </span>
+        ))}
+      </nav>
+
+      <div className="mt-4 border-t border-border/70 pt-3">
+        <button
+          type="button"
+          onClick={() => select("settings")}
+          aria-current={activeNav === "settings" ? "page" : undefined}
+          className={cn(
+            "flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors",
+            activeNav === "settings" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/75 hover:text-foreground"
           )}
+        >
+          <Settings2 className="size-[17px]" />
+          Definições
+        </button>
+
+        <div className="mt-3 rounded-2xl border border-border/70 bg-gradient-to-br from-primary/[0.09] via-card to-card p-3.5">
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-primary/12 text-primary">
+              <Sparkles className="size-3.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-foreground">Kard {currentTier === "free" ? "Free" : currentTier === "pro" ? "Pro" : "Business"}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{currentTier === "free" ? "Plano atual" : "Subscrição ativa"}</p>
+            </div>
+          </div>
+          <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+            {currentTier === "free"
+              ? "Descobre as opções disponíveis para a tua equipa."
+              : "Consulta e gere as opções do teu plano."}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onOpenPricingModal}
+            disabled={!onOpenPricingModal}
+            className="mt-3 h-8 w-full justify-between rounded-lg bg-card px-3 text-[11px]"
+          >
+            Ver planos
+            <ChevronRight className="size-3.5" />
+          </Button>
         </div>
 
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          {currentTier === "free"
-            ? "Projetos ilimitados e sprints com desconto na 1ª compra."
-            : "Todos os recursos avançados estão ativos."}
-        </p>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onOpenPricingModal}
-          className="w-full h-8 text-xs font-semibold rounded-xl bg-card"
-        >
-          {currentTier === "free" ? "Ver planos" : "Gerenciar plano"}
-        </Button>
+        <div className="mt-3 flex items-center justify-between px-2 text-[10px] text-muted-foreground/65">
+          <span>Feito para trabalhar melhor</span>
+          <span className="inline-flex items-center gap-1"><Command className="size-3" /> K</span>
+        </div>
       </div>
     </div>
   )
 
   return (
     <>
-      {/* Desktop Floating Sidebar */}
-      <aside className="hidden lg:block w-[240px] shrink-0 sticky top-6 self-start h-[calc(100vh-3rem)] rounded-[32px] bg-card border border-border/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] overflow-hidden">
-        {sidebarContent}
+      <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] w-[252px] shrink-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_8px_32px_-20px_rgba(0,0,0,0.35)] lg:block">
+        {content}
       </aside>
 
-      {/* Mobile Drawer Overlay */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div className="fixed inset-0 z-50 flex lg:hidden">
           <button
             type="button"
-            aria-label="Close navigation menu"
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+            aria-label="Fechar menu"
+            className="fixed inset-0 bg-black/45 backdrop-blur-[2px]"
             onClick={onCloseMobile}
           />
-          <div role="dialog" aria-modal="true" aria-label="Main navigation" className="relative z-10 h-full w-72 max-w-[80vw] bg-card shadow-2xl">
-            {sidebarContent}
-          </div>
+          <motion.aside
+            initial={{ x: -24, opacity: 0.7 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -24, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 36 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navegação principal"
+            className="relative z-10 h-full w-[min(19rem,88vw)] border-r border-border bg-card shadow-2xl"
+          >
+            {content}
+          </motion.aside>
         </div>
       )}
     </>
