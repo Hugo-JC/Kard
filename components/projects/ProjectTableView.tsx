@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 interface ProjectTableViewProps {
   projects: Project[]
   onToggleStar: (id: string) => void
-  onUpdateStatus: (id: string, newStatus: Project["status"]) => void
+  onUpdateEstado: (id: string, newEstado: Project["status"]) => void
   onSelectProject: (project: Project) => void
   onToggleArchive?: (id: string) => void
 }
@@ -18,16 +18,16 @@ interface ProjectTableViewProps {
 export function ProjectTableView({
   projects,
   onToggleStar,
-  onUpdateStatus,
+  onUpdateEstado,
   onSelectProject,
   onToggleArchive,
 }: ProjectTableViewProps) {
   if (projects.length === 0) {
     return (
       <div className="rounded-[28px] bg-card p-12 text-center text-muted-foreground border border-border">
-        <p className="text-sm font-semibold">No projects found.</p>
+        <p className="text-sm font-semibold">Não foram encontrados projetos.</p>
         <p className="text-xs text-muted-foreground/80 mt-1">
-          Adjust your filters or create a new project.
+          Ajusta os filtros ou cria um novo projeto.
         </p>
       </div>
     )
@@ -41,15 +41,15 @@ export function ProjectTableView({
           <thead className="border-b border-border/70 bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="py-4 pl-6 pr-3 font-bold w-10">★</th>
-              <th className="py-4 px-4 font-bold">Project & Client</th>
-              <th className="py-4 px-4 font-bold">Status</th>
-              <th className="py-4 px-4 font-bold">Priority</th>
-              <th className="py-4 px-4 font-bold min-w-[180px]">Task Progress</th>
-              <th className="py-4 px-4 font-bold">Team</th>
-              <th className="py-4 px-4 font-bold">Sprint / Milestone</th>
-              <th className="py-4 px-4 font-bold">Due Date</th>
-              <th className="py-4 px-4 font-bold">Budget</th>
-              <th className="py-4 pr-6 pl-3 text-right font-bold">Actions</th>
+              <th className="py-4 px-4 font-bold">Projeto e cliente</th>
+              <th className="py-4 px-4 font-bold">Estado</th>
+              <th className="py-4 px-4 font-bold">Prioridade</th>
+              <th className="py-4 px-4 font-bold min-w-[180px]">Progresso das tarefas</th>
+              <th className="py-4 px-4 font-bold">Equipa</th>
+              <th className="py-4 px-4 font-bold">Sprint / marco</th>
+              <th className="py-4 px-4 font-bold">Data limite</th>
+              <th className="py-4 px-4 font-bold">Orçamento</th>
+              <th className="py-4 pr-6 pl-3 text-right font-bold">Ações</th>
             </tr>
           </thead>
 
@@ -123,7 +123,7 @@ export function ProjectTableView({
                     </div>
                   </td>
 
-                  {/* Status Badge */}
+                  {/* Estado Badge */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       <span
@@ -149,7 +149,7 @@ export function ProjectTableView({
                     </div>
                   </td>
 
-                  {/* Priority */}
+                  {/* Prioridade */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <span
                       className={cn(
@@ -165,7 +165,7 @@ export function ProjectTableView({
                     </span>
                   </td>
 
-                  {/* Task Progress */}
+                  {/* Progresso das tarefas */}
                   <td className="py-3.5 px-4">
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
@@ -188,7 +188,7 @@ export function ProjectTableView({
                     </div>
                   </td>
 
-                  {/* Team Members */}
+                  {/* Equipa Members */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <div className="flex items-center -space-x-2 overflow-hidden py-0.5">
                       {project.members.slice(0, 3).map((member, idx) => (
@@ -208,7 +208,7 @@ export function ProjectTableView({
                     </div>
                   </td>
 
-                  {/* Sprint / Milestone */}
+                  {/* Sprint / marco */}
                   <td className="py-3.5 px-4 whitespace-nowrap text-muted-foreground">
                     <span className="font-medium text-card-foreground">
                       {project.sprintStage || "Sprint 1"}
@@ -221,14 +221,14 @@ export function ProjectTableView({
                     )}
                   </td>
 
-                  {/* Due Date */}
+                  {/* Data limite */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <span className="rounded-lg bg-danger-subtle/80 px-2 py-0.5 text-[11px] font-bold text-danger-foreground dark:bg-red-950/30 dark:text-red-400">
                       {project.dueDate}
                     </span>
                   </td>
 
-                  {/* Budget */}
+                  {/* Orçamento */}
                   <td className="py-3.5 px-4 whitespace-nowrap font-mono font-semibold text-card-foreground tabular-nums">
                     {project.budget || "$30,000"}
                   </td>
