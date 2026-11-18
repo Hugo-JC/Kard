@@ -101,7 +101,7 @@ export function TaskBucketCard({
             }
             className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wider rounded-md"
           >
-            {task.priority}
+            {task.priority === "High" ? "Alta" : task.priority === "Medium" ? "Média" : "Baixa"}
           </Badge>
 
           {onDeleteTask && (
@@ -112,7 +112,7 @@ export function TaskBucketCard({
                 onDeleteTask(task.id)
               }}
               aria-label={`Eliminar tarefa ${task.title}`}
-              className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-danger rounded-md transition-opacity"
+              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
             >
               <Trash2 className="w-3 h-3" />
             </button>
@@ -128,7 +128,7 @@ export function TaskBucketCard({
             e.stopPropagation()
             onToggleTask(task.id)
           }}
-          className="relative mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90"
+          className="relative mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           aria-label={task.completed ? `Reabrir tarefa ${task.title}` : `Concluir tarefa ${task.title}`}
         >
           {task.completed ? (
@@ -231,7 +231,7 @@ export function TaskBucketCard({
             aria-label={`Atribuir colaborador à tarefa ${task.title}`}
             className="text-[10px] bg-muted/60 border border-border rounded px-1.5 py-0.5 text-muted-foreground"
           >
-            <option value="">+ Assign</option>
+            <option value="">+ Atribuir</option>
             {availableAssignees.map((m) => (
               <option key={m.name} value={m.name}>
                 {m.name}
