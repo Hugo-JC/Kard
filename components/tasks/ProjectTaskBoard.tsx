@@ -103,6 +103,7 @@ function StageColumn({
           onClick={() => onQuickAddTask(stage.id)}
           className="size-9 sm:size-7"
           title={`Adicionar tarefa em ${stage.label}`}
+          aria-label={`Adicionar tarefa em ${stage.label}`}
         >
           <Plus className="size-3.5" />
         </Button>
@@ -128,8 +129,11 @@ function StageColumn({
 
         {tasks.length === 0 && (
           <div className="my-2 flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center">
-            <span className="text-xs font-medium text-muted-foreground">
-              Solte tarefas aqui
+            <span className="text-xs font-semibold text-muted-foreground">
+              Sem tarefas nesta etapa
+            </span>
+            <span className="mt-1 max-w-[13rem] text-[11px] leading-relaxed text-muted-foreground/80">
+              Arraste uma tarefa para aqui ou crie uma nova.
             </span>
             <Button
               type="button"
@@ -320,7 +324,8 @@ export function ProjectTaskBoard({
       <div className="flex flex-col justify-between gap-3 rounded-2xl border border-border/80 bg-card p-3 sm:flex-row sm:items-center">
         <div className="flex flex-1 flex-wrap items-center gap-2">
           <Input
-            type="text"
+            type="search"
+            aria-label="Pesquisar tarefas por título ou etiqueta"
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
             placeholder="Filtrar tarefas..."
@@ -346,7 +351,22 @@ export function ProjectTaskBoard({
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
+          {(searchFilter || assigneeFilter !== "ALL" || priorityFilter !== "ALL") && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchFilter("")
+                setAssigneeFilter("ALL")
+                setPriorityFilter("ALL")
+              }}
+              className="h-8 rounded-lg px-2.5 text-xs text-muted-foreground"
+            >
+              Limpar filtros
+            </Button>
+          )}
           <div className="hidden items-center gap-1.5 text-xs text-muted-foreground lg:flex">
             <ArrowUpDown className="size-3.5 text-primary" />
             <span>Arraste para reordenar</span>
@@ -386,7 +406,10 @@ export function ProjectTaskBoard({
           />
 
           {boardView === "board" ? (
-            <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 lg:grid-cols-4">
+            <div
+              className="grid grid-cols-[repeat(4,minmax(260px,1fr))] gap-3.5 overflow-x-auto pb-2"
+              aria-label="Quadro de tarefas por etapa"
+            >
               {TASK_STAGES.map((stage) => (
                 <StageColumn
                   key={stage.id}
