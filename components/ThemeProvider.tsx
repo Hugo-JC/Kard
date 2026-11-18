@@ -28,7 +28,7 @@ function getSnapshot(): Theme {
   try {
     return (localStorage.getItem(STORAGE_KEY) as Theme) || "dark"
   } catch {
-    return "light"
+    return "dark"
   }
 }
 
