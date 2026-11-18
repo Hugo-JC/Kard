@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 interface ProjectTableViewProps {
   projects: Project[]
   onToggleStar: (id: string) => void
-  onUpdateEstado: (id: string, newEstado: Project["status"]) => void
+  onUpdateStatus: (id: string, newStatus: Project["status"]) => void
   onSelectProject: (project: Project) => void
   onToggleArchive?: (id: string) => void
 }
@@ -18,7 +18,7 @@ interface ProjectTableViewProps {
 export function ProjectTableView({
   projects,
   onToggleStar,
-  onUpdateEstado,
+  onUpdateStatus,
   onSelectProject,
   onToggleArchive,
 }: ProjectTableViewProps) {
