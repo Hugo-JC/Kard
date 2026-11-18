@@ -205,7 +205,7 @@ export function Sidebar({
 
         <div className="mt-3 flex items-center justify-between px-2 text-[10px] text-muted-foreground/65">
           <span>Feito para trabalhar melhor</span>
-          <span className="inline-flex items-center gap-1"><Command className="size-3" /> K</span>
+          <span className="inline-flex items-center gap-1"><Command className="size-3" /> Ctrl / ⌘ + K</span>
         </div>
       </div>
     </div>
