@@ -35,7 +35,7 @@ export function ProjectTableView({
 
   return (
     <div className="rounded-[28px] bg-card border border-border/80 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] overflow-hidden text-card-foreground">
-      <div role="region" aria-label="Scrollable projects table" tabIndex={0} className="overflow-x-auto focus-visible:outline-offset-[-2px]">
+      <div role="region" aria-label="Tabela de projetos — deslocação horizontal" tabIndex={0} className="overflow-x-auto focus-visible:outline-offset-[-2px]">
         <table className="w-full min-w-[860px] text-left text-sm lg:min-w-full">
           {/* Table Header */}
           <thead className="border-b border-border/70 bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -78,7 +78,7 @@ export function ProjectTableView({
                     <button
                       type="button"
                       className="flex size-11 items-center justify-center rounded-md text-muted-foreground/50 transition-colors hover:text-amber-400 sm:size-9"
-                      aria-label="Toggle star"
+                      aria-label={project.isStarred ? `Remover ${project.name} dos favoritos` : `Adicionar ${project.name} aos favoritos`}
                     >
                       <Star
                         className={cn(
