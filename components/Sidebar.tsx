@@ -2,7 +2,7 @@
 
 import React from "react"
 import Image from "next/image"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import {
   LayoutDashboard,
   FolderKanban,
@@ -217,8 +217,14 @@ export function Sidebar({
         {content}
       </aside>
 
+      <AnimatePresence>
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex lg:hidden"
+        >
           <button
             type="button"
             aria-label="Fechar menu"
@@ -237,8 +243,9 @@ export function Sidebar({
           >
             {content}
           </motion.aside>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </>
   )
 }
