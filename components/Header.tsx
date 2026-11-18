@@ -476,7 +476,7 @@ export function Header({
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <Cloud className="size-3.5 text-success-foreground" />
-                      <span>Firestore Nuvem</span>
+                      <span>Dados da aplicação</span>
                     </span>
                     <span className="font-semibold text-success-foreground">
                       {user ? "Conectado" : "Local"}
@@ -486,22 +486,22 @@ export function Header({
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <FolderSync className="size-3.5 text-primary" />
-                      <span>Cloudflare R2</span>
+                      <span>Armazenamento</span>
                     </span>
                     <span
                       className={cn(
                         "font-semibold",
-                        r2Configured ? "text-success-foreground" : "text-warning-foreground"
+                        "text-warning-foreground"
                       )}
                     >
-                      {r2Configured ? "Pronto" : "Configurar env"}
+                      Migração pendente
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2 pt-0.5">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <Calendar className="size-3.5 text-amber-500" />
-                      <span>Calendar & Drive</span>
+                      <span>Google Workspace</span>
                     </span>
                     {hasWorkspaceConnected ? (
                       <button
@@ -540,7 +540,7 @@ export function Header({
                         <p className="text-xs font-bold text-foreground">
                           {currentTier === "free" ? "Upgrade Kard Pro" : "Gerenciar Plano"}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">50% OFF 1ª compra</p>
+                        <p className="text-[10px] text-muted-foreground">Consultar opções do plano</p>
                       </div>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-primary" />
