@@ -1,8 +1,18 @@
 # FASE 01 — Preparação e Plano Técnico de Fundação Supabase (Kard)
 
-> **Estado:** Plano de preparação concluído com as decisões confirmadas em 17-11-2026.  
+> **Estado:** Plano de preparação concluído; decisões posteriores de 18-11-2026 prevalecem em caso de conflito.  
 > **Restrições ativas:** Nenhuma funcionalidade foi implementada, nenhuma dependência foi instalada, nenhum ficheiro existente do código foi modificado, nenhuma tabela/bucket foi criado e nenhuma migração foi executada.  
 > **Contexto confirmado:** Firebase/Firestore atual contém apenas dados de protótipo (sem utilizadores/dados reais a migrar) e o projeto Supabase ainda não foi criado.
+
+---
+
+## Atualização de decisões — 18-11-2026 (prevalece sobre orientações anteriores)
+
+- **Acesso a projetos:** sempre explícito via `project_members`; nem Owner/Admin do Workspace nem pertença a uma equipa concedem acesso automático.
+- **Ficheiros:** Supabase Storage privado é o único destino aprovado. Cloudflare R2 deixa de fazer parte da arquitetura.
+- **Migração sem interrupção:** manter temporariamente os ficheiros legados Firebase/R2 apenas até Supabase Auth, Storage e dados estarem integrados e testados; depois removê-los por completo.
+- **Autenticação:** Supabase Auth é o destino da autenticação da aplicação. A integração Google Workspace Calendar/Drive deve ser preservada e revalidada durante a migração.
+- A migração `20261118134101_kard_enforce_explicit_project_membership` já corrige os helpers RLS e as políticas de UPDATE/DELETE de projetos no projeto remoto.
 
 ---
 

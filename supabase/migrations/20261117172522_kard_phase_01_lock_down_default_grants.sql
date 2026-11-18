@@ -1,9 +1,12 @@
--- Kard Phase 01: remove inherited privileges from exposed business schema.
+
 begin;
+
+-- Remove inherited/default API privileges first, including grants inherited from PUBLIC.
 revoke all privileges on all tables in schema public from public, anon, authenticated;
 revoke all privileges on all sequences in schema public from public, anon, authenticated;
 revoke all privileges on all functions in schema public from public, anon, authenticated;
 
+-- Ensure future objects created by the postgres migration owner do not re-open the API by default.
 alter default privileges for role postgres in schema public
   revoke all on tables from public, anon, authenticated;
 alter default privileges for role postgres in schema public
@@ -11,6 +14,7 @@ alter default privileges for role postgres in schema public
 alter default privileges for role postgres in schema public
   revoke execute on functions from public, anon, authenticated;
 
+-- Re-grant only the explicitly required operations.
 grant select, update (display_name,avatar_path,locale,presence_status,status_note) on public.profiles to authenticated;
 grant select, insert (name,slug,owner_id), update (name,slug), delete on public.workspaces to authenticated;
 grant select on public.workspace_subscriptions to authenticated;
@@ -24,4 +28,10 @@ grant select, insert (workspace_id,project_id,parent_task_id,title,description_m
 grant select, insert (workspace_id,task_id,user_id,is_primary), delete on public.task_assignees to authenticated;
 grant select, insert (workspace_id,project_id,task_id,bucket_id,object_path,scope,file_name,mime_type,size_bytes,uploaded_by), delete on public.storage_assets to authenticated;
 grant select on public.audit_logs to authenticated;
+
+-- Storage objects are private and available to authenticated users only, subject to object RLS.
+revoke all privileges on storage.objects from public, anon;
+grant select, insert, update, delete on storage.objects to authenticated;
+revoke all privileges on storage.buckets from public, anon, authenticated;
+
 commit;
