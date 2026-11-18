@@ -56,27 +56,34 @@ export function CommandPalette({ open, onOpenChange, onSelectAction }: CommandPa
     )
   }, [query])
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
       setQuery("")
       setActiveIndex(0)
     }
-  }, [open])
+    onOpenChange(nextOpen)
+  }
 
   useEffect(() => {
-    setActiveIndex(0)
-  }, [query])
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault()
+        handleOpenChange(!open)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [open, onOpenChange])
 
-  const close = () => onOpenChange(false)
   const choose = (key: NavItemKey) => {
     onSelectAction(key)
-    close()
+    handleOpenChange(false)
   }
 
   return (
     <Dialog
       open={open}
-      onOpenChange={close}
+      onOpenChange={handleOpenChange}
       title="Pesquisa rápida"
       description="Navega pelo Kard sem interromper o teu fluxo."
       className="max-w-[34rem] overflow-hidden p-0"
@@ -88,12 +95,12 @@ export function CommandPalette({ open, onOpenChange, onSelectAction }: CommandPa
             autoFocus
             type="text"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }}
             onKeyDown={(event) => {
-              if (event.key === "ArrowDown") {
+              if (event.key === "ArrowDown" && filtered.length > 0) {
                 event.preventDefault()
                 setActiveIndex((index) => Math.min(index + 1, filtered.length - 1))
-              } else if (event.key === "ArrowUp") {
+              } else if (event.key === "ArrowUp" && filtered.length > 0) {
                 event.preventDefault()
                 setActiveIndex((index) => Math.max(index - 1, 0))
               } else if (event.key === "Enter" && filtered[activeIndex]) {
