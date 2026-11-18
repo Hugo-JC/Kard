@@ -46,9 +46,9 @@ export function CalendarWidget({
     connectWorkspace,
   } = useFirebase()
 
-  const [currentMonth, setCurrentMonth] = useState(0)
-  const [currentYear, setCurrentYear] = useState(2021)
-  const [selectedDay, setSelectedDay] = useState<number>(5)
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth())
+  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear())
+  const [selectedDay, setSelectedDay] = useState<number>(() => new Date().getDate())
 
   const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(
     INITIAL_CALENDAR_EVENTS
@@ -80,15 +80,9 @@ export function CalendarWidget({
 
   const jumpToInitialSprint = () => {
     const today = new Date()
-    if (hasWorkspaceConnected) {
-      setCurrentMonth(today.getMonth())
-      setCurrentYear(today.getFullYear())
-      setSelectedDay(today.getDate())
-    } else {
-      setCurrentMonth(0)
-      setCurrentYear(2021)
-      setSelectedDay(5)
-    }
+    setCurrentMonth(today.getMonth())
+    setCurrentYear(today.getFullYear())
+    setSelectedDay(today.getDate())
     setIsAddingEvent(false)
   }
 
