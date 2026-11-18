@@ -33,6 +33,7 @@
 ```
 
 ### Decisões arquiteturais consolidadas
+
 - **Raiz multi-tenant:** `workspaces` é a entidade soberana de isolamento. `teams`, `projects`, `workspace_members`, `tasks` e `storage_assets` ficam todos vinculados ao `workspace_id`.
 - **Serviços Supabase na Fase 01:** apenas **PostgreSQL**, **Auth**, **Storage privado** e **RLS/Grants**. **Realtime** e **Edge Functions** ficam desligados nesta fase por não haver necessidade operacional justificada.
 - **Lógica server-side:** mantida nos Route Handlers / Server Actions do Next.js + funções/constraints no PostgreSQL.
@@ -46,6 +47,7 @@
 Todas as tabelas operacionais residem no schema `public` (protegidas por RLS e `GRANT`s mínimos), e helpers de segurança / tabelas administrativas internas ficam no schema `private` (não exposto pela Data API).
 
 ### Enums SQL
+
 - `workspace_role`: `'owner' | 'admin' | 'member' | 'guest'`
 - `invitation_status`: `'pending' | 'accepted' | 'revoked' | 'expired'`
 - `plan_tier`: `'free' | 'pro' | 'business'`
@@ -59,7 +61,7 @@ Todas as tabelas operacionais residem no schema `public` (protegidas por RLS e `
 ### Tabelas da Fase 01
 
 | Tabela | Colunas principais | Restrições / Índices |
-|---|---|---|
+| --- | --- | --- |
 | `public.profiles` | `id uuid PK` (`FK -> auth.users(id) ON DELETE CASCADE`), `display_name text NOT NULL`, `avatar_url text`, `locale text DEFAULT 'pt'`, `presence_status member_presence DEFAULT 'online'`, `status_note text`, `created_at timestamptz`, `updated_at timestamptz` | `1:1` com `auth.users`. Sem coluna de plano editável. |
 | `public.workspaces` | `id uuid PK DEFAULT gen_random_uuid()`, `name text NOT NULL`, `slug text NOT NULL UNIQUE`, `owner_id uuid NOT NULL FK -> profiles(id)`, `created_at timestamptz`, `updated_at timestamptz` | Índice em `owner_id`. `slug` validado por regex `^[a-z0-9-]+$`. |
 | `public.workspace_subscriptions` | `workspace_id uuid PK FK -> workspaces(id) ON DELETE CASCADE`, `plan_tier plan_tier NOT NULL DEFAULT 'free'`, `status subscription_status NOT NULL DEFAULT 'active'`, `max_active_projects int NOT NULL DEFAULT 3`, `max_storage_bytes bigint NOT NULL DEFAULT 104857600`, `updated_at timestamptz` | **Escrita proibida ao cliente (`authenticated`/`anon`).** Apenas `service_role` ou função de provisionamento inicial escreve aqui. |
@@ -95,6 +97,7 @@ Workspace (1)
 ```
 
 ### Garantias de integridade entre tenants
+
 1. **FKs compostas `(workspace_id, ...)`:** é estruturalmente impossível na base de dados ligar uma `Team` do Workspace A a um `Project` do Workspace B, adicionar um utilizador de fora do Workspace a `project_members`, ou atribuir uma `Task` a um utilizador que não pertence ao mesmo `workspace_id`.
 2. **Papel efetivo em Projeto:**
    - `Owner` e `Admin` do `Workspace` têm visibilidade e gestão administrativa sobre todos os projetos e equipas do respetivo Workspace.
@@ -122,7 +125,7 @@ Workspace (1)
 ## 5. Matriz de permissões (`Owner`, `Admin`, `Member`, `Guest`)
 
 | Ação / Recurso | Owner | Admin | Member | Guest | Não-membro |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Ver detalhes do Workspace | Sim | Sim | Sim | Apenas metadados dos projetos onde participa | **Negado** |
 | Editar nome / slug do Workspace | Sim | Sim | Não | Não | **Negado** |
 | Eliminar Workspace / Transferir Owner | **Sim** | Não | Não | Não | **Negado** |
@@ -145,6 +148,7 @@ Workspace (1)
 ## 6. Políticas RLS e `GRANT`s
 
 ### 6.1 Princípio duplo: `GRANT`s mínimos + RLS obrigatório
+
 1. **Revogação base:**
    - `REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC, anon, authenticated;`
    - `REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC, anon, authenticated;`
@@ -157,7 +161,9 @@ Workspace (1)
    - `audit_logs`: `SELECT` apenas.
 
 ### 6.2 Helpers SQL no schema `private` (sem recursão RLS)
+
 Todas as funções auxiliares são `SECURITY DEFINER`, `STABLE`, `SET search_path = public, private, pg_temp`, com `REVOKE ALL FROM PUBLIC` e `GRANT EXECUTE TO authenticated`:
+
 - `private.is_workspace_member(p_ws_id uuid) -> boolean`
 - `private.has_workspace_role(p_ws_id uuid, p_roles workspace_role[]) -> boolean`
 - `private.can_access_project(p_project_id uuid) -> boolean`: verdadeiro se `has_workspace_role(p.workspace_id, ['owner','admin'])`, se o utilizador for membro `member` do workspace num projeto não restrito (ou presente em `project_members`), ou se for `guest` presente em `project_members`.
@@ -165,6 +171,7 @@ Todas as funções auxiliares são `SECURITY DEFINER`, `STABLE`, `SET search_pat
 - `private.within_active_project_limit(p_ws_id uuid) -> boolean`: lê `workspace_subscriptions.max_active_projects` e compara com `COUNT(*)` de `projects WHERE workspace_id = p_ws_id AND is_archived = false`.
 
 ### 6.3 Resumo das políticas RLS por tabela (separadas por `SELECT`, `INSERT`, `UPDATE`, `DELETE`)
+
 - **`profiles`:**
   - `SELECT`: `id = auth.uid()` OU partilha `workspace_id` ativo em `workspace_members`.
   - `UPDATE`: `USING (id = auth.uid())` + `WITH CHECK (id = auth.uid())`.
@@ -218,6 +225,7 @@ Todas as funções auxiliares são `SECURITY DEFINER`, `STABLE`, `SET search_pat
 ## 8. Estratégia de configuração do Supabase (projeto ainda não criado)
 
 Como o projeto Supabase ainda não foi criado, a arquitetura será preparada em modo **Schema-as-Code**:
+
 1. **Estrutura versionada no repositório (quando Fase 01 for aprovada):**
    - `supabase/config.toml` (para desenvolvimento/testes com Supabase CLI se disponível) e `supabase/migrations/0001_...sql` até `000N_...sql` contendo **100% das tabelas, enums, funções `private.*`, triggers, `GRANT`s, policies RLS e criação dos buckets/policies de Storage**.
 2. **Passos manuais que o utilizador fará quando criar o projeto Supabase:**
@@ -235,7 +243,7 @@ Como o projeto Supabase ainda não foi criado, a arquitetura será preparada em 
 ## 9. Variáveis de ambiente necessárias (apenas nomes)
 
 | Variável | Escopo | Uso |
-|---|---|---|
+| --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Cliente + Servidor | URL base da instância Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cliente + Servidor | Chave pública (`anon`/publishable) sujeita a RLS |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Servidor apenas** | Usada exclusivamente no backend protegido (provisioning de subscrição inicial, webhooks futuros, limpeza administrativa e runner de testes) |
@@ -265,7 +273,7 @@ Como **não existem dados reais nem utilizadores em produção** no Firebase (ap
 ## 11. Correção das vulnerabilidades identificadas na Fase 00
 
 | Vulnerabilidade (Fase 00) | Correção arquitetural na Fase 01 |
-|---|---|
+| --- | --- |
 | **1. Auto-upgrade de `userTier` pelo cliente** (`firestore.rules:345` + `app/page.tsx:2213`) | Removido do cliente. Plano vive em `workspace_subscriptions`, sem `GRANT INSERT/UPDATE/DELETE` para `authenticated` e protegido por RLS (`SELECT` apenas para `Owner`/`Admin`). |
 | **2. Bypass do limite Free (3 projetos ativos)** (`app/page.tsx:699,747`) | Validado no servidor/PostgreSQL via função `private.within_active_project_limit(workspace_id)` aplicada tanto nas policies RLS (`INSERT`/`UPDATE` em `projects`) como na API route, com lock/contagem atómica. |
 | **3. Fallback permissivo de RBAC para `"owner"`** (`lib/rbac.ts:36`) | Removido. Sem utilizador autenticado válido, `getEffectiveRole()` devolve `null`; toda operação protegida exige JWT válido e membership verificada. |
@@ -279,6 +287,7 @@ Como **não existem dados reais nem utilizadores em produção** no Firebase (ap
 ## 12. Testes de segurança e isolamento entre Workspaces
 
 Será criada uma suíte automatizada (`tests/security/` e `tests/integration/`) utilizando clientes autenticados reais distintos contra instância Supabase de teste/staging:
+
 - **Atores de teste:** `User A` (`Owner` do Workspace A), `User A2` (`Member` do Workspace A), `User A3` (`Guest` apenas no `Projeto A1`), `User B` (`Owner` do Workspace B), `AnonClient` (não autenticado).
 - **Cenários obrigatórios:**
   1. **Isolamento cross-tenant:** `User A` tenta `SELECT`, `INSERT`, `UPDATE`, `DELETE` em `workspaces`, `teams`, `projects`, `tasks`, `workspace_members`, `profiles` e `storage_assets` do `Workspace B` (por ID direto) -> deve retornar vazio / falhar com erro de permissão.
@@ -298,6 +307,7 @@ Será criada uma suíte automatizada (`tests/security/` e `tests/integration/`) 
 ## 13. Critérios de aceitação da Fase 01
 
 A Fase 01 só poderá ser dada como concluída quando **todos** os critérios abaixo forem verificados com evidência real:
+
 1. Migrações SQL versionadas em `supabase/migrations/` aplicam-se de raiz numa base PostgreSQL limpa sem erros.
 2. **100%** das tabelas privadas expostas em `public` têm RLS ativo, `GRANT`s revistos e policies testadas (`SELECT/INSERT/UPDATE/DELETE`).
 3. Todos os testes de isolamento entre Workspaces (`Workspace A` vs. `Workspace B`), RBAC (`Owner/Admin/Member/Guest`), Storage privado, limite Free e bloqueio de alteração de plano passam (se o projeto Supabase ainda não existir no momento da escrita do código, fica explicitamente documentado o que foi validado localmente vs. o que aguarda criação do projeto para execução final dos testes contra a instância).

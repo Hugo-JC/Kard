@@ -3,6 +3,7 @@
 Atualizado em 17-11-2026.
 
 ## Decisões confirmadas
+
 - Supabase principal: projeto **Kard**, região `eu-west-1`, PostgreSQL 17.
 - Workspace é a raiz do isolamento multi-tenant; equipas pertencem a Workspaces.
 - O acesso a projetos é sempre explícito via `project_members`. A pertença a uma equipa não concede acesso.
@@ -10,6 +11,7 @@ Atualizado em 17-11-2026.
 - Planos e limites não podem ser alterados pelo cliente.
 
 ## Aplicado no Supabase
+
 - Migração `kard_phase_01_core_schema_and_rls` — versão `20261117172303`.
 - Migração `kard_phase_01_foreign_key_indexes` — versão `20261117172334`, índices de suporte às chaves estrangeiras.
 - Migração `kard_phase_01_lock_down_default_grants` — versão `20261117172522`, removeu privilégios herdados nas tabelas/funções públicas e repôs apenas os grants necessários.
@@ -22,6 +24,7 @@ Atualizado em 17-11-2026.
 - A função antiga `public.rls_auto_enable()` mantém o event trigger ativo, mas já não pode ser executada por `anon` nem `authenticated`.
 
 ## Verificação executada
+
 - 13/13 tabelas com RLS e 40 políticas RLS no schema `public`.
 - 8 políticas Storage, todas limitadas a `authenticated`; os buckets permanecem privados.
 - `anon` não tem `SELECT` nas tabelas de negócio; `authenticated` não tem `UPDATE` em `workspace_subscriptions`.
@@ -32,6 +35,7 @@ Atualizado em 17-11-2026.
 - A base de dados está vazia; não foram criados utilizadores, Workspaces ou dados de demonstração.
 
 ## Ainda por concluir antes de declarar a Fase 01 concluída
+
 1. Exportar/gerar e versionar no GitHub a migração SQL base completa a partir do schema aplicado no projeto remoto (não reconstruir manualmente a partir deste resumo).
 2. Instalar e fixar `@supabase/supabase-js`, `@supabase/ssr` e Vitest no projeto, atualizando o lockfile com o gestor de pacotes do repositório.
 3. Implementar clientes browser/server, middleware SSR, Auth email/password + Google e onboarding.
@@ -40,4 +44,5 @@ Atualizado em 17-11-2026.
 6. Executar `tsc`, lint e build.
 
 ## Regra de segurança
+
 Nunca colocar `SUPABASE_SECRET_KEY` (ou uma antiga `service_role`) em código/browser, prefixos `NEXT_PUBLIC_`, logs ou commits. A chave publicável é a única chave Supabase permitida no browser; as políticas RLS continuam a ser a fronteira de autorização.
