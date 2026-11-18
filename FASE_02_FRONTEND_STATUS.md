@@ -47,6 +47,12 @@ As referências Linear, Notion e Trello são padrões de produto e interação; 
 - Diálogos partilhados melhorados com foco inicial, contenção da navegação por Tab e reposição do foco ao fechar.
 - Tabela de projetos com região e ações de favoritos com nomes acessíveis e específicos.
 
+## Refinamentos adicionais
+
+- Controlo de Tempo: os cronómetros são agora agrupados dinamicamente por projeto, evitando ocultar projetos que não sejam Google ou Slack; estado vazio orientador, contagem por grupo, tempos normalizados e ações com labels mais claros.
+- Calendário: o atalho de regresso à data atual apresenta sempre “Hoje”; o estado da ligação Google deixou de afirmar que o calendário já está sincronizado apenas por existir uma conta ligada.
+- Detalhes do projeto: opções de estado e métricas remanescentes foram localizadas para português europeu.
+
 ## Limites desta primeira entrega
 
 A aplicação ainda usa Firebase Auth/Firestore em fluxos existentes. Esta fase visual não deve fingir que a migração do backend está concluída. O estado de armazenamento na UI indica explicitamente integração pendente.
